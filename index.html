@@ -11,8 +11,474 @@
         .sidebar-link.active {
             background-color: #ec4899;
             color: white;
-            font-weight: 600;
         }
+
+        /* --- Kanban Styles Start --- */
+        /* Estilos personalizados (igual que la versión anterior) */
+        .kanban-body {
+            /* Applied to body when kanban is active? Or just use existing body styles? */
+            font-family: 'Inter', sans-serif;
+            /* background-color: #f3f4f6; /* Let index.html body style handle this */
+        }
+
+        .kanban-container {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            /* Or adjust based on integration */
+        }
+
+        .kanban-column {
+            min-height: 300px;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+
+        .kanban-tasks {
+            flex-grow: 1;
+            min-height: 200px;
+            border-radius: 0.375rem;
+        }
+
+        .task-card {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: grab;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .task-card.editing {
+            cursor: default;
+            box-shadow: 0 0 0 2px #3b82f6;
+            /* Tailwind blue-500 */
+        }
+
+        .task-card:not(.editing):hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card p {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .task-card .details {
+            font-size: 0.8rem;
+            color: #6b7280;
+            /* Tailwind gray-500 */
+        }
+
+        .task-card .edit-input {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-card .edit-textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        /* --- Subtask Styles --- */
+        .subtasks-section {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+            /* Tailwind gray-200 */
+        }
+
+        .subtasks-list-view,
+        .subtasks-list-edit {
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+            /* Indent subtasks slightly */
+            list-style: none;
+            /* Remove default list bullets */
+            padding-inline-start: 10px;
+            /* Override browser default padding */
+        }
+
+        .subtask-item-view {
+            font-size: 0.85rem;
+            color: #4b5563;
+            /* Tailwind gray-600 */
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .subtask-item-view input[type="checkbox"] {
+            width: 0.8rem;
+            height: 0.8rem;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            /* Space after checkbox */
+            flex-shrink: 0;
+            /* Prevent checkbox shrinking */
+            /* Consider Tailwind accent color: accent-pink-500 */
+        }
+
+        .subtask-item-view span {
+            word-break: break-word;
+            /* Wrap long subtask text */
+        }
+
+        .subtask-item-view span.completed {
+            text-decoration: line-through;
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+        }
+
+        .subtasks-list-edit {
+            max-height: 150px;
+            /* Limit height and allow scroll */
+            overflow-y: auto;
+            padding-right: 5px;
+            /* Space for scrollbar */
+        }
+
+        .subtask-item-edit {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.2rem;
+            margin-bottom: 0.3rem;
+            background-color: #f9fafb;
+            /* Tailwind gray-50 */
+            border: 1px solid #e5e7eb;
+            /* Tailwind gray-200 */
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .subtask-item-edit.sortable-ghost {
+            /* Style for dragged item placeholder */
+            opacity: 0.4;
+            background-color: #dbeafe;
+            /* Tailwind blue-100 */
+        }
+
+        .subtask-drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+            padding: 0 0.2rem;
+            align-self: center;
+            /* Center handle vertically */
+        }
+
+        .subtask-item-edit input[type="text"] {
+            flex-grow: 1;
+            border: none;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.85rem;
+            background-color: transparent;
+            /* Match item background */
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .subtask-item-edit input[type="text"]:focus {
+            outline: none;
+            background-color: white;
+            /* Highlight on focus */
+            box-shadow: inset 0 0 0 1px #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.15rem;
+        }
+
+        .subtask-delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            /* Tailwind red-500 */
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 0.3rem;
+            line-height: 1;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+        }
+
+        .subtask-delete-btn:hover {
+            color: #dc2626;
+            /* Tailwind red-600 */
+        }
+
+        .add-subtask-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .add-subtask-input {
+            flex-grow: 1;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .add-subtask-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+            /* Reuse edit-button styles */
+        }
+
+        .view-subtasks-btn {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #4b5563;
+            /* Tailwind gray-600 */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.2rem 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .view-subtasks-btn:hover {
+            color: #1f2937;
+            /* Tailwind gray-800 */
+            text-decoration: underline;
+        }
+
+        .view-subtasks-btn .arrow {
+            transition: transform 0.2s ease-in-out;
+            display: inline-block;
+            /* Needed for transform */
+        }
+
+        .view-subtasks-btn[aria-expanded="true"] .arrow {
+            transform: rotate(90deg);
+        }
+
+        /* --- End Subtask Styles --- */
+
+        .task-card .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            /* Increased margin */
+        }
+
+        .task-card .edit-button {
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            /* Para alinear emoji y texto */
+            align-items: center;
+            gap: 0.25rem;
+            /* Espacio entre emoji y texto */
+        }
+
+        .task-card .save-button {
+            background-color: #2563eb;
+            /* Tailwind blue-600 */
+            color: white;
+            border-color: #2563eb;
+            /* Tailwind blue-600 */
+        }
+
+        .task-card .save-button:hover {
+            background-color: #1d4ed8;
+            /* Tailwind blue-700 */
+        }
+
+        .task-card .cancel-button {
+            background-color: #e5e7eb;
+            /* Tailwind gray-200 */
+            color: #374151;
+            /* Tailwind gray-700 */
+            border-color: #d1d5db;
+            /* Tailwind gray-300 */
+        }
+
+        .task-card .cancel-button:hover {
+            background-color: #d1d5db;
+            /* Tailwind gray-300 */
+        }
+
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 0.5rem 0;
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #374151;
+            /* Tailwind gray-700 */
+            gap: 0.5rem;
+            /* Espacio para emojis */
+        }
+
+        .context-menu-item:hover {
+            background-color: #f3f4f6;
+            /* Tailwind gray-100 */
+        }
+
+        .color-swatch {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+        }
+
+        .bg-task-red {
+            background-color: #fee2e2;
+            border-left: 4px solid #f87171;
+        }
+
+        /* red-100, red-400 */
+        .bg-task-blue {
+            background-color: #dbeafe;
+            border-left: 4px solid #60a5fa;
+        }
+
+        /* blue-100, blue-400 */
+        .bg-task-green {
+            background-color: #d1fae5;
+            border-left: 4px solid #34d399;
+        }
+
+        /* green-100, green-400 */
+        .bg-task-yellow {
+            background-color: #fef3c7;
+            border-left: 4px solid #facc15;
+        }
+
+        /* yellow-100, yellow-400 */
+        .bg-task-purple {
+            background-color: #e9d5ff;
+            border-left: 4px solid #a78bfa;
+        }
+
+        /* purple-100, purple-400 */
+        .bg-task-default {
+            background-color: white;
+            border-left: 4px solid #d1d5db;
+        }
+
+        /* gray-300 */
+
+        .kanban-tasks.drag-over {
+            background-color: #e5e7eb;
+            /* Tailwind gray-200 */
+            border: 1px dashed #9ca3af;
+            /* Tailwind gray-400 */
+        }
+
+        /* Modal styles (reusing existing modal styles might be better if consistent) */
+        .kanban-modal {
+            /* Use a specific class to avoid conflicts */
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .kanban-modal-content {
+            /* Use a specific class */
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 2rem;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 0.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .kanban-close-button {
+            /* Use a specific class */
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .kanban-close-button:hover,
+        .kanban-close-button:focus {
+            color: #1f2937;
+            /* Tailwind gray-800 */
+            text-decoration: none;
+        }
+
+        #addTaskBtn {
+            /* ID might need adjustment if conflicts */
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Estilo para emojis en títulos y botones */
+        .emoji {
+            margin-right: 0.4rem;
+            /* Espacio después del emoji */
+            display: inline-block;
+            /* Asegura espaciado correcto */
+        }
+
+        /* --- Kanban Styles End --- */
 
         .btn-create-ovc {
             background-color: #343a40;
@@ -170,6 +636,9 @@
     <script>
         // Listeners DOMContentLoaded de líneas 171-228 eliminados (redundantes con lógica principal en 846+)
     </script>
+    <!-- SortableJS for drag-and-drop subtasks -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Duplicate SortableJS removed -->
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -199,6 +668,12 @@
                             <span>🌱</span> <span>Ver Rizoma</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200"
+                            data-section="kanban">
+                            <span>📋</span> <span>Tablero Kanban</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
             <div class="p-4 mt-auto flex justify-center border-t border-gray-200">
@@ -226,7 +701,7 @@
                 <div id="content-area" class="flex flex-col flex-1 min-h-0 h-full"> <!-- Added h-full -->
                     <div id="listar-section" class="space-y-6">
                         <div class="flex justify-between items-center mb-6">
-            
+
                             <div class="flex items-center space-x-4">
                                 <button id="go-to-create-btn"
                                     class="btn-create-ovc flex items-center px-4 py-2 rounded-lg shadow hover:shadow-md transition duration-300">
@@ -302,7 +777,7 @@
                     <!-- Eliminado div duplicado con id="rizoma-section" que estaba aquí -->
                     <div id="crear-section" class="hidden space-y-8">
                         <!-- Eliminado: Título duplicado -->
-                        
+
                         <form id="crear-ovc-form" class="space-y-10 bg-white p-8 rounded-lg shadow-lg">
                             <input type="hidden" id="edit-ovc-id" name="edit-ovc-id">
                             <div class="border-b border-gray-200 pb-6">
@@ -561,10 +1036,15 @@
                             </div>
                         </div>
 
-                        <div
-                            class="bg-white rounded-lg shadow flex-1 flex flex-col text-gray-500 min-h-0 h-full"> <!-- Removed min-h-[600px] test class -->
+                        <div class="bg-white rounded-lg shadow flex-1 flex flex-col text-gray-500 min-h-0 h-full">
+                            <!-- Removed min-h-[600px] test class -->
                             <svg id="rizoma-graph" class="w-full h-full"></svg>
                         </div>
+                    </div>
+
+                    <!-- Placeholder for Kanban Board -->
+                    <div id="kanban-section" class="hidden flex flex-col flex-1 min-h-0 h-full">
+                        <!-- Kanban content will be loaded here -->
                     </div>
 
                 </div>
@@ -640,14 +1120,17 @@
         </div>
     </div>
 
-    <div id="ovc-summary-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
+    <div id="ovc-summary-modal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
         aria-labelledby="ovc-summary-modal-title" role="dialog" aria-modal="true">
         <div id="ovc-summary-modal-overlay" class="absolute inset-0 bg-gray-600 bg-opacity-75"></div>
         <div class="modal-content bg-white rounded-lg shadow-xl overflow-hidden transform sm:max-w-lg sm:w-full mx-4">
             <div class="px-6 py-4">
                 <div class="flex justify-between items-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="ovc-summary-modal-title"><span></span></h3>
-                    <button id="ovc-summary-modal-close" type="button" class="text-gray-400 hover:text-gray-600 text-2xl">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="ovc-summary-modal-title"><span></span>
+                    </h3>
+                    <button id="ovc-summary-modal-close" type="button"
+                        class="text-gray-400 hover:text-gray-600 text-2xl">
                     </button>
                 </div>
                 <div class="mt-4">
@@ -666,8 +1149,12 @@
                         </div>
                         <div class="flex-1">
                             <h4 class="text-md font-semibold text-gray-700">Etiquetas</h4>
-                            <span class="inline-block bg-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded">Etiqueta 1</span>
-                            <span class="inline-block bg-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded">Etiqueta 2</span>
+                            <span
+                                class="inline-block bg-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded">Etiqueta
+                                1</span>
+                            <span
+                                class="inline-block bg-gray-200 text-gray-700 text-xs font-medium px-2 py-1 rounded">Etiqueta
+                                2</span>
                         </div>
                     </div>
                 </div>
@@ -713,7 +1200,7 @@
             const summaryModalContent = document.getElementById('ovc-summary-modal-content');
 
             // Función para mostrar el modal con el resumen del OVC
-            window.showSummaryModal = function(ovcId) { // Hacer la función global
+            window.showSummaryModal = function (ovcId) { // Hacer la función global
                 const ovcs = getOvcsFromStorage();
                 const ovc = ovcs.find(ovc => ovc.id === Number(ovcId));
 
@@ -814,12 +1301,14 @@
             const sections = {
                 crear: document.getElementById('crear-section'),
                 listar: document.getElementById('listar-section'),
-                rizoma: document.getElementById('rizoma-section')
+                rizoma: document.getElementById('rizoma-section'),
+                kanban: document.getElementById('kanban-section') // Added Kanban section
             };
             const sectionTitles = {
                 crear: '<span>➕</span> Crear Nuevo Objeto Virtual Creativo',
                 listar: '<span>📋</span> Mis objetos virtuales creativos',
-                rizoma: '<span>🌱</span> Visualización del Rizoma'
+                rizoma: '<span>🌱</span> Visualización del Rizoma',
+                kanban: '<span>📋</span> Tablero Kanban' // Added Kanban title
             };
             const OVC_STORAGE_KEY = 'ovcData';
 
@@ -860,6 +1349,63 @@
                         console.log("DEBUG: Llamando a renderRizomaGraph desde showSection (retrasado)");
                         renderRizomaGraph(); // Renderizar el grafo
                     }, 50); // Un retraso corto debería ser suficiente
+                } else if (sectionId === 'kanban') {
+                    const kanbanSection = sections['kanban'];
+                    if (kanbanSection && !kanbanSection.dataset.loaded) { // Check a flag
+                        console.log("DEBUG: Cargando contenido de kanban.html...");
+                        fetch('kanban.html')
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error(`HTTP error! status: ${response.status}`);
+                                }
+                                return response.text();
+                            })
+                            .then(html => {
+                                const parser = new DOMParser();
+                                const doc = parser.parseFromString(html, 'text/html');
+
+                                // Extract specific elements needed for Kanban
+                                const title = doc.querySelector('h1'); // First h1
+                                const description = doc.querySelector('p'); // First p
+                                const container = doc.querySelector('.kanban-container');
+                                const contextMenu = doc.getElementById('contextMenu');
+                                const taskModal = doc.getElementById('taskModal');
+
+                                if (title && description && container && contextMenu && taskModal) {
+                                    // Clear previous content and append new elements
+                                    kanbanSection.innerHTML = '';
+                                    kanbanSection.appendChild(title.cloneNode(true));
+                                    kanbanSection.appendChild(description.cloneNode(true));
+                                    kanbanSection.appendChild(container.cloneNode(true));
+                                    kanbanSection.appendChild(contextMenu.cloneNode(true));
+                                    kanbanSection.appendChild(taskModal.cloneNode(true));
+                                    kanbanSection.dataset.loaded = 'true'; // Set flag
+
+                                    console.log("DEBUG: Contenido de Kanban cargado. Inicializando KanbanApp con retraso...");
+
+                                    // Initialize KanbanApp after a short delay to ensure DOM is ready
+                                    setTimeout(() => {
+                                        if (typeof KanbanApp !== 'undefined' && typeof KanbanApp.init === 'function') {
+                                            KanbanApp.init();
+                                        } else {
+                                            console.error("KanbanApp o KanbanApp.init no está definido al intentar inicializar.");
+                                        }
+                                    }, 50); // 50ms delay
+
+                                } else {
+                                    console.error("Error: No se pudieron encontrar todos los elementos necesarios en kanban.html.");
+                                    kanbanSection.innerHTML = '<p class="text-red-500">Error al extraer contenido del tablero Kanban.</p>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al cargar o procesar kanban.html:', error);
+                                kanbanSection.innerHTML = '<p class="text-red-500">Error al cargar el tablero Kanban.</p>';
+                                delete kanbanSection.dataset.loaded; // Reset flag on error
+                            });
+                    } else if (kanbanSection) {
+                        console.log("DEBUG: Sección Kanban ya cargada, mostrando.");
+                        // If already loaded, just ensure it's visible. Re-init might be needed if state can change externally.
+                    }
                 }
             }
 
@@ -1361,8 +1907,8 @@
                 const containerElement = document.querySelector(containerId);
 
                 if (containerElement) {
-                     // Asegurarse de que los datos estén en localStorage antes de llamar
-                     if (localStorage.getItem('ovcData')) {
+                    // Asegurarse de que los datos estén en localStorage antes de llamar
+                    if (localStorage.getItem('ovcData')) {
                         // Llamar a la función asíncrona verRizoma
                         verRizoma(containerId)
                             .then(() => {
@@ -1373,16 +1919,16 @@
                                 // Opcionalmente mostrar error en la UI
                                 containerElement.innerHTML = `<text x="50%" y="50%" text-anchor="middle" fill="red">Error al cargar grafo: ${error.message}</text>`;
                             });
-                     } else {
-                         console.warn("DEBUG: No hay 'ovcData' en localStorage. No se puede renderizar el grafo.");
-                         containerElement.innerHTML = `<text x="50%" y="50%" text-anchor="middle">No hay datos OVC en localStorage para mostrar el grafo.</text>`;
-                     }
+                    } else {
+                        console.warn("DEBUG: No hay 'ovcData' en localStorage. No se puede renderizar el grafo.");
+                        containerElement.innerHTML = `<text x="50%" y="50%" text-anchor="middle">No hay datos OVC en localStorage para mostrar el grafo.</text>`;
+                    }
                 } else {
                     console.error(`Error: Contenedor SVG con ID '${containerId}' no encontrado.`);
                 }
             }
 
-             // --- Búsqueda en Rizoma (Adaptar si es necesario para D3) ---
+            // --- Búsqueda en Rizoma (Adaptar si es necesario para D3) ---
             // La lógica actual de búsqueda manipula display, lo cual puede no funcionar
             // bien con D3 que controla las posiciones. Se necesitaría una lógica
             // diferente para resaltar o filtrar nodos/enlaces en D3.
@@ -1401,6 +1947,689 @@
             */
 
         }); // Fin del listener DOMContentLoaded principal
+
+
+        // =====================================================================
+        // ======================= KANBAN BOARD LOGIC ==========================
+        // =====================================================================
+        const KanbanApp = (() => {
+            // --- Elementos del DOM (Kanban) ---
+            let columns = null;
+            let contextMenu = null;
+            let taskModal = null;
+            let addTaskBtn = null;
+            let taskForm = null;
+            let draggedTask = null;
+            let currentTaskElement = null; // For context menu target
+            let currentEditingTask = null; // For inline editing target
+
+            // --- Colores disponibles (Kanban) ---
+            const taskColorClasses = [
+                'bg-task-default', 'bg-task-red', 'bg-task-blue',
+                'bg-task-green', 'bg-task-yellow', 'bg-task-purple'
+            ];
+
+            // --- Funciones (Kanban) ---
+
+            function generateId(prefix = 'task') {
+                return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            }
+
+            function getTaskDataFromElement(taskElement) {
+                const description = taskElement.querySelector('p.font-medium')?.textContent || '';
+                const dueDateText = taskElement.querySelector('.details p:first-child')?.textContent || '';
+                const assigneeText = taskElement.querySelector('.details p:last-child:not(:first-child)')?.textContent || '';
+                const dueDate = dueDateText.includes(' ') ? dueDateText.substring(dueDateText.indexOf(' ') + 1).trim() : '';
+                const assignee = assigneeText.includes(' ') ? assigneeText.substring(assigneeText.indexOf(' ') + 1).trim() : '';
+                return { description, dueDate, assignee };
+            }
+
+            function renderTaskViewContent(taskData) {
+                const subtasks = taskData.subtasks || [];
+                const completedSubtasks = subtasks.filter(st => st.completed).length;
+                const totalSubtasks = subtasks.length;
+                const subtasksExist = totalSubtasks > 0;
+
+                return `
+                    <p class="font-medium text-gray-800">${taskData.description || 'Sin descripción'}</p>
+                    <div class="details mt-2 text-xs">
+                        ${taskData.dueDate ? `<p class="flex items-center gap-1"><span class="emoji">📅</span> ${taskData.dueDate}</p>` : ''}
+                        ${taskData.assignee ? `<p class="flex items-center gap-1 mt-1"><span class="emoji">👤</span> ${taskData.assignee}</p>` : ''}
+                    </div>
+                    ${subtasksExist ? `
+                    <button class="view-subtasks-btn" aria-expanded="false">
+                        <span class="arrow mr-1">▶</span><span class="emoji">📑</span> Subtareas (${completedSubtasks}/${totalSubtasks})
+                    </button>
+                    <div class="subtasks-list-view" style="display: none;">
+                        ${renderSubtasksView(subtasks, taskData.id)}
+                    </div>
+                    ` : ''}
+                `;
+            }
+
+            function renderSubtasksView(subtasks, taskId) {
+                if (!subtasks || subtasks.length === 0) return '<p class="text-xs text-gray-500 italic ml-1">No hay subtareas.</p>';
+                return `
+                    <ul>
+                        ${subtasks.map(subtask => `
+                            <li class="subtask-item-view" data-subtask-id="${subtask.id}">
+                                <input type="checkbox" ${subtask.completed ? 'checked' : ''} onchange="KanbanApp.toggleSubtaskCompletion(event, '${taskId}', '${subtask.id}')" aria-label="Marcar subtarea ${subtask.description} como completada">
+                                <span class="${subtask.completed ? 'completed' : ''}">${subtask.description}</span>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+
+            function createTaskElement(taskData) {
+                const taskElement = document.createElement('div');
+                taskElement.id = taskData.id;
+                taskElement.classList.add('task-card');
+                taskElement.draggable = true;
+
+                const colorClass = (taskData.color && taskColorClasses.includes(taskData.color)) ? taskData.color : 'bg-task-default';
+                taskElement.classList.add(colorClass);
+
+                taskElement._subtasks = taskData.subtasks || []; // Store subtasks data
+
+                taskElement.innerHTML = renderTaskViewContent(taskData);
+
+                taskElement.addEventListener('click', handleTaskClick);
+                taskElement.addEventListener('dragstart', handleDragStart);
+                taskElement.addEventListener('dragend', handleDragEnd);
+                taskElement.addEventListener('contextmenu', handleContextMenu);
+
+                taskElement.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('view-subtasks-btn') || event.target.closest('.view-subtasks-btn')) {
+                        const button = event.target.classList.contains('view-subtasks-btn') ? event.target : event.target.closest('.view-subtasks-btn');
+                        toggleSubtasksView(button);
+                        event.stopPropagation();
+                    }
+                    if (event.target.matches('.subtask-item-view input[type="checkbox"]')) {
+                        event.stopPropagation();
+                    }
+                });
+
+                return taskElement;
+            }
+
+            function addTask(taskData, save = true) {
+                if (!taskData.id) taskData.id = generateId('task');
+                if (!taskData.columnId) taskData.columnId = 'todo';
+                if (!taskData.color) taskData.color = 'bg-task-default';
+                if (!taskData.subtasks) taskData.subtasks = [];
+
+                const taskElement = createTaskElement(taskData);
+                const targetColumn = document.querySelector(`.kanban-tasks[data-column-id="${taskData.columnId}"]`);
+
+                if (targetColumn) {
+                    targetColumn.appendChild(taskElement);
+                    if (save) saveBoardState();
+                } else {
+                    console.error(`Columna Kanban con ID "${taskData.columnId}" no encontrada.`);
+                    const todoColumn = document.querySelector('.kanban-tasks[data-column-id="todo"]');
+                    if (todoColumn) {
+                        todoColumn.appendChild(taskElement);
+                        taskData.columnId = 'todo';
+                        if (save) saveBoardState();
+                    } else {
+                        console.error("Columna Kanban 'todo' tampoco encontrada.");
+                    }
+                }
+            }
+
+            function deleteTask(taskId) {
+                const taskElement = document.getElementById(taskId);
+                if (taskElement) {
+                    if (currentEditingTask && currentEditingTask.id === taskId) {
+                        disableEditMode(currentEditingTask, false);
+                    }
+                    taskElement.remove();
+                    saveBoardState();
+                    console.log(`Tarea Kanban ${taskId} eliminada.`);
+                } else {
+                    console.warn(`No se encontró la tarea Kanban con ID ${taskId} para eliminar.`);
+                }
+            }
+
+            function handleTaskClick(event) {
+                const taskCard = event.currentTarget;
+                if (event.target.closest('.view-subtasks-btn') || event.target.closest('.subtasks-list-view')) {
+                    return;
+                }
+                if (currentEditingTask || taskCard.classList.contains('editing') || event.target.closest('.edit-actions') || event.button === 2) {
+                    return;
+                }
+                enableEditMode(taskCard);
+            }
+
+            function enableEditMode(taskElement) {
+                if (currentEditingTask && currentEditingTask !== taskElement) {
+                    disableEditMode(currentEditingTask, false);
+                }
+
+                currentEditingTask = taskElement;
+                taskElement.classList.add('editing');
+                taskElement.draggable = false;
+
+                const originalData = getTaskDataFromElement(taskElement);
+                const originalSubtasks = JSON.parse(JSON.stringify(taskElement._subtasks || []));
+                taskElement.dataset.originalDescription = originalData.description;
+                taskElement.dataset.originalDueDate = originalData.dueDate;
+                taskElement.dataset.originalAssignee = originalData.assignee;
+                taskElement._originalSubtasks = originalSubtasks;
+
+                taskElement.innerHTML = `
+                    <textarea class="edit-input edit-textarea" placeholder="Descripción..." aria-label="Descripción de la tarea">${originalData.description}</textarea>
+                    <input type="date" class="edit-input" value="${originalData.dueDate}" aria-label="Fecha de vencimiento">
+                    <input type="text" class="edit-input" placeholder="Responsable..." value="${originalData.assignee}" aria-label="Responsable">
+                    <div class="subtasks-section">
+                        <h4 class="text-sm font-medium text-gray-600 mb-2">Subtareas</h4>
+                        <ul class="subtasks-list-edit mb-3" aria-label="Lista de subtareas editables">
+                            ${renderSubtasksEdit(originalSubtasks)}
+                        </ul>
+                        <div class="add-subtask-container">
+                            <input type="text" class="add-subtask-input" placeholder="Añadir nueva subtarea..." aria-label="Nueva subtarea">
+                            <button type="button" class="edit-button add-subtask-btn bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300" aria-label="Añadir subtarea">➕ Añadir</button>
+                        </div>
+                    </div>
+                    <div class="edit-actions">
+                        <button class="edit-button cancel-button"><span class="emoji">❌</span>Cancelar</button>
+                        <button class="edit-button save-button"><span class="emoji">💾</span>Guardar</button>
+                    </div>
+                `;
+
+                const subtaskListElement = taskElement.querySelector('.subtasks-list-edit');
+                const addSubtaskInput = taskElement.querySelector('.add-subtask-input');
+                const addSubtaskBtn = taskElement.querySelector('.add-subtask-btn');
+
+                taskElement.querySelector('.save-button').addEventListener('click', () => disableEditMode(taskElement, true));
+                taskElement.querySelector('.cancel-button').addEventListener('click', () => disableEditMode(taskElement, false));
+
+                addSubtaskBtn.addEventListener('click', () => {
+                    const description = addSubtaskInput.value.trim();
+                    if (description) {
+                        addSubtaskToEditList(subtaskListElement, description);
+                        addSubtaskInput.value = '';
+                        addSubtaskInput.focus();
+                    }
+                });
+                addSubtaskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addSubtaskBtn.click();
+                    }
+                });
+
+                subtaskListElement.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('subtask-delete-btn')) {
+                        deleteSubtaskFromEditList(e.target.closest('.subtask-item-edit'));
+                    }
+                });
+
+                // Initialize SortableJS only if Sortable is defined
+                if (typeof Sortable !== 'undefined') {
+                    Sortable.create(subtaskListElement, {
+                        animation: 150,
+                        ghostClass: 'sortable-ghost',
+                        handle: '.subtask-drag-handle',
+                        forceFallback: true,
+                        fallbackOnBody: true,
+                        swapThreshold: 0.65
+                    });
+                } else {
+                    console.warn("SortableJS no está definido. La función de arrastrar subtareas no funcionará.");
+                }
+
+
+                taskElement.querySelector('textarea').focus();
+                document.addEventListener('click', handleClickOutsideEdit, true);
+            }
+
+            function disableEditMode(taskElement, saveData) {
+                if (!taskElement || !taskElement.classList.contains('editing')) return;
+
+                let updatedData = {};
+
+                if (saveData) {
+                    const newDescription = taskElement.querySelector('textarea').value.trim();
+                    const newDueDate = taskElement.querySelector('input[type="date"]').value;
+                    const newAssignee = taskElement.querySelector('input[type="text"]').value.trim();
+                    if (!newDescription) {
+                        alert("La descripción no puede estar vacía.");
+                        taskElement.querySelector('textarea').focus();
+                        return;
+                    }
+                    updatedData = {
+                        description: newDescription,
+                        dueDate: newDueDate,
+                        assignee: newAssignee,
+                        subtasks: getSubtasksFromEditList(taskElement.querySelector('.subtasks-list-edit'))
+                    };
+                    taskElement._subtasks = updatedData.subtasks;
+                } else {
+                    updatedData = {
+                        description: taskElement.dataset.originalDescription,
+                        dueDate: taskElement.dataset.originalDueDate,
+                        assignee: taskElement.dataset.originalAssignee,
+                        subtasks: taskElement._originalSubtasks || []
+                    };
+                    taskElement._subtasks = updatedData.subtasks;
+                }
+
+                taskElement.innerHTML = renderTaskViewContent(updatedData);
+                taskElement.classList.remove('editing');
+                taskElement.draggable = true;
+
+                delete taskElement.dataset.originalDescription;
+                delete taskElement.dataset.originalDueDate;
+                delete taskElement.dataset.originalAssignee;
+                delete taskElement._originalSubtasks;
+
+                taskElement.addEventListener('click', handleTaskClick);
+                taskElement.addEventListener('dragstart', handleDragStart);
+                taskElement.addEventListener('dragend', handleDragEnd);
+                taskElement.addEventListener('contextmenu', handleContextMenu);
+
+                currentEditingTask = null;
+                document.removeEventListener('click', handleClickOutsideEdit, true);
+
+                if (saveData) {
+                    saveBoardState();
+                }
+            }
+
+            function handleClickOutsideEdit(event) {
+                if (contextMenu && contextMenu.contains(event.target) || (currentEditingTask && currentEditingTask.contains(event.target))) {
+                    return;
+                }
+                if (currentEditingTask) {
+                    if (event.target.closest('.sortable-fallback') || event.target.closest('.sortable-ghost')) {
+                        return;
+                    }
+                    disableEditMode(currentEditingTask, false);
+                }
+            }
+
+            function renderSubtasksEdit(subtasks) {
+                if (!subtasks || subtasks.length === 0) return '<p class="text-xs text-gray-500 italic px-1">No hay subtareas añadidas.</p>';
+                return subtasks.map(subtask => `
+                    <li class="subtask-item-edit" data-subtask-id="${subtask.id}" data-completed="${subtask.completed}">
+                        <span class="subtask-drag-handle" title="Arrastrar para reordenar">⠿</span>
+                        <input type="text" value="${subtask.description}" placeholder="Descripción subtarea..." aria-label="Descripción de la subtarea ${subtask.description}">
+                        <button type="button" class="subtask-delete-btn" title="Eliminar subtarea">✖</button>
+                    </li>
+                `).join('');
+            }
+
+            function addSubtaskToEditList(listElement, description) {
+                const noSubtasksMsg = listElement.querySelector('p');
+                if (noSubtasksMsg) noSubtasksMsg.remove();
+
+                const newSubtaskId = generateId('sub');
+                const newSubtask = { id: newSubtaskId, description: description, completed: false };
+                const li = document.createElement('li');
+                li.className = 'subtask-item-edit';
+                li.dataset.subtaskId = newSubtask.id;
+                li.dataset.completed = 'false';
+                li.innerHTML = `
+                    <span class="subtask-drag-handle" title="Arrastrar para reordenar">⠿</span>
+                    <input type="text" value="${newSubtask.description}" placeholder="Descripción subtarea..." aria-label="Descripción de la subtarea ${newSubtask.description}">
+                    <button type="button" class="subtask-delete-btn" title="Eliminar subtarea">✖</button>
+                `;
+                listElement.appendChild(li);
+            }
+
+            function deleteSubtaskFromEditList(subtaskItemElement) {
+                const listElement = subtaskItemElement.parentElement;
+                subtaskItemElement.remove();
+                if (listElement && !listElement.querySelector('.subtask-item-edit')) {
+                    listElement.innerHTML = '<p class="text-xs text-gray-500 italic px-1">No hay subtareas añadidas.</p>';
+                }
+            }
+
+            function getSubtasksFromEditList(listElement) {
+                const subtaskItems = listElement.querySelectorAll('.subtask-item-edit');
+                const subtasks = [];
+                subtaskItems.forEach(item => {
+                    const input = item.querySelector('input[type="text"]');
+                    const description = input ? input.value.trim() : '';
+                    if (description) {
+                        subtasks.push({
+                            id: item.dataset.subtaskId,
+                            description: description,
+                            completed: item.dataset.completed === 'true'
+                        });
+                    } else {
+                        console.warn("Subtarea Kanban vacía encontrada y omitida al guardar:", item.dataset.subtaskId);
+                    }
+                });
+                return subtasks;
+            }
+
+            function toggleSubtasksView(button) {
+                const subtaskList = button.nextElementSibling;
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                const arrow = button.querySelector('.arrow');
+                if (subtaskList) {
+                    subtaskList.style.display = isExpanded ? 'none' : 'block';
+                    button.setAttribute('aria-expanded', !isExpanded);
+                    if (arrow) {
+                        arrow.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+                    }
+                }
+            }
+
+            function toggleSubtaskCompletion(event, taskId, subtaskId) {
+                const isChecked = event.target.checked;
+                const taskElement = document.getElementById(taskId);
+                if (taskElement && taskElement._subtasks) {
+                    const subtaskIndex = taskElement._subtasks.findIndex(st => st.id === subtaskId);
+                    if (subtaskIndex !== -1) {
+                        taskElement._subtasks[subtaskIndex].completed = isChecked;
+
+                        const subtaskSpan = event.target.nextElementSibling;
+                        if (subtaskSpan) {
+                            subtaskSpan.classList.toggle('completed', isChecked);
+                        }
+                        const viewButton = taskElement.querySelector('.view-subtasks-btn');
+                        if (viewButton) {
+                            const completedCount = taskElement._subtasks.filter(st => st.completed).length;
+                            const totalCount = taskElement._subtasks.length;
+                            viewButton.innerHTML = `<span class="arrow mr-1" style="transform: ${viewButton.getAttribute('aria-expanded') === 'true' ? 'rotate(90deg)' : 'rotate(0deg)'};">▶</span><span class="emoji">📑</span> Subtareas (${completedCount}/${totalCount})`;
+                        }
+                        saveBoardState();
+                    } else {
+                        console.error("Subtask Kanban no encontrada en datos internos:", subtaskId, "para tarea:", taskId);
+                    }
+                } else {
+                    console.error("Elemento de tarea Kanban o datos internos de subtarea no encontrados:", taskId);
+                }
+            }
+
+            function handleDragStart(event) {
+                if (event.target.classList.contains('editing')) {
+                    event.preventDefault(); return;
+                }
+                if (event.target.classList.contains('task-card')) {
+                    draggedTask = event.target;
+                    event.dataTransfer.setData('text/plain', event.target.id);
+                    event.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => { if (draggedTask) draggedTask.classList.add('dragging'); }, 0);
+                } else {
+                    event.preventDefault();
+                }
+            }
+            function handleDragEnd(event) {
+                if (draggedTask) draggedTask.classList.remove('dragging');
+                if (columns) columns.forEach(col => col.classList.remove('drag-over'));
+                draggedTask = null;
+            }
+            function handleDragOver(event) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && (!draggedTask || !targetColumn.contains(draggedTask))) {
+                    if (columns) columns.forEach(col => col !== targetColumn && col.classList.remove('drag-over'));
+                    targetColumn.classList.add('drag-over');
+                }
+            }
+            function handleDragEnter(event) {
+                event.preventDefault();
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && (!draggedTask || !targetColumn.contains(draggedTask))) {
+                    targetColumn.classList.add('drag-over');
+                }
+            }
+            function handleDragLeave(event) {
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && !targetColumn.contains(event.relatedTarget)) {
+                    targetColumn.classList.remove('drag-over');
+                }
+                if (!event.relatedTarget || !event.relatedTarget.closest('.kanban-tasks')) {
+                    if (columns) columns.forEach(col => col.classList.remove('drag-over'));
+                }
+            }
+            function handleDrop(event) {
+                event.preventDefault();
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && draggedTask && targetColumn !== draggedTask.parentElement) {
+                    targetColumn.appendChild(draggedTask);
+                    saveBoardState();
+                }
+                if (targetColumn) targetColumn.classList.remove('drag-over');
+            }
+
+            function handleContextMenu(event) {
+                if (event.currentTarget.classList.contains('editing')) {
+                    event.preventDefault(); return;
+                }
+                event.preventDefault();
+                currentTaskElement = event.currentTarget;
+                if (!currentTaskElement || !contextMenu) return;
+
+                const { clientX: mouseX, clientY: mouseY } = event;
+                contextMenu.style.display = 'block';
+                const { offsetWidth: menuWidth, offsetHeight: menuHeight } = contextMenu;
+                const { innerWidth, innerHeight } = window;
+                let top = mouseY, left = mouseX;
+                if (mouseY + menuHeight > innerHeight) top = mouseY - menuHeight;
+                if (mouseX + menuWidth > innerWidth) left = mouseX - menuWidth;
+                if (top < 0) top = 5;
+                if (left < 0) left = 5;
+                contextMenu.style.top = `${top}px`;
+                contextMenu.style.left = `${left}px`;
+
+                setTimeout(() => {
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                    document.addEventListener('keydown', closeContextMenuOnEscape, { once: true });
+                }, 0);
+            }
+            function closeContextMenu() {
+                if (contextMenu) contextMenu.style.display = 'none';
+                currentTaskElement = null;
+                document.removeEventListener('click', closeContextMenuOnClickOutside, { capture: true });
+                document.removeEventListener('keydown', closeContextMenuOnEscape);
+            }
+            function closeContextMenuOnClickOutside(event) {
+                if (currentEditingTask && currentEditingTask.contains(event.target)) {
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                    return;
+                }
+                if (contextMenu && !contextMenu.contains(event.target)) {
+                    closeContextMenu();
+                } else {
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                }
+            }
+            function closeContextMenuOnEscape(event) {
+                if (event.key === 'Escape') {
+                    closeContextMenu();
+                } else {
+                    document.addEventListener('keydown', closeContextMenuOnEscape, { once: true });
+                }
+            }
+            function handleContextMenuAction(event) {
+                const menuItem = event.target.closest('.context-menu-item');
+                if (!menuItem || !currentTaskElement) {
+                    return;
+                }
+                const color = menuItem.dataset.color;
+                const action = menuItem.dataset.action;
+                if (color) {
+                    taskColorClasses.forEach(cls => currentTaskElement.classList.remove(cls));
+                    currentTaskElement.classList.add(color);
+                    saveBoardState();
+                } else if (action === 'delete') {
+                    const taskDescription = getTaskDataFromElement(currentTaskElement).description || 'esta tarea';
+                    if (confirm(`¿Estás seguro de que quieres eliminar la tarea Kanban "${taskDescription}"?`)) {
+                        deleteTask(currentTaskElement.id);
+                    }
+                }
+                closeContextMenu();
+            }
+
+            function openModal() {
+                if (taskForm) taskForm.reset();
+                if (taskModal) {
+                    taskModal.style.display = 'block';
+                    const descInput = document.getElementById('taskDescription');
+                    if (descInput) descInput.focus();
+                }
+            }
+            function closeModal() {
+                if (taskModal) taskModal.style.display = 'none';
+            }
+            function handleFormSubmit(event) {
+                event.preventDefault();
+                if (!taskForm) return;
+                const formData = new FormData(taskForm);
+                const taskData = {
+                    description: formData.get('description').trim(),
+                    dueDate: formData.get('dueDate'),
+                    assignee: formData.get('assignee').trim(),
+                };
+                if (!taskData.description) {
+                    alert("La descripción de la tarea Kanban no puede estar vacía.");
+                    const descInput = document.getElementById('taskDescription');
+                    if (descInput) descInput.focus();
+                    return;
+                }
+                addTask(taskData);
+                closeModal();
+            }
+
+            function saveBoardState() {
+                if (currentEditingTask) {
+                    console.warn("Guardando estado Kanban con tarea en edición. Cancelando edición...");
+                    disableEditMode(currentEditingTask, false);
+                }
+                const boardState = [];
+                if (!columns) return; // Check if columns exist
+
+                columns.forEach(column => {
+                    const columnId = column.dataset.columnId;
+                    const tasks = column.querySelectorAll('.task-card');
+                    tasks.forEach((taskElement, index) => {
+                        if (taskElement.classList.contains('editing')) {
+                            console.error("Error crítico Kanban: Guardando tarea aún en modo edición:", taskElement.id);
+                            return;
+                        }
+                        let taskColor = taskColorClasses.find(cls => taskElement.classList.contains(cls)) || 'bg-task-default';
+                        const taskData = getTaskDataFromElement(taskElement);
+                        const subtasks = taskElement._subtasks || [];
+                        boardState.push({
+                            id: taskElement.id,
+                            description: taskData.description,
+                            dueDate: taskData.dueDate,
+                            assignee: taskData.assignee,
+                            color: taskColor,
+                            columnId: columnId,
+                            order: index,
+                            subtasks: subtasks
+                        });
+                    });
+                });
+                boardState.sort((a, b) => {
+                    const columnOrder = ['todo', 'in-progress', 'done'];
+                    const columnAIndex = columnOrder.indexOf(a.columnId);
+                    const columnBIndex = columnOrder.indexOf(b.columnId);
+                    if (columnAIndex !== columnBIndex) return columnAIndex - columnBIndex;
+                    return (a.order || 0) - (b.order || 0);
+                });
+                try {
+                    localStorage.setItem('kanbanBoardState_v3', JSON.stringify(boardState));
+                    console.log("Estado del tablero Kanban guardado (v3).");
+                } catch (error) {
+                    console.error("Error al guardar estado Kanban en localStorage:", error);
+                    alert("No se pudo guardar el estado del tablero Kanban.");
+                }
+            }
+
+            function loadBoardState() {
+                let savedState = localStorage.getItem('kanbanBoardState_v3');
+                let version = 'v3';
+
+                if (savedState) {
+                    try {
+                        let boardState = JSON.parse(savedState);
+                        boardState.sort((a, b) => {
+                            const columnOrder = ['todo', 'in-progress', 'done'];
+                            const columnAIndex = columnOrder.indexOf(a.columnId);
+                            const columnBIndex = columnOrder.indexOf(b.columnId);
+                            if (columnAIndex === -1) return 1;
+                            if (columnBIndex === -1) return -1;
+                            if (columnAIndex !== columnBIndex) return columnAIndex - columnBIndex;
+                            return (a.order || 0) - (b.order || 0);
+                        });
+
+                        if (columns) columns.forEach(col => col.innerHTML = ''); // Clear columns before loading
+
+                        boardState.forEach(taskData => {
+                            if (!taskData.id) taskData.id = generateId('task');
+                            taskData.subtasks = (taskData.subtasks || []).map(st => ({
+                                ...st,
+                                id: st.id || generateId('sub'),
+                                completed: st.completed || false
+                            }));
+                            addTask(taskData, false); // Add task without triggering another save
+                        });
+                        console.log(`Estado del tablero Kanban cargado (${version}).`);
+                    } catch (error) {
+                        console.error(`Error al cargar el estado del tablero Kanban (${version}):`, error);
+                        localStorage.removeItem('kanbanBoardState_v3');
+                    }
+                } else {
+                    console.log("No hay estado Kanban guardado (v3), iniciando tablero vacío.");
+                }
+            }
+
+            // --- Inicialización (Kanban) ---
+            function init() {
+                console.log("DEBUG: Inicializando KanbanApp...");
+                // Query selectors within the init function, after DOM is ready
+                columns = document.querySelectorAll('#kanban-section .kanban-tasks');
+                contextMenu = document.getElementById('contextMenu');
+                taskModal = document.getElementById('taskModal');
+                addTaskBtn = document.getElementById('addTaskBtn');
+                taskForm = document.getElementById('taskForm');
+
+                if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
+                    console.error("Error: No se encontraron todos los elementos necesarios para el Kanban.");
+                    return;
+                }
+
+                columns.forEach(column => {
+                    column.addEventListener('dragover', handleDragOver);
+                    column.addEventListener('dragenter', handleDragEnter);
+                    column.addEventListener('dragleave', handleDragLeave);
+                    column.addEventListener('drop', handleDrop);
+                });
+                contextMenu.addEventListener('click', handleContextMenuAction, true);
+                addTaskBtn.addEventListener('click', openModal);
+                taskForm.addEventListener('submit', handleFormSubmit);
+
+                // Global listeners specific to Kanban (modal close, escape key)
+                window.addEventListener('click', function (event) {
+                    if (taskModal && event.target == taskModal) closeModal();
+                });
+                // Escape key handling is combined in the main script's listener
+
+                loadBoardState(); // Load saved state
+                console.log("DEBUG: KanbanApp inicializado.");
+            }
+
+            // Public interface
+            return {
+                init: init,
+                closeModal: closeModal, // Expose closeModal for onclick attribute
+                toggleSubtaskCompletion: toggleSubtaskCompletion // Expose for onclick attribute
+            };
+        })();
+
+        // Call Kanban init after main DOMContentLoaded logic
+        // KanbanApp.init is now called conditionally within showSection after loading content
+        // document.addEventListener('DOMContentLoaded', KanbanApp.init);
         // Auto completado
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -1444,6 +2673,19 @@
         });
         // Las funciones renderRizomaGraph y la búsqueda comentada se movieron dentro del listener principal
 
+        // Combined Escape Key Listener
+        window.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                // OVC Modals
+                if (confirmationModal && !confirmationModal.classList.contains('hidden')) hideConfirmationModal();
+                else if (deleteConfirmModal && !deleteConfirmModal.classList.contains('hidden')) hideDeleteConfirmModal();
+                else if (summaryModal && !summaryModal.classList.contains('hidden')) hideSummaryModal();
+                // Kanban Modals / States
+                else if (KanbanApp && typeof KanbanApp.closeModal === 'function' && document.getElementById('taskModal')?.style.display === 'block') KanbanApp.closeModal();
+                else if (KanbanApp && typeof KanbanApp.disableEditMode === 'function' && KanbanApp.currentEditingTask) KanbanApp.disableEditMode(KanbanApp.currentEditingTask, false); // Needs currentEditingTask exposed or a public cancel method
+                else if (KanbanApp && typeof KanbanApp.closeContextMenu === 'function' && document.getElementById('contextMenu')?.style.display === 'block') KanbanApp.closeContextMenu(); // Needs closeContextMenu exposed or a public cancel method
+            }
+        });
     </script>
     <!-- Eliminada etiqueta </style> incorrecta -->
 </body>
