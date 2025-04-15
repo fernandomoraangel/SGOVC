@@ -630,6 +630,39 @@
         .hidden {
             display: none;
         }
+
+        /* Styles for Rubrics Submenu */
+        .submenu {
+            display: none;
+            /* Hidden by default */
+            padding-left: 1.5rem;
+            /* Indentation for submenu items */
+            background-color: #f8f9fa;
+            /* Slightly different background */
+        }
+
+        .submenu.open {
+            display: block;
+            /* Show when open */
+        }
+
+        .submenu-link {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            font-size: 0.9rem;
+            /* Slightly smaller font */
+        }
+
+        .submenu-toggle-icon {
+            margin-left: auto;
+            /* Push arrow to the right */
+            transition: transform 0.2s ease-in-out;
+            font-size: 0.8rem;
+        }
+
+        .submenu-toggle-icon.open {
+            transform: rotate(90deg);
+        }
     </style>
     <script>
     </script>
@@ -673,6 +706,40 @@
                             data-section="kanban">
                             <span>📋</span> <span>Tablero Kanban</span>
                         </a>
+                    </li>
+                    </li>
+                    <li>
+                        <a href="#" class="sidebar-link flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200"
+                            id="rubricas-toggle">
+                            <span>📊</span> <span>Rúbricas</span>
+                            <span class="submenu-toggle-icon">▶️</span>
+                        </a>
+                        <ul class="submenu" id="rubricas-submenu">
+                            <li>
+                                <a href="disenar_rubrica.html"
+                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
+                                    <span>✏️</span> <span>Diseñar Rúbrica</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="evaluar_ovc.html"
+                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
+                                    <span>✔️</span> <span>Evaluar OVC</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="ver_promedios.html"
+                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
+                                    <span>📈</span> <span>Ver Promedios</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="resumen_rubricas.html"
+                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
+                                    <span>📑</span> <span>Resumen Rúbricas</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                 </ul>
             </nav>
@@ -2671,6 +2738,19 @@
             // Observar cambios en el contenedor de relaciones
             observer.observe(relacionesContainer, { childList: true, subtree: true });
         });
+
+        // Rubricas Submenu Toggle
+        const rubricasToggle = document.getElementById('rubricas-toggle');
+        const rubricasSubmenu = document.getElementById('rubricas-submenu');
+        const rubricasToggleIcon = rubricasToggle.querySelector('.submenu-toggle-icon');
+
+        rubricasToggle.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevent default link behavior
+            const isOpen = rubricasSubmenu.classList.toggle('open');
+            rubricasToggleIcon.classList.toggle('open', isOpen);
+            rubricasToggleIcon.textContent = isOpen ? '▼' : '▶️'; // Change arrow icon
+        });
+
         // Las funciones renderRizomaGraph y la búsqueda comentada se movieron dentro del listener principal
 
         // Combined Escape Key Listener
