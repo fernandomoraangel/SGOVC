@@ -14,6 +14,19 @@
         <p class="text-gray-600">Aquí se cargará el módulo para ver los promedios de las evaluaciones.</p>
         <!-- Contenido futuro del módulo -->
     </div>
+    <script>
+        // Hide sidebar if loaded inside an iframe (e.g., within index.html)
+        if (window.self !== window.top) {
+            const sidebar = document.querySelector('aside.w-64'); // Target the specific sidebar
+            if (sidebar) {
+                sidebar.classList.add('hidden');
+                const mainContent = document.querySelector('main.flex-1');
+                if (mainContent) {
+                    // Adjustments if needed
+                }
+            }
+        }
+    </script>
 </body>
 
 </html>

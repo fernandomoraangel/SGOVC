@@ -626,12 +626,35 @@
                 // Initialization
                 init() {
                     console.log('Initializing Rubric System...');
-                    this.loadSavedRubrics();
+                    this.loadSavedRubrics(); // Load rubrics first
                     this.loadSavedEvaluations();
-                    // Add a default criterion and level if empty
-                    if (this.newRubric.criteria.length === 0) {
+
+                    // Check if we need to load a rubric for editing
+                    try {
+                        const editIndexStr = localStorage.getItem('editRubricIndex');
+                        if (editIndexStr !== null) {
+                            const editIndex = parseInt(editIndexStr, 10);
+                            localStorage.removeItem('editRubricIndex'); // Remove immediately
+                            if (!isNaN(editIndex) && editIndex >= 0 && editIndex < this.savedRubrics.length) {
+                                console.log(`Found editRubricIndex: ${editIndex}. Loading rubric for editing.`);
+                                // Use $nextTick to ensure data is loaded before attempting edit
+                                this.$nextTick(() => {
+                                    this.editRubric(editIndex);
+                                });
+                            } else {
+                                console.warn(`Invalid editRubricIndex found: ${editIndexStr}`);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error reading editRubricIndex from localStorage:", e);
+                        localStorage.removeItem('editRubricIndex'); // Clean up potentially bad data
+                    }
+
+                    // Add a default criterion and level if empty AND not editing
+                    if (this.newRubric.criteria.length === 0 && localStorage.getItem('editRubricIndex') === null) { // Check again in case editRubric failed
                         this.addCriterion();
                     }
+
                     // Use $nextTick to ensure Alpine is ready before initializing icons
                     this.$nextTick(() => {
                         lucide.createIcons(); // Initialize Lucide icons

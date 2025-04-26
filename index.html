@@ -1370,12 +1370,14 @@
                 listar: document.getElementById('listar-section'),
                 rizoma: document.getElementById('rizoma-section'),
                 kanban: document.getElementById('kanban-section') // Added Kanban section
+                // Rubric sections are handled differently (iframe)
             };
             const sectionTitles = {
                 crear: '<span>➕</span> Crear Nuevo Objeto Virtual Creativo',
                 listar: '<span>📋</span> Mis objetos virtuales creativos',
                 rizoma: '<span>🌱</span> Visualización del Rizoma',
-                kanban: '<span>📋</span> Tablero Kanban' // Added Kanban title
+                kanban: '<span>📋</span> Tablero Kanban', // Added Kanban title
+                // Titles for rubric pages will be set dynamically
             };
             const OVC_STORAGE_KEY = 'ovcData';
 
@@ -1386,14 +1388,31 @@
 
             // --- Navegación ---
             function showSection(sectionId) {
-                // console.log(`DEBUG: Mostrando sección: ${sectionId}`); // Menos verboso
+                console.log(`DEBUG: Mostrando sección interna: ${sectionId}`);
+                // Clear iframe if it exists
+                const contentArea = document.getElementById('content-area');
+                const existingIframe = contentArea.querySelector('iframe');
+                if (existingIframe) {
+                    existingIframe.remove();
+                }
+
+                // Hide all regular sections
                 Object.values(sections).forEach(section => {
                     if (section) section.classList.add('hidden');
                 });
+                // Deactivate all links first
                 sidebarLinks.forEach(link => link.classList.remove('active'));
+                // Deactivate rubric parent toggle if active
+                rubricasToggle.classList.remove('active');
+
 
                 const activeSection = sections[sectionId];
-                if (activeSection) activeSection.classList.remove('hidden');
+                if (activeSection) {
+                    activeSection.classList.remove('hidden');
+                } else {
+                    console.warn(`Sección con ID '${sectionId}' no encontrada.`);
+                }
+
 
                 if (sectionId !== 'crear' && isEditMode) {
                     resetFormToCreateMode();
@@ -1403,8 +1422,12 @@
                     sectionTitle.innerHTML = sectionTitles[sectionId];
                 }
 
+                // Activate the correct link
                 const activeLink = document.querySelector(`.sidebar-link[data-section="${sectionId}"]`);
-                if (activeLink) activeLink.classList.add('active');
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                }
+
 
                 if (sectionId === 'listar') {
                     renderOvcTable();
@@ -1476,11 +1499,27 @@
                 }
             }
 
-            sidebarLinks.forEach(link => { /* ... */
+            // --- Navigation Handling ---
+            sidebarLinks.forEach(link => {
                 link.addEventListener('click', function (event) {
-                    event.preventDefault();
                     const sectionId = this.getAttribute('data-section');
-                    showSection(sectionId);
+                    const isSubmenuLink = this.classList.contains('submenu-link');
+                    const targetUrl = this.getAttribute('href');
+
+                    if (sectionId) {
+                        // Handle regular section toggle
+                        event.preventDefault();
+                        showSection(sectionId);
+                        // Ensure submenu is closed if a main section is clicked
+                        if (!this.closest('.submenu') && rubricasSubmenu.classList.contains('open')) {
+                            rubricasToggle.click(); // Simulate click to close
+                        }
+                    } else if (isSubmenuLink && targetUrl && targetUrl !== '#') {
+                        // Handle rubric submenu link click (load in iframe)
+                        event.preventDefault();
+                        loadPageInContentArea(targetUrl, this);
+                    }
+                    // Allow default behavior for other links (like the main Rubricas toggle)
                 });
             });
             if (goToCreateBtn) { /* ... */
@@ -1956,13 +1995,95 @@
 
 
             // --- Inicialización ---
-            const initialActiveLink = document.querySelector('.sidebar-link.active');
-            if (initialActiveLink) {
-                showSection(initialActiveLink.getAttribute('data-section'));
-            } else {
-                showSection('listar'); // Mostrar lista por defecto
+            let loadedFromUrlParams = false; // Flag to track if content was loaded based on URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialTab = urlParams.get('initialTab');
+            const editIndex = urlParams.get('editIndex');
+
+            // Check specifically for the designer tab parameter
+            if (initialTab === 'designer') {
+                const designerLink = document.querySelector('a.sidebar-link[href="disenar_rubrica.html"]');
+                if (designerLink) {
+                    let targetUrl = 'disenar_rubrica.html';
+                    if (editIndex !== null && !isNaN(parseInt(editIndex))) {
+                        targetUrl += `?editIndex=${encodeURIComponent(editIndex)}`;
+                        console.log(`DEBUG: URL Params indicate loading designer with editIndex: ${editIndex}`);
+                    } else {
+                        console.log("DEBUG: URL Params indicate loading designer (no editIndex).");
+                    }
+                    // Load the iframe content
+                    loadPageInContentArea(targetUrl, designerLink);
+                    loadedFromUrlParams = true; // Mark that we loaded based on params
+                } else {
+                    console.warn("DEBUG: initialTab=designer specified, but designer link not found.");
+                }
+            }
+            // Add more 'else if' blocks here for other potential initialTab values if needed
+
+            // If no specific URL parameters were handled, load the default section
+            if (!loadedFromUrlParams) {
+                console.log("DEBUG: No relevant URL parameters found or processed, loading default section.");
+                const initialActiveLink = document.querySelector('.sidebar-link.active[data-section]'); // Find active section link
+                if (initialActiveLink) {
+                    showSection(initialActiveLink.getAttribute('data-section'));
+                } else {
+                    showSection('listar'); // Fallback to 'listar' if no active link found
+                }
+            }
+
+            // Always clear URL parameters after initial load to prevent re-triggering on refresh
+            if (window.history.replaceState) {
+                const cleanUrl = window.location.pathname; // Get path without query string
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                console.log("DEBUG: Cleared URL parameters.");
             }
             console.log("DEBUG: Script inicializado.");
+
+
+            // --- Function to Load Rubric Pages into Content Area ---
+            function loadPageInContentArea(url, clickedLink) {
+                console.log(`DEBUG: Cargando contenido de ${url} en iframe.`);
+                const contentArea = document.getElementById('content-area');
+
+                // Hide all other sections first
+                Object.values(sections).forEach(section => {
+                    if (section) section.classList.add('hidden');
+                });
+
+                // Clear previous content (including any old iframe)
+                contentArea.innerHTML = '';
+
+                // Create and configure iframe
+                const iframe = document.createElement('iframe');
+                iframe.setAttribute('src', url);
+                iframe.setAttribute('frameborder', '0');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%'; // Make iframe fill the container
+                iframe.style.border = 'none';
+
+                // Append iframe
+                contentArea.appendChild(iframe);
+
+                // Update title (use text content of the clicked link)
+                const linkText = clickedLink.textContent.trim().replace(/^[^\w]+/, ''); // Clean up emoji/prefix
+                sectionTitle.innerHTML = `<span>📊</span> Rúbricas: ${linkText}`;
+
+                // Update active link state
+                sidebarLinks.forEach(link => link.classList.remove('active'));
+                if (clickedLink) {
+                    clickedLink.classList.add('active');
+                }
+                // Also mark the main "Rúbricas" toggle as active visually
+                rubricasToggle.classList.add('active');
+
+                // Ensure the submenu stays open visually
+                if (!rubricasSubmenu.classList.contains('open')) {
+                    rubricasSubmenu.classList.add('open');
+                    rubricasToggleIcon.classList.add('open');
+                    rubricasToggleIcon.textContent = '▼';
+                }
+            }
+
 
             // Mover aquí la definición de renderRizomaGraph para que esté en el scope correcto
             /**
