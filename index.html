@@ -1235,6 +1235,41 @@
         </div>
     </div>
 
+    <!-- Forum Modal -->
+    <div id="forum-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+        aria-labelledby="forum-modal-title" role="dialog" aria-modal="true">
+        <div id="forum-modal-overlay" class="absolute inset-0 bg-gray-800 bg-opacity-60 modal-overlay"></div>
+        <div class="modal-content bg-white rounded-lg shadow-xl overflow-hidden transform sm:max-w-2xl sm:w-full mx-4 flex flex-col"
+            style="max-height: 80vh;">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="forum-modal-title">
+                    <span>💬</span> Foro: <span id="forum-ovc-title"></span>
+                </h3>
+                <button id="forum-modal-close-x" type="button" class="text-gray-400 hover:text-gray-600 text-2xl">
+                    <span>❌</span>
+                </button>
+            </div>
+            <!-- Messages Area -->
+            <div id="forum-messages-area" class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
+                <!-- Messages will be loaded here -->
+                <p class="text-center text-gray-500 italic">Cargando mensajes...</p>
+            </div>
+            <!-- Input Area -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-100 flex items-center gap-3">
+                <input type="text" id="forum-message-input" placeholder="Escribe tu mensaje..."
+                    class="flex-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                    aria-label="Nuevo mensaje del foro">
+                <button id="forum-send-button" type="button"
+                    class="inline-flex items-center justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm">
+                    Enviar
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- End Forum Modal -->
+
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="rizoma.js"></script>
     <script>
@@ -1582,8 +1617,9 @@
                             <td class="px-6 py-4 text-sm text-gray-500 break-words">${truncate(etiquetasStr, 40) || 'N/A'}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <a href="#" class="text-indigo-600 hover:text-indigo-900 action-btn edit-ovc-btn" title="Editar" data-id="${ovc.id}">✏️</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 ml-4 action-btn view-ovc-btn" title="Ver" data-id="${ovc.id}">🔍</a>
-                                <a href="#" class="text-red-600 hover:text-red-900 ml-4 action-btn delete-ovc-btn" title="Eliminar" data-id="${ovc.id}">🗑️</a>
+                                <a href="#" class="text-blue-600 hover:text-blue-900 ml-3 action-btn view-ovc-btn" title="Ver" data-id="${ovc.id}">🔍</a>
+                                <a href="#" class="text-green-600 hover:text-green-900 ml-3 action-btn forum-ovc-btn" title="Foro" data-id="${ovc.id}" data-title="${ovc.titulo || 'OVC sin título'}">💬</a>
+                                <a href="#" class="text-red-600 hover:text-red-900 ml-3 action-btn delete-ovc-btn" title="Eliminar" data-id="${ovc.id}">🗑️</a>
                             </td>
                         `;
                         ovcTableBody.appendChild(row);
@@ -1968,11 +2004,13 @@
                 });
             }
 
-            // Listener para clics en la tabla (Editar y Borrar)
-            if (ovcTableBody) { /* ... código sin cambios ... */
+            // Listener para clics en la tabla (Editar, Ver, Foro, Borrar)
+            if (ovcTableBody) {
                 ovcTableBody.addEventListener('click', function (event) {
                     const editButton = event.target.closest('.edit-ovc-btn');
                     const deleteButton = event.target.closest('.delete-ovc-btn');
+                    const viewButton = event.target.closest('.view-ovc-btn'); // Listener moved here from separate block
+                    const forumButton = event.target.closest('.forum-ovc-btn'); // Listener for the new forum button
 
                     if (editButton) {
                         event.preventDefault();
@@ -1989,9 +2027,146 @@
                         if (ovcIdToDelete) {
                             showDeleteConfirmModal(ovcIdToDelete);
                         }
+                    } else if (viewButton) { // Handle view button click
+                        event.preventDefault();
+                        const ovcId = viewButton.getAttribute('data-id');
+                        showSummaryModal(ovcId); // Call the existing summary modal function
+                    } else if (forumButton) { // Handle forum button click
+                        event.preventDefault();
+                        const ovcId = forumButton.getAttribute('data-id');
+                        const ovcTitle = forumButton.getAttribute('data-title');
+                        console.log(`DEBUG: Clic en Foro para ID: ${ovcId}, Título: ${ovcTitle}`);
+                        if (ovcId) {
+                            openForumModal(ovcId, ovcTitle);
+                        }
                     }
                 });
             } else { console.error("Error: Elemento #ovc-table-body no encontrado."); }
+
+            // --- Forum Modal Logic ---
+            const forumModal = document.getElementById('forum-modal');
+            const forumModalOverlay = document.getElementById('forum-modal-overlay');
+            const forumModalCloseX = document.getElementById('forum-modal-close-x');
+            const forumOvcTitleSpan = document.getElementById('forum-ovc-title');
+            const forumMessagesArea = document.getElementById('forum-messages-area');
+            const forumMessageInput = document.getElementById('forum-message-input');
+            const forumSendButton = document.getElementById('forum-send-button');
+            const FORUM_STORAGE_KEY = 'ovcForums';
+            let currentForumOvcId = null; // Track which OVC's forum is open
+
+            function getForumMessagesFromStorage() {
+                const forumsJson = localStorage.getItem(FORUM_STORAGE_KEY);
+                try {
+                    return forumsJson ? JSON.parse(forumsJson) : {}; // Store as object { ovcId: [messages] }
+                } catch (e) {
+                    console.error("Error al analizar los datos de foros:", e);
+                    return {};
+                }
+            }
+
+            function saveForumMessagesToStorage(forumsData) {
+                try {
+                    localStorage.setItem(FORUM_STORAGE_KEY, JSON.stringify(forumsData));
+                } catch (e) {
+                    console.error("Error saving forum data to localStorage:", e);
+                    alert('Error al guardar el mensaje del foro.');
+                }
+            }
+
+            function renderForumMessages(ovcId) {
+                const allForums = getForumMessagesFromStorage();
+                const messages = allForums[ovcId] || [];
+                forumMessagesArea.innerHTML = ''; // Clear previous messages
+
+                if (messages.length === 0) {
+                    forumMessagesArea.innerHTML = '<p class="text-center text-gray-500 italic">No hay mensajes en este foro todavía.</p>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const msgElement = document.createElement('div');
+                    msgElement.classList.add('p-3', 'rounded-lg', 'shadow-sm', 'max-w-xl'); // Max width for messages
+                    const date = new Date(msg.timestamp);
+                    const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
+                    // Simulate different users - alternating background/alignment
+                    if (msg.user === 'Usuario Actual') { // Assuming 'Usuario Actual' for now
+                        msgElement.classList.add('bg-blue-100', 'ml-auto'); // Sent message style
+                        msgElement.innerHTML = `
+                            <p class="text-sm text-gray-800">${msg.text}</p>
+                            <p class="text-xs text-blue-700 text-right mt-1">${msg.user} - ${formattedDate}</p>
+                         `;
+                    } else {
+                        msgElement.classList.add('bg-gray-200', 'mr-auto'); // Received message style
+                        msgElement.innerHTML = `
+                            <p class="text-sm text-gray-800">${msg.text}</p>
+                            <p class="text-xs text-gray-600 text-left mt-1">${msg.user} - ${formattedDate}</p>
+                         `;
+                    }
+                    forumMessagesArea.appendChild(msgElement);
+                });
+
+                // Scroll to the bottom
+                forumMessagesArea.scrollTop = forumMessagesArea.scrollHeight;
+            }
+
+            function addForumMessage(ovcId, messageText) {
+                if (!messageText.trim()) return; // Ignore empty messages
+
+                const allForums = getForumMessagesFromStorage();
+                if (!allForums[ovcId]) {
+                    allForums[ovcId] = [];
+                }
+
+                // Simulate user - replace with actual user logic if available
+                const currentUser = 'Usuario Actual'; // Placeholder
+
+                const newMessage = {
+                    user: currentUser,
+                    text: messageText.trim(),
+                    timestamp: new Date().toISOString()
+                };
+
+                allForums[ovcId].push(newMessage);
+                saveForumMessagesToStorage(allForums);
+                renderForumMessages(ovcId); // Re-render messages including the new one
+                forumMessageInput.value = ''; // Clear input
+                forumMessageInput.focus();
+            }
+
+            function openForumModal(ovcId, ovcTitle) {
+                currentForumOvcId = ovcId;
+                forumOvcTitleSpan.textContent = ovcTitle || 'OVC Desconocido';
+                renderForumMessages(ovcId);
+                if (forumModal) forumModal.classList.remove('hidden');
+                forumMessageInput.focus();
+            }
+
+            function closeForumModal() {
+                currentForumOvcId = null;
+                if (forumModal) forumModal.classList.add('hidden');
+            }
+
+            // Event Listeners for Forum Modal
+            if (forumModalCloseX) forumModalCloseX.addEventListener('click', closeForumModal);
+            if (forumModalOverlay) forumModalOverlay.addEventListener('click', closeForumModal);
+            if (forumSendButton) {
+                forumSendButton.addEventListener('click', () => {
+                    if (currentForumOvcId) {
+                        addForumMessage(currentForumOvcId, forumMessageInput.value);
+                    }
+                });
+            }
+            if (forumMessageInput) {
+                forumMessageInput.addEventListener('keypress', (event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) { // Send on Enter, allow Shift+Enter for newline
+                        event.preventDefault(); // Prevent default newline insertion
+                        if (currentForumOvcId) {
+                            addForumMessage(currentForumOvcId, forumMessageInput.value);
+                        }
+                    }
+                });
+            }
 
 
             // --- Inicialización ---
