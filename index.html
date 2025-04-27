@@ -1387,8 +1387,8 @@
             let ovcIdToDeleteConfirm = null;
 
             // --- Navegación ---
-            function showSection(sectionId) {
-                console.log(`DEBUG: Mostrando sección interna: ${sectionId}`);
+            function showSection(sectionId, contextId = null, contextTitle = null) { // Added context params
+                console.log(`DEBUG: Mostrando sección interna: ${sectionId}`, contextId ? `(Context ID: ${contextId}, Title: ${contextTitle})` : '');
                 // Clear iframe if it exists
                 const contentArea = document.getElementById('content-area');
                 const existingIframe = contentArea.querySelector('iframe');
@@ -1418,8 +1418,14 @@
                     resetFormToCreateMode();
                 }
 
-                if (sectionTitles[sectionId]) {
+                // Update section title - Use contextTitle if provided for Kanban
+                if (sectionId === 'kanban' && contextTitle) {
+                    sectionTitle.innerHTML = `<span>📋</span> Tablero Kanban - ${contextTitle}`;
+                } else if (sectionTitles[sectionId]) {
                     sectionTitle.innerHTML = sectionTitles[sectionId];
+                } else {
+                    // Keep previous title or set a default if navigating from iframe?
+                    // For now, let's assume sectionTitles covers all main sections.
                 }
 
                 // Activate the correct link
@@ -1476,9 +1482,11 @@
                                     // Initialize KanbanApp after a short delay to ensure DOM is ready
                                     setTimeout(() => {
                                         if (typeof KanbanApp !== 'undefined' && typeof KanbanApp.init === 'function') {
-                                            KanbanApp.init();
+                                            // Pass contextId (OVC ID) to KanbanApp initialization
+                                            console.log(`DEBUG: Initializing KanbanApp with OVC ID: ${contextId}`);
+                                            KanbanApp.init(contextId); // Pass the OVC ID here
                                         } else {
-                                            console.error("KanbanApp o KanbanApp.init no está definido al intentar inicializar.");
+                                            console.error("KanbanApp or KanbanApp.init is not defined or cannot accept parameters.");
                                         }
                                     }, 50); // 50ms delay
 
@@ -1587,6 +1595,7 @@
                                 <a href="foro.html?ovcId=${ovc.id}" class="text-green-600 hover:text-green-900 ml-4 action-btn forum-ovc-btn" title="Foro" data-id="${ovc.id}">💬</a>
                                 <a href="evaluar_ovc.html?ovcId=${ovc.id}" class="text-purple-600 hover:text-purple-900 ml-4 action-btn evaluate-ovc-btn" title="Evaluar" data-id="${ovc.id}">✔️</a>
                                 <a href="ver_promedios.html?ovcId=${ovc.id}" class="text-cyan-600 hover:text-cyan-900 ml-4 action-btn view-averages-btn" title="Ver Promedios" data-id="${ovc.id}">📈</a>
+                                <a href="#" class="text-orange-600 hover:text-orange-900 ml-4 action-btn kanban-ovc-btn" title="Tablero Kanban" data-id="${ovc.id}" data-title="${ovc.titulo || ''}">📋</a>
                            </td>
                         `;
                         ovcTableBody.appendChild(row);
@@ -1976,6 +1985,7 @@
                 ovcTableBody.addEventListener('click', function (event) {
                     const editButton = event.target.closest('.edit-ovc-btn');
                     const deleteButton = event.target.closest('.delete-ovc-btn');
+                    const kanbanButton = event.target.closest('.kanban-ovc-btn'); // Added Kanban button selector
 
                     if (editButton) {
                         event.preventDefault();
@@ -1991,6 +2001,17 @@
                         console.log(`DEBUG: Clic en Borrar para ID: ${ovcIdToDelete}`);
                         if (ovcIdToDelete) {
                             showDeleteConfirmModal(ovcIdToDelete);
+                        }
+                    } else if (kanbanButton) { // Handle Kanban button click
+                        event.preventDefault();
+                        const ovcIdForKanban = kanbanButton.getAttribute('data-id');
+                        const ovcTitleForKanban = kanbanButton.getAttribute('data-title');
+                        console.log(`DEBUG: Clic en Kanban para ID: ${ovcIdForKanban}, Título: ${ovcTitleForKanban}`);
+                        if (ovcIdForKanban && ovcTitleForKanban) {
+                            // Call showSection with Kanban context
+                            showSection('kanban', ovcIdForKanban, ovcTitleForKanban);
+                        } else {
+                            console.error("Error: Missing data-id or data-title on Kanban button.");
                         }
                     }
                 });
