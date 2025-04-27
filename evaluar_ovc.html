@@ -57,38 +57,7 @@
 <body x-data="rubricSystemComponent()">
 
     <div class="flex h-screen bg-gray-100">
-        <!-- Sidebar (copied structure, but links point to standalone pages) -->
-        <aside class="w-64 bg-white shadow-md flex flex-col p-4">
-            <div class="flex items-center justify-center mb-6 py-2">
-                <span class="text-xl font-bold text-gray-700">Ude<span class="accent-pink">@</span> Digital</span>
-            </div>
-            <nav class="flex-1 space-y-2">
-                <a href="disenar_rubrica.html"
-                    class="w-full flex items-center space-x-4 p-4 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                    <i data-lucide="edit" class="w-5 h-5"></i>
-                    <span>Diseñar Rúbrica</span>
-                </a>
-                <a href="evaluar_ovc.html"
-                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium sidebar-active focus:outline-none focus:ring-2 focus:ring-pink-500">
-                    <!-- Active class -->
-                    <i data-lucide="file-check-2" class="w-5 h-5"></i>
-                    <span>Evaluar OVC</span>
-                </a>
-                <a href="ver_promedios.html"
-                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
-                    <span>Ver Promedios</span>
-                </a>
-                <a href="resumen_rubricas.html"
-                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500">
-                    <i data-lucide="list" class="w-5 h-5"></i>
-                    <span>Resumen Rúbricas</span>
-                </a>
-            </nav>
-            <div class="mt-auto border-t pt-4">
-                <p class="text-xs text-gray-500 text-center">© 2024 Universidad de Antioquia</p>
-            </div>
-        </aside>
+
 
         <main class="flex-1 flex flex-col overflow-hidden">
             <header>
@@ -244,6 +213,17 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
+        // Function to get OVCs from localStorage (copied from index.html for standalone use)
+        function getOvcsFromStorage() {
+            const ovcsJson = localStorage.getItem('ovcData');
+            try {
+                return ovcsJson ? JSON.parse(ovcsJson) : [];
+            } catch (e) {
+                console.error("Error al analizar los datos de OVC:", e);
+                return [];
+            }
+        }
+
         function rubricSystemComponent() {
             return {
                 // --- State specific to Evaluator ---
@@ -279,6 +259,27 @@
                     this.$nextTick(() => {
                         lucide.createIcons(); // Initialize Lucide icons
                     });
+
+                    // --- Pre-fill OVC Title from URL ---
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ovcIdParam = urlParams.get('ovcId');
+                    if (ovcIdParam) {
+                        console.log(`Found ovcId in URL: ${ovcIdParam}`);
+                        const ovcs = getOvcsFromStorage(); // Use the helper function
+                        const ovcToEvaluate = ovcs.find(ovc => ovc.id === Number(ovcIdParam));
+                        if (ovcToEvaluate) {
+                            console.log(`Found OVC to evaluate: ${ovcToEvaluate.titulo}`);
+                            this.evaluation.ovcTitle = ovcToEvaluate.titulo;
+                        } else {
+                            console.warn(`OVC with ID ${ovcIdParam} not found in localStorage.`);
+                            this.showMessage(`No se encontró el OVC con ID ${ovcIdParam} para pre-cargar el título.`, 'error');
+                        }
+                    } else {
+                        console.log("No ovcId found in URL parameters.");
+                    }
+                    // --- End Pre-fill ---
+
+
                     // Watchers needed if dynamic content affects icons
                     this.$watch('evaluation.rubric', () => this.$nextTick(() => lucide.createIcons()));
                 },
