@@ -203,6 +203,17 @@
 
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
+        // Function to get OVCs from localStorage (needed to map ID to Title)
+        function getOvcsFromStorage() {
+            const ovcsJson = localStorage.getItem('ovcData');
+            try {
+                return ovcsJson ? JSON.parse(ovcsJson) : [];
+            } catch (e) {
+                console.error("Error al analizar los datos de OVC:", e);
+                return [];
+            }
+        }
+
         function rubricSystemComponent() {
             return {
                 // --- State specific to Viewer ---
@@ -229,6 +240,32 @@
                     // Watchers needed if dynamic content affects icons
                     this.$watch('showIndividualEvaluations', () => this.$nextTick(() => lucide.createIcons()));
                     this.$watch('individualEvaluations', () => this.$nextTick(() => lucide.createIcons())); // Update icons when table data changes
+
+                    // --- Pre-select OVC from URL ---
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ovcIdParam = urlParams.get('ovcId');
+                    if (ovcIdParam) {
+                        console.log(`Found ovcId in URL: ${ovcIdParam}`);
+                        const ovcs = getOvcsFromStorage(); // Use the helper function
+                        const ovcToSelect = ovcs.find(ovc => ovc.id === Number(ovcIdParam));
+                        if (ovcToSelect && this.availableOvcTitles.includes(ovcToSelect.titulo)) {
+                            console.log(`Found OVC title to pre-select: ${ovcToSelect.titulo}`);
+                            this.selectedOvcForAverage = ovcToSelect.titulo;
+                            // Trigger calculation immediately after setting the value
+                            this.$nextTick(() => {
+                                this.calculateAverageScore(this.selectedOvcForAverage);
+                            });
+                        } else if (ovcToSelect) {
+                            console.warn(`OVC title '${ovcToSelect.titulo}' (ID: ${ovcIdParam}) found but not present in evaluated OVCs list.`);
+                            this.showMessage(`El OVC '${ovcToSelect.titulo}' existe pero aún no tiene evaluaciones registradas.`, 'info');
+                        } else {
+                            console.warn(`OVC with ID ${ovcIdParam} not found in localStorage.`);
+                            this.showMessage(`No se encontró el OVC con ID ${ovcIdParam} para pre-seleccionar.`, 'error');
+                        }
+                    } else {
+                        console.log("No ovcId found in URL parameters.");
+                    }
+                    // --- End Pre-select ---
                 },
 
                 // --- Load/Save Logic ---
