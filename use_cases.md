@@ -2,16 +2,18 @@
 
 ## 1. Introducción
 
-Este documento describe los casos de uso para el Sistema de Gestión de Objetos Virtuales Creativos (SGOVC), una aplicación diseñada para apoyar el proceso de creación, gestión y evaluación de OVCs en el contexto de un programa de pregrado en creación digital. El sistema facilita la interacción entre estudiantes, profesores, administradores e invitados, proporcionando herramientas para la gestión de proyectos (Kanban), visualización de relaciones (Rizoma), comunicación (Foro), y un sistema robusto de evaluación basado en rúbricas.
+Este documento describe los casos de uso para el Sistema de Gestión de Objetos Virtuales Creativos (SGOVC), una aplicación diseñada para apoyar el proceso de creación, gestión y evaluación de OVCs en el contexto del Pregrado de en  Creación Digital de la Universidad de Antioquia. El sistema facilita la interacción entre estudiantes, profesores, administradores e invitados, proporcionando herramientas para la gestión de OVC, la gestión de estos como proyectos (Kanban), visualización de relacionesentre OVC (Rizoma), comunicación (Foro), y un sistema robusto de evaluación basado en rúbricas.
 
 ## 2. Actores
 
 Los actores principales que interactúan con el sistema son:
 
-*   **Estudiante:** Usuario que crea y gestiona sus propios Objetos Virtuales Creativos (OVCs), utiliza el tablero Kanban para el seguimiento de su proyecto, visualiza el Rizoma y participa en los foros asociados a los OVCs.
-*   **Profesor:** Usuario que supervisa el proceso de creación de OVCs, diseña y utiliza rúbricas para la evaluación, visualiza promedios de evaluación, resume rúbricas, visualiza el Rizoma y participa en los foros. Tiene visibilidad sobre todos los OVCs.
+*   **Estudiante:** Usuario que crea y gestiona sus propios Objetos Virtuales Creativos (OVCs), utiliza el tablero Kanban para el seguimiento de su proyecto, visualiza el Rizoma, participa en los foros asociados a los OVCs, ve sus evaluaciones, se evalúa a sí mismo o a sus compañeros (Evaluación 360 multi-rúbrica).Tiene visibilidad sobre todos los OVC y capacidad de edición en los propios.
+
+*   **Profesor:** Usuario que Crea sus propios OVC (que en su caso pueden ser usados como recursos didácticos), supervisa el proceso de creación de OVCs, diseña y utiliza rúbricas para la evaluación, visualiza promedios de evaluación, crea  rúbricas, visualiza el Rizoma y participa en los foros. Tiene visibilidad sobre todos los OVCs.
+
 *   **Administrador:** Usuario con control total sobre todas las funcionalidades del sistema, incluyendo la gestión de usuarios, OVCs, rúbricas, evaluaciones, tableros Kanban y foros.
-*   **Invitado:** Usuario externo que puede visualizar los OVCs públicos y participar en el proceso de evaluación utilizando rúbricas designadas para invitados.
+*   **Invitado:** Usuario externo que puede visualizar los OVCs públicos y participar en el proceso de evaluación utilizando rúbricas designadas para invitados y participar en los foros.
 
 ## 3. Casos de Uso
 
@@ -28,7 +30,7 @@ Los actores principales que interactúan con el sistema son:
         2.  El sistema presenta un formulario para ingresar los detalles del OVC (título, descripción, archivos, etc.).
         3.  El Estudiante completa el formulario y envía la información.
         4.  El sistema valida los datos y crea el nuevo OVC asociado al Estudiante.
-        5.  El sistema muestra un mensaje de confirmación y redirige al Estudiante a la vista de su OVC recién creado o a la lista de sus OVCs.
+        5.  El sistema muestra un mensaje de confirmación y redirige al Estudiante a la vista de su OVC recién creado o a la lista de sus OVCs o al rizoma filtrando su propio OVC y sus relaciones.
 *   **Postconditions:** Se ha creado un nuevo OVC en el sistema, asociado al Estudiante.
 
 **UC-102: Ver Lista de OVCs**
@@ -39,7 +41,7 @@ Los actores principales que interactúan con el sistema son:
 *   **Flow of Events:**
     *   **Basic Flow:**
         1.  El Actor accede a la sección de OVCs.
-        2.  El sistema recupera la lista de OVCs a los que el Actor tiene permiso de acceso (Estudiante: propios; Profesor, Administrador, Invitado: todos).
+        2.  El sistema recupera la lista de OVCs a los que el Actor tiene permiso de acceso (Estudiante: todos; Profesor, Administrador, Invitado: todos).
         3.  El sistema muestra la lista de OVCs, incluyendo información relevante como título, autor (para roles con permiso), y posiblemente una breve descripción o miniatura.
 *   **Postconditions:** El Actor puede visualizar la lista de OVCs según sus permisos.
 
@@ -95,7 +97,7 @@ Los actores principales que interactúan con el sistema son:
     *   **Basic Flow:**
         1.  El Actor accede a la sección de diseño de rúbricas.
         2.  El sistema presenta una interfaz para definir los criterios de evaluación, niveles de desempeño y puntuaciones.
-        3.  El Actor define la estructura y contenido de la rúbrica.
+        3.  El Actor define la   estructura y contenido de la rúbrica.
         4.  El Actor guarda la rúbrica.
         5.  El sistema valida la rúbrica y la guarda en el sistema.
         6.  El sistema muestra un mensaje de confirmación y redirige a la lista de rúbricas.
@@ -109,7 +111,7 @@ Los actores principales que interactúan con el sistema son:
 **UC-202: Evaluar OVC Usando Rúbrica**
 
 *   **Goal:** Un Actor desea evaluar un OVC utilizando una rúbrica existente.
-*   **Actor(s):** Profesor, Administrador, Invitado
+*   **Actor(s):** Profesor, Administrador, Invitado, estudiante (autoevaluación y heteroevaluación)
 *   **Preconditions:** El Actor tiene permisos para evaluar OVCs. Existe al menos un OVC y una rúbrica disponible para la evaluación.
 *   **Flow of Events:**
     *   **Basic Flow:**
@@ -121,6 +123,10 @@ Los actores principales que interactúan con el sistema son:
         6.  El Actor guarda la evaluación.
         7.  El sistema calcula la puntuación de la evaluación y la guarda asociada al OVC, la rúbrica y el Actor evaluador.
         8.  El sistema muestra un mensaje de confirmación.
+        **Alternative Flow - ingresar a la evaluación desde el OVC:**
+        1. Desde la la miniatura del OVC o desde la vista de detalles del mismo, el actor accede a la herramietna de evaluación.
+        2. El actor selecciona la rúbrica con la cual va a evaluar.
+        3. (Continúa en el paso 4 del flujo básico).
 *   **Postconditions:** Se ha registrado una evaluación para el OVC utilizando la rúbrica seleccionada.
 
 **UC-203: Ver Promedios de Evaluación de OVC**
@@ -133,7 +139,8 @@ Los actores principales que interactúan con el sistema son:
         1.  El Actor accede a la sección de promedios de evaluación.
         2.  El sistema presenta una lista de OVCs.
         3.  El Actor selecciona un OVC.
-        4.  El sistema calcula y muestra las puntuaciones promedio del OVC, posiblemente desglosadas por rúbrica o criterio.
+        4.  El sistema calcula y muestra las puntuaciones promedio del OVC, posiblemente desglosadas por rúbrica.
+        5. EL actor puede acceder al detalle de la evaluación y ver la rúbrica con los niveles de desempeño obtenidos.
 *   **Postconditions:** El Actor puede visualizar los promedios de evaluación del OVC seleccionado.
 
 **UC-204: Resumir Rúbricas**
@@ -157,14 +164,14 @@ Los actores principales que interactúan con el sistema son:
 *   **Flow of Events:**
     *   **Basic Flow:**
         1.  El Actor accede a la sección de rúbricas.
-        2.  El sistema recupera la lista de rúbricas a las que el Actor tiene permiso de acceso (Profesor, Administrador: todas; Invitado: posiblemente solo las designadas para evaluación de invitados).
+        2.  El sistema recupera la lista de rúbricas a las que el Actor tiene permiso de acceso (Profesor, Administrador, estudiante: todas; Invitado: posiblemente solo las designadas para evaluación de invitados).
         3.  El sistema muestra la lista de rúbricas, incluyendo información relevante como título y autor (para roles con permiso).
 *   **Postconditions:** El Actor puede visualizar la lista de rúbricas según sus permisos.
 
 **UC-206: Ver Detalles de Rúbrica**
 
 *   **Goal:** Un Actor desea ver la información detallada de una rúbrica específica.
-*   **Actor(s):** Profesor, Administrador, Invitado
+*   **Actor(s):** Profesor, Administrador, Estudiante, Invitado
 *   **Preconditions:** El Actor está visualizando una lista de rúbricas o tiene acceso directo a una rúbrica. El Actor tiene permisos para ver la rúbrica.
 *   **Flow of Events:**
     *   **Basic Flow:**
@@ -177,13 +184,13 @@ Los actores principales que interactúan con el sistema son:
 
 *   **Goal:** El Administrador desea eliminar una rúbrica del sistema.
 *   **Actor(s):** Administrador
-*   **Preconditions:** El Administrador ha iniciado sesión y tiene permisos para eliminar la rúbrica. El Administrador está visualizando los detalles de la rúbrica o una lista de rúbricas.
+*   **Preconditions:** El Administrador ha iniciado sesión y tiene permisos para eliminar la rúbrica. El Administrador está visualizando los detalles de la rúbrica o una lista de rúbricas. 
 *   **Flow of Events:**
     *   **Basic Flow:**
         1.  El Administrador selecciona la opción de eliminar para una rúbrica específica.
         2.  El sistema solicita confirmación para la eliminación.
         3.  El Administrador confirma la eliminación.
-        4.  El sistema elimina la rúbrica. (Nota: La eliminación de una rúbrica podría afectar evaluaciones existentes que la utilizaron; el sistema podría requerir manejo de esta situación, como archivar evaluaciones o desvincular la rúbrica).
+        4.  El sistema valida que la rúbrica no esté en uso en otra evaluación y la elimina.
         5.  El sistema muestra un mensaje de confirmación y redirige a la lista de rúbricas.
 *   **Postconditions:** La rúbrica ha sido eliminada del sistema.
 
@@ -209,7 +216,7 @@ Los actores principales que interactúan con el sistema son:
 **UC-301: Usar Tablero Kanban**
 
 *   **Goal:** Un Actor desea visualizar y organizar las tareas relacionadas con un OVC utilizando un tablero Kanban.
-*   **Actor(s):** Estudiante, Administrador
+*   **Actor(s):** Estudiante, docente, Administrador
 *   **Preconditions:** El Actor ha iniciado sesión y tiene permisos para acceder al tablero Kanban (Estudiante: para su OVC; Administrador: para cualquier OVC). Existe al menos un OVC con un tablero Kanban asociado.
 *   **Flow of Events:**
     *   **Basic Flow:**
@@ -247,7 +254,11 @@ Los actores principales que interactúan con el sistema son:
         3.  El Actor confirma la eliminación.
         4.  El sistema elimina la tarea del tablero Kanban.
         5.  El sistema actualiza la vista del tablero.
+        **Basic Flow - cambiar color a tarea:**
+        1. El actor hace click derecho en la tarea para cambiar su color.
+        2. El sistema modifica el color de la tarea y la muestra actualizada.
 *   **Postconditions:** Las tareas en el tablero Kanban han sido modificadas según la acción del Actor.
+
 
 ### 3.4. Visualización Rizoma
 
