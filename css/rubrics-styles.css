@@ -1,0 +1,283 @@
+/* Custom styles from rubrics.html */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .selected-level {
+            background-color: #fce7f3;
+            border-color: #db2777;
+        }
+
+        .sidebar-active {
+            background-color: #e91e63;
+            color: white;
+        }
+
+        .sidebar-active i {
+            color: white;
+        }
+
+        .accent-pink {
+            color: #ec4899;
+        }
+
+        .bg-accent-pink {
+            background-color: #e91e63;
+        }
+
+        .border-accent-pink {
+            border-color: #e91e63;
+        }
+
+        .hover\:bg-accent-pink-dark:hover {
+            background-color: #c0266d;
+        }
+
+        .ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+
+        .focus\:border-accent-pink:focus {
+            border-color: #db2777;
+        }
+
+        .focus\:ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+
+        .scrollable-area {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .minimal-table th,
+        .minimal-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        .minimal-table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .minimal-table tr:last-child td {
+            border-bottom: none;
+        }
+/* Styles from evaluar_ovc.html */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .selected-level {
+            background-color: #fce7f3;
+            border-color: #db2777;
+        }
+
+        .accent-pink {
+            color: #ec4899;
+        }
+
+        .bg-accent-pink {
+            background-color: #e91e63;
+        }
+
+        .border-accent-pink {
+            border-color: #e91e63;
+        }
+
+        .hover\:bg-accent-pink-dark:hover {
+            background-color: #c0266d;
+        }
+
+        .ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+
+        .focus\:border-accent-pink:focus {
+            border-color: #db2777;
+        }
+
+        .focus\:ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+/* Styles from resumen_rubricas.html */
+        .minimal-table th,
+        .minimal-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            /* Light gray border */
+            text-align: left;
+        }
+
+        .minimal-table th {
+            background-color: #f9fafb;
+            /* Very light gray header */
+            font-weight: 500;
+            color: #374151;
+            /* Darker gray text */
+        }
+
+        .minimal-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Pink accent color for potential future use or consistency */
+        .accent-pink {
+            color: #ec4899;
+        }
+
+        .bg-accent-pink {
+            background-color: #e91e63;
+        }
+
+        .hover\:bg-accent-pink-dark:hover {
+            background-color: #c0266d;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+/* Styles from rubrics.html */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            /* Light gray background like screenshot */
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* Style for selected level in evaluation */
+        .selected-level {
+            background-color: #fce7f3;
+            /* Lighter pink background */
+            border-color: #db2777;
+            /* Darker pink border */
+        }
+
+        /* Sidebar active item style */
+        .sidebar-active {
+            background-color: #e91e63;
+            /* Slightly lighter pink background for sidebar active */
+            color: white;
+        }
+
+        .sidebar-active i {
+            /* Ensure icon color is white too */
+            color: white;
+        }
+
+        /* Pink accent color */
+        .accent-pink {
+            color: #ec4899;
+        }
+
+        .bg-accent-pink {
+            background-color: #e91e63;
+        }
+
+        .border-accent-pink {
+            border-color: #e91e63;
+        }
+
+        .hover\:bg-accent-pink-dark:hover {
+            background-color: #c0266d;
+        }
+
+        /* Even darker pink on hover */
+        .ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+
+        .focus\:border-accent-pink:focus {
+            border-color: #db2777;
+        }
+
+        .focus\:ring-accent-pink:focus {
+            --tw-ring-color: #db2777;
+        }
+
+        /* Custom scrollbar for rubric criteria/levels if needed */
+        .scrollable-area {
+            max-height: 400px;
+            /* Adjust as needed */
+            overflow-y: auto;
+        }
+
+        /* Minimalist table style */
+        .minimal-table th,
+        .minimal-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            /* Light gray border */
+            text-align: left;
+        }
+
+        .minimal-table th {
+            background-color: #f9fafb;
+            /* Very light gray header */
+            font-weight: 500;
+            color: #374151;
+            /* Darker gray text */
+        }
+
+        .minimal-table tr:last-child td {
+            border-bottom: none;
+        }
+/* Styles from ver_promedios.html */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        .accent-pink {
+            color: #ec4899;
+        }
+
+        .bg-accent-pink {
+            background-color: #e91e63;
+        }
+
+        .minimal-table th,
+        .minimal-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        .minimal-table th {
+            background-color: #f9fafb;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .minimal-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .sidebar-active {
+            background-color: #e91e63;
+            color: white;
+        }
+
+        .sidebar-active i {
+            color: white;
+        }

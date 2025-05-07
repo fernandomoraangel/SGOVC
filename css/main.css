@@ -1,0 +1,656 @@
+/* Estilos CSS (sin cambios) */
+        .sidebar-link.active {
+            background-color: #ec4899;
+            color: white;
+        }
+
+        /* --- Kanban Styles Start --- */
+        /* Estilos personalizados (igual que la versión anterior) */
+        .kanban-body {
+            /* Applied to body when kanban is active? Or just use existing body styles? */
+            font-family: 'Inter', sans-serif;
+            /* background-color: #f3f4f6; /* Let index.html body style handle this */
+        }
+
+        .kanban-container {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            /* Or adjust based on integration */
+        }
+
+        .kanban-column {
+            min-height: 300px;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+
+        .kanban-tasks {
+            flex-grow: 1;
+            min-height: 200px;
+            border-radius: 0.375rem;
+        }
+
+        .task-card {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: grab;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .task-card.editing {
+            cursor: default;
+            box-shadow: 0 0 0 2px #3b82f6;
+            /* Tailwind blue-500 */
+        }
+
+        .task-card:not(.editing):hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card p {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .task-card .details {
+            font-size: 0.8rem;
+            color: #6b7280;
+            /* Tailwind gray-500 */
+        }
+
+        .task-card .edit-input {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-card .edit-textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        /* --- Subtask Styles --- */
+        .subtasks-section {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+            /* Tailwind gray-200 */
+        }
+
+        .subtasks-list-view,
+        .subtasks-list-edit {
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+            /* Indent subtasks slightly */
+            list-style: none;
+            /* Remove default list bullets */
+            padding-inline-start: 10px;
+            /* Override browser default padding */
+        }
+
+        .subtask-item-view {
+            font-size: 0.85rem;
+            color: #4b5563;
+            /* Tailwind gray-600 */
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .subtask-item-view input[type="checkbox"] {
+            width: 0.8rem;
+            height: 0.8rem;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            /* Space after checkbox */
+            flex-shrink: 0;
+            /* Prevent checkbox shrinking */
+            /* Consider Tailwind accent color: accent-pink-500 */
+        }
+
+        .subtask-item-view span {
+            word-break: break-word;
+            /* Wrap long subtask text */
+        }
+
+        .subtask-item-view span.completed {
+            text-decoration: line-through;
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+        }
+
+        .subtasks-list-edit {
+            max-height: 150px;
+            /* Limit height and allow scroll */
+            overflow-y: auto;
+            padding-right: 5px;
+            /* Space for scrollbar */
+        }
+
+        .subtask-item-edit {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.2rem;
+            margin-bottom: 0.3rem;
+            background-color: #f9fafb;
+            /* Tailwind gray-50 */
+            border: 1px solid #e5e7eb;
+            /* Tailwind gray-200 */
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .subtask-item-edit.sortable-ghost {
+            /* Style for dragged item placeholder */
+            opacity: 0.4;
+            background-color: #dbeafe;
+            /* Tailwind blue-100 */
+        }
+
+        .subtask-drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+            padding: 0 0.2rem;
+            align-self: center;
+            /* Center handle vertically */
+        }
+
+        .subtask-item-edit input[type="text"] {
+            flex-grow: 1;
+            border: none;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.85rem;
+            background-color: transparent;
+            /* Match item background */
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .subtask-item-edit input[type="text"]:focus {
+            outline: none;
+            background-color: white;
+            /* Highlight on focus */
+            box-shadow: inset 0 0 0 1px #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.15rem;
+        }
+
+        .subtask-delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            /* Tailwind red-500 */
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 0.3rem;
+            line-height: 1;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+        }
+
+        .subtask-delete-btn:hover {
+            color: #dc2626;
+            /* Tailwind red-600 */
+        }
+
+        .add-subtask-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .add-subtask-input {
+            flex-grow: 1;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .add-subtask-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+            /* Reuse edit-button styles */
+        }
+
+        .view-subtasks-btn {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #4b5563;
+            /* Tailwind gray-600 */
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.2rem 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .view-subtasks-btn:hover {
+            color: #1f2937;
+            /* Tailwind gray-800 */
+            text-decoration: underline;
+        }
+
+        .view-subtasks-btn .arrow {
+            transition: transform 0.2s ease-in-out;
+            display: inline-block;
+            /* Needed for transform */
+        }
+
+        .view-subtasks-btn[aria-expanded="true"] .arrow {
+            transform: rotate(90deg);
+        }
+
+        /* --- End Subtask Styles --- */
+
+        .task-card .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            /* Increased margin */
+        }
+
+        .task-card .edit-button {
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            /* Para alinear emoji y texto */
+            align-items: center;
+            gap: 0.25rem;
+            /* Espacio entre emoji y texto */
+        }
+
+        .task-card .save-button {
+            background-color: #2563eb;
+            /* Tailwind blue-600 */
+            color: white;
+            border-color: #2563eb;
+            /* Tailwind blue-600 */
+        }
+
+        .task-card .save-button:hover {
+            background-color: #1d4ed8;
+            /* Tailwind blue-700 */
+        }
+
+        .task-card .cancel-button {
+            background-color: #e5e7eb;
+            /* Tailwind gray-200 */
+            color: #374151;
+            /* Tailwind gray-700 */
+            border-color: #d1d5db;
+            /* Tailwind gray-300 */
+        }
+
+        .task-card .cancel-button:hover {
+            background-color: #d1d5db;
+            /* Tailwind gray-300 */
+        }
+
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            /* Tailwind gray-300 */
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 0.5rem 0;
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #374151;
+            /* Tailwind gray-700 */
+            gap: 0.5rem;
+            /* Espacio para emojis */
+        }
+
+        .context-menu-item:hover {
+            background-color: #f3f4f6;
+            /* Tailwind gray-100 */
+        }
+
+        .color-swatch {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+        }
+
+        .bg-task-red {
+            background-color: #fee2e2;
+            border-left: 4px solid #f87171;
+        }
+
+        /* red-100, red-400 */
+        .bg-task-blue {
+            background-color: #dbeafe;
+            border-left: 4px solid #60a5fa;
+        }
+
+        /* blue-100, blue-400 */
+        .bg-task-green {
+            background-color: #d1fae5;
+            border-left: 4px solid #34d399;
+        }
+
+        /* green-100, green-400 */
+        .bg-task-yellow {
+            background-color: #fef3c7;
+            border-left: 4px solid #facc15;
+        }
+
+        /* yellow-100, yellow-400 */
+        .bg-task-purple {
+            background-color: #e9d5ff;
+            border-left: 4px solid #a78bfa;
+        }
+
+        /* purple-100, purple-400 */
+        .bg-task-default {
+            background-color: white;
+            border-left: 4px solid #d1d5db;
+        }
+
+        /* gray-300 */
+
+        .kanban-tasks.drag-over {
+            background-color: #e5e7eb;
+            /* Tailwind gray-200 */
+            border: 1px dashed #9ca3af;
+            /* Tailwind gray-400 */
+        }
+
+        /* Modal styles (reusing existing modal styles might be better if consistent) */
+        .kanban-modal {
+            /* Use a specific class to avoid conflicts */
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .kanban-modal-content {
+            /* Use a specific class */
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 2rem;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 0.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .kanban-close-button {
+            /* Use a specific class */
+            color: #9ca3af;
+            /* Tailwind gray-400 */
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .kanban-close-button:hover,
+        .kanban-close-button:focus {
+            color: #1f2937;
+            /* Tailwind gray-800 */
+            text-decoration: none;
+        }
+
+        #addTaskBtn {
+            /* ID might need adjustment if conflicts */
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Estilo para emojis en títulos y botones */
+        .emoji {
+            margin-right: 0.4rem;
+            /* Espacio después del emoji */
+            display: inline-block;
+            /* Asegura espaciado correcto */
+        }
+
+        /* --- Kanban Styles End --- */
+
+        .btn-create-ovc {
+            background-color: #343a40;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-create-ovc:hover {
+            background-color: #495057;
+        }
+
+        .btn-create-ovc span:first-child {
+            margin-right: 0.5rem;
+        }
+
+        .sidebar-link span:first-child {
+            display: inline-block;
+            width: 24px;
+            text-align: center;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        .logo-placeholder {
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+
+        .udea-logo {
+            max-width: 100px;
+            height: auto;
+            margin-top: auto;
+            margin-bottom: 1rem;
+            align-self: center;
+        }
+
+        .image-preview {
+            width: 200px;
+            height: 150px;
+            border: 2px dashed #cbd5e1;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+            color: #94a3b8;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+
+        .custom-file-input::before {
+            content: 'Seleccionar archivo';
+            display: inline-block;
+            background: linear-gradient(top, #f9f9f9, #e3e3e3);
+            border: 1px solid #999;
+            border-radius: 3px;
+            padding: 5px 8px;
+            outline: none;
+            white-space: nowrap;
+            -webkit-user-select: none;
+            cursor: pointer;
+            text-shadow: 1px 1px #fff;
+            font-weight: 700;
+            font-size: 10pt;
+            margin-right: 10px;
+        }
+
+        .custom-file-input:hover::before {
+            border-color: black;
+        }
+
+        .custom-file-input:active::before {
+            background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+        }
+
+        .btn-add,
+        .btn-remove {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1;
+        }
+
+        .btn-add span,
+        .btn-remove span {
+            margin-right: 0.25rem;
+        }
+
+        .modal-overlay {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+
+
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .empty-table-row td {
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        label>span:first-child,
+        h2>span:first-child,
+        h3>span:first-child {
+            margin-right: 0.3em;
+        }
+
+        button[title="Salir"] span {
+            margin-right: 0;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        .action-btn {
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Styles for Rubrics Submenu */
+        .submenu {
+            display: none;
+            /* Hidden by default */
+            padding-left: 1.5rem;
+            /* Indentation for submenu items */
+            background-color: #f8f9fa;
+            /* Slightly different background */
+        }
+
+        .submenu.open {
+            display: block;
+            /* Show when open */
+        }
+
+        .submenu-link {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            font-size: 0.9rem;
+            /* Slightly smaller font */
+        }
+
+        .submenu-toggle-icon {
+            margin-left: auto;
+            /* Push arrow to the right */
+            transition: transform 0.2s ease-in-out;
+            font-size: 0.8rem;
+        }
+
+        .submenu-toggle-icon.open {
+            transform: rotate(90deg);
+        }

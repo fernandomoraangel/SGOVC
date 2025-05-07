@@ -8,45 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        /* Minimalist table style from rubrics.html */
-        .minimal-table th,
-        .minimal-table td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #e5e7eb;
-            /* Light gray border */
-            text-align: left;
-        }
-
-        .minimal-table th {
-            background-color: #f9fafb;
-            /* Very light gray header */
-            font-weight: 500;
-            color: #374151;
-            /* Darker gray text */
-        }
-
-        .minimal-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* Pink accent color for potential future use or consistency */
-        .accent-pink {
-            color: #ec4899;
-        }
-
-        .bg-accent-pink {
-            background-color: #e91e63;
-        }
-
-        .hover\:bg-accent-pink-dark:hover {
-            background-color: #c0266d;
-        }
-
-        [x-cloak] {
-            display: none !important;
-        }
-    </style>
+    <link rel="stylesheet" href="css/rubrics-styles.css">
 </head>
 
 <body class="bg-gray-100 p-8" x-data="rubricSystem()" x-init="init()">

@@ -1,0 +1,419 @@
+/* Estilos personalizados (igual que la versión anterior) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .kanban-container {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .kanban-column {
+            min-height: 300px;
+            background-color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e5e7eb;
+        }
+
+        .kanban-tasks {
+            flex-grow: 1;
+            min-height: 200px;
+            border-radius: 0.375rem;
+        }
+
+        .task-card {
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            cursor: grab;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .task-card.editing {
+            cursor: default;
+            box-shadow: 0 0 0 2px #3b82f6;
+        }
+
+        .task-card:not(.editing):hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card.dragging {
+            opacity: 0.6;
+            cursor: grabbing;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .task-card p {
+            margin-bottom: 0.25rem;
+            word-wrap: break-word;
+        }
+
+        .task-card .details {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .task-card .edit-input {
+            width: 100%;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .task-card .edit-textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        /* --- Subtask Styles --- */
+        .subtasks-section {
+            margin-top: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .subtasks-list-view,
+        .subtasks-list-edit {
+            margin-top: 0.5rem;
+            padding-left: 0.5rem;
+            /* Indent subtasks slightly */
+            list-style: none;
+            /* Remove default list bullets */
+            padding-inline-start: 10px;
+            /* Override browser default padding */
+        }
+
+        .subtask-item-view {
+            font-size: 0.85rem;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .subtask-item-view input[type="checkbox"] {
+            width: 0.8rem;
+            height: 0.8rem;
+            cursor: pointer;
+            margin-right: 0.3rem;
+            /* Space after checkbox */
+            flex-shrink: 0;
+            /* Prevent checkbox shrinking */
+        }
+
+        .subtask-item-view span {
+            word-break: break-word;
+            /* Wrap long subtask text */
+        }
+
+        .subtask-item-view span.completed {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+
+        .subtasks-list-edit {
+            max-height: 150px;
+            /* Limit height and allow scroll */
+            overflow-y: auto;
+            padding-right: 5px;
+            /* Space for scrollbar */
+        }
+
+        .subtask-item-edit {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.3rem 0.2rem;
+            margin-bottom: 0.3rem;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .subtask-item-edit.sortable-ghost {
+            /* Style for dragged item placeholder */
+            opacity: 0.4;
+            background-color: #dbeafe;
+        }
+
+        .subtask-drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            padding: 0 0.2rem;
+            align-self: center;
+            /* Center handle vertically */
+        }
+
+        .subtask-item-edit input[type="text"] {
+            flex-grow: 1;
+            border: none;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.85rem;
+            background-color: transparent;
+            /* Match item background */
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .subtask-item-edit input[type="text"]:focus {
+            outline: none;
+            background-color: white;
+            /* Highlight on focus */
+            box-shadow: inset 0 0 0 1px #d1d5db;
+            border-radius: 0.15rem;
+        }
+
+        .subtask-delete-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 0 0.3rem;
+            line-height: 1;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+        }
+
+        .subtask-delete-btn:hover {
+            color: #dc2626;
+        }
+
+        .add-subtask-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .add-subtask-input {
+            flex-grow: 1;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+            min-width: 0;
+            /* Allow shrinking */
+        }
+
+        .add-subtask-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+            /* Prevent button shrinking */
+            /* Reuse edit-button styles */
+        }
+
+        .view-subtasks-btn {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #4b5563;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.2rem 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .view-subtasks-btn:hover {
+            color: #1f2937;
+            text-decoration: underline;
+        }
+
+        .view-subtasks-btn .arrow {
+            transition: transform 0.2s ease-in-out;
+            display: inline-block;
+            /* Needed for transform */
+        }
+
+        .view-subtasks-btn[aria-expanded="true"] .arrow {
+            transform: rotate(90deg);
+        }
+
+        /* --- End Subtask Styles --- */
+
+        .task-card .edit-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            /* Increased margin */
+        }
+
+        .task-card .edit-button {
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-flex;
+            /* Para alinear emoji y texto */
+            align-items: center;
+            gap: 0.25rem;
+            /* Espacio entre emoji y texto */
+        }
+
+        .task-card .save-button {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .task-card .save-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .task-card .cancel-button {
+            background-color: #e5e7eb;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+
+        .task-card .cancel-button:hover {
+            background-color: #d1d5db;
+        }
+
+        .context-menu {
+            position: absolute;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 0.5rem 0;
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #374151;
+            gap: 0.5rem;
+            /* Espacio para emojis */
+        }
+
+        .context-menu-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .color-swatch {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            /* margin-right ya no es necesario por gap */
+            border: 1px solid #ccc;
+        }
+
+        .bg-task-red {
+            background-color: #fee2e2;
+            border-left: 4px solid #f87171;
+        }
+
+        .bg-task-blue {
+            background-color: #dbeafe;
+            border-left: 4px solid #60a5fa;
+        }
+
+        .bg-task-green {
+            background-color: #d1fae5;
+            border-left: 4px solid #34d399;
+        }
+
+        .bg-task-yellow {
+            background-color: #fef3c7;
+            border-left: 4px solid #facc15;
+        }
+
+        .bg-task-purple {
+            background-color: #e9d5ff;
+            border-left: 4px solid #a78bfa;
+        }
+
+        .bg-task-default {
+            background-color: white;
+            border-left: 4px solid #d1d5db;
+        }
+
+        .kanban-tasks.drag-over {
+            background-color: #e5e7eb;
+            border: 1px dashed #9ca3af;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 2rem;
+            border: none;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 0.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .close-button {
+            color: #9ca3af;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #1f2937;
+            text-decoration: none;
+        }
+
+        #addTaskBtn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Estilo para emojis en títulos y botones */
+        .emoji {
+            margin-right: 0.4rem;
+            /* Espacio después del emoji */
+            display: inline-block;
+            /* Asegura espaciado correcto */
+        }
