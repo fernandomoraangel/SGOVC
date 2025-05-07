@@ -397,11 +397,12 @@ async function verRizoma(containerId) {
     .append("text") // Añadimos el elemento text
     .attr("class", "link-label")
     .attr("text-anchor", "middle") // Anchor en el <text> padre
-    .style("font-size", "8px") // Reducir tamaño de fuente
+    .style("font-size", "6px") // Reducir tamaño de fuente
     .style("fill", "#555")
     .append("textPath") // Añadimos textPath dentro del text
     .attr("href", (d, i) => `#link-path-${i}`) // Referencia al ID del path del enlace
     .attr("startOffset", "50%") // Centrar texto en el path
+    .attr("dy", "-0.5em") // Mueve el texto ligeramente hacia arriba
     .text((d) => d.label);
 
   // IDs en los paths (útil si se necesita textPath, aunque no lo usemos ahora)
