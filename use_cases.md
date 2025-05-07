@@ -13,6 +13,7 @@ Los actores principales que interactúan con el sistema son:
 *   **Profesor:** Usuario que Crea sus propios OVC (que en su caso pueden ser usados como recursos didácticos), supervisa el proceso de creación de OVCs, diseña y utiliza rúbricas para la evaluación, visualiza promedios de evaluación, crea  rúbricas, visualiza el Rizoma y participa en los foros. Tiene visibilidad sobre todos los OVCs.
 
 *   **Administrador:** Usuario con control total sobre todas las funcionalidades del sistema, incluyendo la gestión de usuarios, OVCs, rúbricas, evaluaciones, tableros Kanban y foros.
+
 *   **Invitado:** Usuario externo que puede visualizar los OVCs públicos y participar en el proceso de evaluación utilizando rúbricas designadas para invitados y participar en los foros.
 
 ## 3. Casos de Uso
@@ -28,10 +29,12 @@ Los actores principales que interactúan con el sistema son:
     *   **Basic Flow:**
         1.  El Estudiante accede a la sección de creación de OVCs.
         2.  El sistema presenta un formulario para ingresar los detalles del OVC (título, descripción, archivos, etc.).
-        3.  El Estudiante completa el formulario y envía la información.
-        4.  El sistema valida los datos y crea el nuevo OVC asociado al Estudiante.
-        5.  El sistema muestra un mensaje de confirmación y redirige al Estudiante a la vista de su OVC recién creado o a la lista de sus OVCs o al rizoma filtrando su propio OVC y sus relaciones.
-*   **Postconditions:** Se ha creado un nuevo OVC en el sistema, asociado al Estudiante.
+        3.  El Estudiante completa el formulario con los detalles del OVC.
+        4.  El sistema solicita al Estudiante seleccionar el nivel de visibilidad para el OVC (ej. Privado, Miembros del Curso, Institucional, Público).
+        5.  El Estudiante selecciona el nivel de visibilidad y envía la información completa.
+        6.  El sistema valida los datos y crea el nuevo OVC asociado al Estudiante con el nivel de visibilidad especificado.
+        7.  El sistema muestra un mensaje de confirmación y redirige al Estudiante a la vista de su OVC recién creado o a la lista de sus OVCs o al rizoma filtrando su propio OVC y sus relaciones.
+*   **Postconditions:** Se ha creado un nuevo OVC en el sistema, asociado al Estudiante y con un nivel de visibilidad definido.
 
 **UC-102: Ver Lista de OVCs**
 
@@ -65,12 +68,12 @@ Los actores principales que interactúan con el sistema son:
 *   **Flow of Events:**
     *   **Basic Flow:**
         1.  El Actor, desde la vista de detalles del OVC, selecciona la opción de editar.
-        2.  El sistema presenta un formulario pre-llenado con la información actual del OVC.
-        3.  El Actor realiza las modificaciones necesarias en el formulario.
+        2.  El sistema presenta un formulario pre-llenado con la información actual del OVC, incluyendo su configuración de visibilidad.
+        3.  El Actor realiza las modificaciones necesarias en el formulario, pudiendo cambiar el título, descripción, archivos, y también el nivel de visibilidad del OVC.
         4.  El Actor guarda los cambios.
-        5.  El sistema valida los datos y actualiza la información del OVC.
+        5.  El sistema valida los datos y actualiza la información del OVC, incluyendo su nivel de visibilidad.
         6.  El sistema muestra un mensaje de confirmación y redirige a la vista de detalles del OVC actualizado.
-*   **Postconditions:** La información del OVC ha sido actualizada en el sistema.
+*   **Postconditions:** La información del OVC, incluyendo su nivel de visibilidad, ha sido actualizada en el sistema.
 
 **UC-105: Eliminar OVC**
 
@@ -85,6 +88,58 @@ Los actores principales que interactúan con el sistema son:
         4.  El sistema elimina el OVC y toda la información asociada (evaluaciones, tareas de Kanban, temas de foro relacionados, etc.).
         5.  El sistema muestra un mensaje de confirmación y redirige a la lista de OVCs.
 *   **Postconditions:** El OVC y su información asociada han sido eliminados del sistema.
+
+**UC-106: Gestionar Versiones de OVC**
+
+*   **Goal:** Un Actor (Estudiante, Profesor) desea guardar, visualizar o restaurar versiones de un OVC.
+*   **Actor(s):** Estudiante, Profesor, Administrador (para visualización y gestión)
+*   **Preconditions:** El Actor está editando un OVC (UC-104) o visualizando sus detalles (UC-103). El OVC existe.
+*   **Flow of Events - Guardar Nueva Versión:**
+    1.  Mientras edita un OVC, el Actor decide guardar los cambios actuales como una nueva versión.
+    2.  El Actor selecciona la opción "Guardar como nueva versión" (o similar).
+    3.  El sistema solicita opcionalmente una descripción o etiqueta para esta versión (ej. "Versión con bocetos iniciales", "Entrega Parcial 1").
+    4.  El sistema guarda el estado actual del OVC como una nueva versión, vinculada al OVC principal, y registra la fecha, el autor de la versión y la descripción.
+    5.  El sistema muestra un mensaje de confirmación.
+*   **Flow of Events - Ver Historial de Versiones:**
+    1.  Desde la vista de detalles de un OVC, el Actor selecciona la opción "Ver historial de versiones".
+    2.  El sistema muestra una lista cronológica de las versiones guardadas del OVC, con sus etiquetas/descripciones, fechas y autores.
+    3.  El Actor puede seleccionar una versión para ver sus detalles o una previsualización (si aplica).
+*   **Flow of Events - Restaurar Versión Anterior:**
+    1.  Desde el historial de versiones, el Actor selecciona una versión anterior.
+    2.  El Actor selecciona la opción "Restaurar esta versión".
+    3.  El sistema advierte que restaurar una versión puede sobrescribir los cambios no guardados de la versión actual o crear una nueva rama/versión a partir de la restaurada.
+    4.  El Actor confirma la restauración.
+    5.  El sistema restaura el contenido del OVC al estado de la versión seleccionada. La versión actual podría guardarse automáticamente antes de restaurar.
+*   **Postconditions:** Se ha guardado una nueva versión del OVC, o el Actor ha visualizado el historial, o se ha restaurado una versión anterior del OVC.
+
+**UC-107: Gestionar Colaboradores de OVC**
+
+*   **Goal:** El propietario de un OVC desea invitar, ver o remover colaboradores de su OVC. Un colaborador desea aceptar o rechazar una invitación.
+*   **Actor(s):** Estudiante (Propietario del OVC, Colaborador invitado), Profesor (posiblemente para supervisar o ser añadido como colaborador especial).
+*   **Preconditions:** El OVC existe. El Actor propietario ha iniciado sesión.
+*   **Flow of Events - Invitar Colaborador:**
+    1.  El Propietario del OVC, desde la vista de detalles o gestión del OVC, selecciona la opción "Gestionar Colaboradores" o "Invitar".
+    2.  El sistema presenta una interfaz para buscar y seleccionar otros usuarios (Estudiantes) del sistema.
+    3.  El Propietario busca y selecciona al usuario que desea invitar.
+    4.  (Opcional) El Propietario asigna un rol al colaborador (ej. Editor).
+    5.  El Propietario envía la invitación.
+    6.  El sistema registra la invitación pendiente y notifica al usuario invitado (ver UC-601).
+*   **Flow of Events - Aceptar/Rechazar Invitación de Colaboración:**
+    1.  El Estudiante invitado recibe una notificación de colaboración.
+    2.  El Estudiante accede a sus invitaciones pendientes o a través de la notificación.
+    3.  El sistema muestra la invitación, indicando el OVC y quién lo invita.
+    4.  El Estudiante selecciona "Aceptar" o "Rechazar".
+    5.  Si acepta, el sistema lo añade como colaborador al OVC. El Propietario es notificado.
+    6.  Si rechaza, la invitación se descarta. El Propietario es notificado.
+*   **Flow of Events - Ver Colaboradores:**
+    1.  El Propietario (o un colaborador existente) accede a la sección "Gestionar Colaboradores" del OVC.
+    2.  El sistema muestra la lista de colaboradores actuales del OVC y sus roles (si aplica).
+*   **Flow of Events - Remover Colaborador:**
+    1.  El Propietario, desde la lista de colaboradores, selecciona un colaborador para remover.
+    2.  El sistema solicita confirmación.
+    3.  El Propietario confirma.
+    4.  El sistema remueve al colaborador del OVC y le notifica.
+*   **Postconditions:** Se ha enviado una invitación de colaboración, el invitado ha respondido, se ha visualizado la lista de colaboradores, o se ha removido un colaborador. Los colaboradores aceptados pueden editar el OVC según los permisos definidos (por defecto, edición completa).
 
 ### 3.2. Sistema de Evaluación
 
@@ -446,7 +501,6 @@ Los actores principales que interactúan con el sistema son:
 *   **Actor(s):** Estudiante, Profesor, Administrador, Invitado (según los permisos de visualización de cada vista)
 *   **Preconditions:** El Actor está en una vista que soporta filtrado avanzado (ej. Lista de OVCs - UC-102, Ver Visualización Rizoma - UC-304, Ver Lista de Rúbricas - UC-205).
 *   **Flow of Events:**
-    *   **Basic Flow:**
         1.  El Actor accede a la funcionalidad de búsqueda/filtrado en la vista actual.
         2.  El sistema presenta una interfaz de búsqueda que permite al Actor ingresar términos de búsqueda.
         3.  El Actor ingresa su consulta, que puede incluir:
