@@ -259,10 +259,24 @@ Los actores principales que interactúan con el sistema son:
         2. El sistema modifica el color de la tarea y la muestra actualizada.
 *   **Postconditions:** Las tareas en el tablero Kanban han sido modificadas según la acción del Actor.
 
+**UC-303: Visualizar Tareas Propias en Kanban**
 
-### 3.4. Visualización Rizoma
+*   **Goal:** Un Estudiante desea visualizar todas sus tareas pendientes y en progreso de todos sus OVCs en una vista consolidada.
+*   **Actor(s):** Estudiante
+*   **Preconditions:** El Estudiante ha iniciado sesión en el sistema y tiene OVCs con tareas asignadas en sus respectivos tableros Kanban.
+*   **Flow of Events:**
+    *   **Basic Flow:**
+        1.  El Estudiante accede a la sección "Mis Tareas" o una vista similar.
+        2.  El sistema recupera todas las tareas asociadas al Estudiante de todos sus OVCs.
+        3.  El sistema presenta una lista o tablero consolidado de estas tareas, indicando el OVC al que pertenece cada tarea, su estado (To Do, In Progress) y otros detalles relevantes (ej. fecha de vencimiento si aplica).
+        4.  El Estudiante puede filtrar o agrupar las tareas (ej. por OVC, por fecha de vencimiento).
+*   **Postconditions:** El Estudiante puede visualizar un resumen de todas sus tareas pendientes y en progreso de sus OVCs.
 
-**UC-401: Ver Visualización Rizoma**
+
+
+### 3.4. Visualización Rizoma y Gestión de Tareas Global
+
+**UC-304: Ver Visualización Rizoma**
 
 *   **Goal:** Un Actor desea visualizar la red de relaciones entre los OVCs.
 *   **Actor(s):** Estudiante, Profesor, Administrador
@@ -273,11 +287,12 @@ Los actores principales que interactúan con el sistema son:
         2.  El sistema recupera los datos de los OVCs y sus relaciones.
         3.  El sistema genera y muestra la visualización interactiva del Rizoma.
         4.  El Actor puede interactuar con la visualización (zoom, pan, ver detalles al pasar el mouse, etc.).
+        5. El actor puede abrir la previsualización o los detalles de un OVC desde esta vista.
 *   **Postconditions:** El Actor puede visualizar la red de OVCs en formato Rizoma.
 
 ### 3.5. Foro
 
-**UC-501: Ver Foro de OVC**
+**UC-401: Ver Foro de OVC**
 
 *   **Goal:** Un Actor desea ver las discusiones asociadas a un OVC específico.
 *   **Actor(s):** Estudiante, Profesor, Administrador
@@ -289,7 +304,7 @@ Los actores principales que interactúan con el sistema son:
         3.  El Actor puede ver los títulos de los temas y un resumen del primer mensaje.
 *   **Postconditions:** El Actor puede visualizar los temas del foro para el OVC seleccionado.
 
-**UC-502: Crear Tema en Foro**
+**UC-402: Crear Tema en Foro**
 
 *   **Goal:** Un Actor desea iniciar una nueva discusión en el foro de un OVC.
 *   **Actor(s):** Estudiante, Profesor, Administrador
@@ -303,7 +318,7 @@ Los actores principales que interactúan con el sistema son:
         5.  El sistema muestra el nuevo tema en la lista de temas del foro.
 *   **Postconditions:** Se ha creado un nuevo tema de discusión en el foro del OVC.
 
-**UC-503: Crear Mensaje en Tema de Foro**
+**UC-403: Crear Mensaje en Tema de Foro**
 
 *   **Goal:** Un Actor desea responder a un tema de discusión existente en el foro de un OVC.
 *   **Actor(s):** Estudiante, Profesor, Administrador
@@ -317,7 +332,7 @@ Los actores principales que interactúan con el sistema son:
         5.  El sistema actualiza la vista del tema de discusión para incluir el nuevo mensaje.
 *   **Postconditions:** Se ha añadido un nuevo mensaje al tema de discusión en el foro del OVC.
 
-**UC-504: Moderar Foro (Eliminar Temas/Mensajes)**
+**UC-404: Moderar Foro (Eliminar Temas/Mensajes)**
 
 *   **Goal:** El Administrador desea eliminar temas o mensajes inapropiados del foro.
 *   **Actor(s):** Administrador
@@ -339,7 +354,7 @@ Los actores principales que interactúan con el sistema son:
 
 ### 3.6. Administración
 
-**UC-601: Gestionar Usuarios (Crear, Editar, Eliminar)**
+**UC-501: Gestionar Usuarios (Crear, Editar, Eliminar)**
 
 *   **Goal:** El Administrador desea administrar las cuentas de usuario en el sistema.
 *   **Actor(s):** Administrador
@@ -365,3 +380,87 @@ Los actores principales que interactúan con el sistema son:
         4.  El sistema elimina la cuenta de usuario y toda la información asociada a ese usuario (OVCs propios, evaluaciones realizadas, posts en foros, etc.).
         5.  El sistema muestra un mensaje de confirmación y actualiza la lista de usuarios.
 *   **Postconditions:** Las cuentas de usuario han sido gestionadas según la acción del Administrador.
+### 3.7. Notificaciones
+
+**UC-601: Recibir Notificaciones por Correo Electrónico**
+
+*   **Goal:** Un Actor desea ser notificado por correo electrónico sobre eventos relevantes en el sistema.
+*   **Actor(s):** Estudiante, Profesor, Administrador
+*   **Preconditions:** El Actor tiene una dirección de correo electrónico válida registrada en el sistema y ha habilitado las notificaciones (o están habilitadas por defecto).
+*   **Trigger:** Ocurre un evento en el sistema que genera una notificación (ej. creación/edición/eliminación de OVC, nueva tarea Kanban asignada, nueva evaluación recibida, nueva rúbrica creada, nueva participación en un foro seguido).
+*   **Flow of Events:**
+    *   **Basic Flow:**
+        1.  Un Actor realiza una acción en el sistema que está configurada para generar una notificación (ej. Estudiante crea un OVC - UC-101, Profesor crea una rúbrica - UC-201, Estudiante añade una tarea en Kanban - UC-302, etc.).
+        2.  El sistema identifica a los Actores relevantes que deben ser notificados sobre este evento (ej. el propio actor, el profesor del curso, los colaboradores de un OVC, los suscriptores de un foro).
+        3.  El sistema compone un mensaje de correo electrónico con la información relevante sobre el evento (ej. "El OVC '[Nombre OVC]' ha sido creado", "Se te ha asignado una nueva tarea '[Nombre Tarea]' en el OVC '[Nombre OVC]'").
+        4.  El sistema envía el correo electrónico a las direcciones registradas de los Actores identificados.
+*   **Postconditions:** Los Actores relevantes reciben una notificación por correo electrónico sobre el evento ocurrido en el sistema.
+*   **Notas:**
+    *   Las notificaciones específicas y quién las recibe dependerán de la configuración del sistema y las preferencias del usuario.
+    *   Los eventos que disparan notificaciones incluyen, pero no se limitan a:
+        *   **Gestión de OVCs:** Creación (UC-101), Edición (UC-104), Eliminación (UC-105).
+        *   **Sistema de Evaluación:** Diseño de Rúbrica (UC-201), Evaluación de OVC (UC-202), Eliminación de Rúbrica (UC-207).
+        *   **Tablero Kanban:** Gestión de Tareas (UC-302 - creación, asignación, cambio de estado).
+        *   **Foro:** Creación de Tema (UC-402), Creación de Mensaje en Tema (UC-403) en foros seguidos o donde el usuario participa.
+### 3.8. Estadísticas
+
+**UC-701: Visualizar Estadísticas del Sistema y OVCs**
+
+*   **Goal:** Un Actor (Profesor o Administrador) desea visualizar estadísticas consolidadas sobre el uso del sistema, la actividad de los OVCs, evaluaciones y otros datos relevantes.
+*   **Actor(s):** Profesor, Administrador
+*   **Preconditions:** El Actor ha iniciado sesión en el sistema y tiene los permisos necesarios para acceder a la sección de estadísticas. Existen datos en el sistema (OVCs, evaluaciones, actividad de usuarios, etc.).
+*   **Flow of Events:**
+    *   **Basic Flow - Estadísticas Generales del Sistema:**
+        1.  El Actor accede a la sección de "Estadísticas" o "Reportes".
+        2.  El sistema presenta un panel de control (dashboard) con estadísticas generales:
+            *   Número total de OVCs.
+            *   Número de OVCs por estado (ej. en desarrollo, completado, público).
+            *   Actividad de usuarios (ej. número de OVCs creados recientemente, número de evaluaciones realizadas).
+            *   Uso de rúbricas (ej. rúbricas más utilizadas).
+            *   Actividad en foros (ej. número de temas nuevos, mensajes recientes).
+        3.  El Actor puede aplicar filtros (ej. por rango de fechas, por curso si aplica).
+    *   **Alternative Flow - Estadísticas de un OVC Específico:**
+        1.  Desde la vista de un OVC (UC-103) o desde una lista de OVCs (UC-102), el Actor selecciona la opción "Ver Estadísticas".
+        2.  El sistema presenta estadísticas detalladas para el OVC seleccionado:
+            *   Número de visualizaciones.
+            *   Número de evaluaciones recibidas.
+            *   Promedio de calificaciones (general y por rúbrica).
+            *   Actividad en el tablero Kanban asociado (ej. número de tareas completadas, tiempo promedio por tarea).
+            *   Actividad en el foro asociado (ej. número de temas, número de mensajes).
+    *   **Alternative Flow - Estadísticas de Evaluaciones:**
+        1.  El Actor navega a una subsección de "Estadísticas de Evaluaciones".
+        2.  El sistema presenta datos como:
+            *   Promedio general de calificaciones en todos los OVCs.
+            *   Distribución de calificaciones.
+            *   Rúbricas con promedios más altos/bajos.
+            *   Evaluaciones por evaluador (para Administradores).
+*   **Postconditions:** El Actor puede visualizar un compendio de estadísticas relevantes sobre la actividad y el contenido del sistema SGOVC, tanto a nivel general como específico por OVC.
+*   **Notas:**
+    *   Las estadísticas exactas disponibles pueden variar según la implementación y las necesidades del Pregrado.
+    *   Se podrían generar gráficos y visualizaciones para facilitar la comprensión de los datos.
+### 3.9. Búsqueda y Filtrado Avanzado
+
+**UC-801: Aplicar Búsqueda y Filtrado Avanzado**
+
+*   **Goal:** Un Actor desea buscar y filtrar OVCs, Rúbricas o elementos dentro del Rizoma utilizando criterios avanzados para refinar los resultados.
+*   **Actor(s):** Estudiante, Profesor, Administrador, Invitado (según los permisos de visualización de cada vista)
+*   **Preconditions:** El Actor está en una vista que soporta filtrado avanzado (ej. Lista de OVCs - UC-102, Ver Visualización Rizoma - UC-304, Ver Lista de Rúbricas - UC-205).
+*   **Flow of Events:**
+    *   **Basic Flow:**
+        1.  El Actor accede a la funcionalidad de búsqueda/filtrado en la vista actual.
+        2.  El sistema presenta una interfaz de búsqueda que permite al Actor ingresar términos de búsqueda.
+        3.  El Actor ingresa su consulta, que puede incluir:
+            *   **Palabras exactas:** Términos específicos que deben coincidir.
+            *   **Palabras aproximadas:** Términos con posibles variaciones o errores tipográficos (búsqueda difusa).
+            *   **Operadores booleanos:** Uso de AND, OR, NOT para combinar términos de búsqueda.
+            *   **Descripciones en lenguaje natural:** Frases descriptivas de lo que se busca (ej. "OVCs sobre realidad virtual creados el último mes").
+        4.  Si la consulta es una descripción en lenguaje natural, el sistema la procesa utilizando la API de Gemini para interpretarla y convertirla en criterios de búsqueda estructurados.
+        5.  El sistema aplica los criterios de búsqueda (directos o interpretados por IA) a los campos relevantes de los ítems (OVCs, Rúbricas, etc.), incluyendo títulos, descripciones, metadatos, contenido, autor, fechas, etc.
+        6.  El sistema actualiza la vista para mostrar solo los ítems que coinciden con los criterios de búsqueda.
+        7.  El Actor puede refinar o modificar su búsqueda.
+*   **Postconditions:** La vista actual (Lista de OVCs, Rizoma, Lista de Rúbricas) se actualiza para mostrar solo los elementos que coinciden con los criterios de búsqueda y filtrado avanzados ingresados por el Actor.
+*   **Notas:**
+    *   Esta funcionalidad se integra con los casos de uso existentes de visualización de listas y el Rizoma.
+    *   La capacidad de búsqueda en "cualquier campo" implica una indexación robusta de los datos.
+    *   La integración con Gemini API para el procesamiento de lenguaje natural requiere una configuración y manejo de API adecuados.
+    *   Los filtros pueden ser apilables o combinables.
