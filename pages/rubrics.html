@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Evaluación con Rúbricas - UdeA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/rubrics-styles.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body x-data="rubricSystem()">
+
+    <div class="flex h-screen bg-gray-100">
+        <aside class="w-64 bg-white shadow-md flex flex-col p-4">
+            <div class="flex items-center justify-center mb-6 py-2">
+                <span class="text-xl font-bold text-gray-700">Ude<span class="accent-pink">@</span> Digital</span>
+            </div>
+
+            <nav class="flex-1 space-y-2">
+                <button @click="currentTab = 'designer'"
+                    :class="{ 'sidebar-active': currentTab === 'designer', 'text-gray-600 hover:bg-gray-100': currentTab !== 'designer' }"
+                    class="w-full flex items-center space-x-4 p-4 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <i data-lucide="edit" class="w-5 h-5"></i>
+                    <span>Diseñar Rúbrica</span>
+                </button>
+                <button @click="currentTab = 'evaluator'"
+                    :class="{ 'sidebar-active': currentTab === 'evaluator', 'text-gray-600 hover:bg-gray-100': currentTab !== 'evaluator' }"
+                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                    <span>Evaluar OVC</span>
+                </button>
+                <button @click="currentTab = 'viewer'"
+                    :class="{ 'sidebar-active': currentTab === 'viewer', 'text-gray-600 hover:bg-gray-100': currentTab !== 'viewer' }"
+                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                    <span>Ver Promedios</span>
+                </button>
+                <button @click="currentTab = 'summary'"
+                    :class="{ 'sidebar-active': currentTab === 'summary', 'text-gray-600 hover:bg-gray-100': currentTab !== 'summary' }"
+                    class="w-full flex items-center space-x-3 p-2 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-pink-500">
+                    <i data-lucide="list" class="w-5 h-5"></i>
+                    <span>Resumen Rúbricas</span>
+                </button>
+            </nav>
+
+            <div class="mt-auto border-t pt-4">
+                <p class="text-xs text-gray-500 text-center">© 2024 Universidad de Antioquia</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header class="bg-white shadow-sm p-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-lg font-semibold text-gray-700" x-text="pageTitle"></h1>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="user-circle-2" class="w-6 h-6 text-gray-500"></i>
+                    <span class="text-sm text-gray-600">Usuario Ejemplo</span>
+                    <button class="text-gray-500 hover:text-pink-600">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+
+                    <div x-show="message.text"
+                        :class="{ 'bg-green-100 border-green-400 text-green-700': message.type === 'success', 'bg-red-100 border-red-400 text-red-700': message.type === 'error', 'bg-blue-100 border-blue-400 text-blue-700': message.type === 'info' }"
+                        class="border px-4 py-3 rounded relative mb-4" role="alert">
+                        <span class="block sm:inline" x-text="message.text"></span>
+                        <span @click="message.text = ''"
+                            class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">
+                            <svg class="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20">
+                                <title>Cerrar</title>
+                                <path
+                                    d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <div x-show="currentTab === 'designer'" x-cloak>
+                        <h2
+                            class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
+                            Diseñador de Rúbricas</h2>
+
+                        <!-- AI Generation Section -->
+                        <div class="p-4 border border-dashed border-pink-300 rounded-md bg-pink-50 mb-6">
+                            <h3 class="text-lg font-medium text-gray-800 mb-2 flex items-center">
+                                <i data-lucide="sparkles" class="w-5 h-5 mr-2 text-pink-600"></i> Generar con IA
+                            </h3>
+                            <p class="text-sm text-gray-600 mb-3">Describe el tema o la tarea para la cual necesitas la
+                                rúbrica, y la IA generará una propuesta inicial.</p>
+                            <div>
+                                <label for="aiTopic" class="block text-sm font-medium text-gray-700">Tema/Tarea para la
+                                    Rúbrica</label>
+                                <input type="text" id="aiTopic" x-model="aiRubricTopic"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                    placeholder="Ej: Ensayo argumentativo sobre cambio climático">
+                            </div>
+                            <div class="mt-3 text-right">
+                                <button @click="generateRubricWithAi()"
+                                    :disabled="!aiRubricTopic.trim() || isGeneratingAiRubric"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-accent-pink hover:bg-accent-pink-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-pink disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <span x-show="!isGeneratingAiRubric">
+                                        <i data-lucide="wand-2" class="w-4 h-4 mr-2"></i> Generar Rúbrica
+                                    </span>
+                                    <span x-show="isGeneratingAiRubric">
+                                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
+                                        Generando...
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- End AI Generation Section -->
+
+                        <div class="space-y-4">
+                            <div>
+                                <label for="rubricTitle" class="block text-sm font-medium text-gray-700">Título de la
+                                    Rúbrica (Editable)</label>
+                                <input type="text" id="rubricTitle" x-model="newRubric.title"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                    placeholder="Ej: Rúbrica para Presentación Oral">
+                            </div>
+
+                            <h3 class="text-lg font-medium text-gray-800 pt-4">Criterios de Desempeño</h3>
+                            <div class="space-y-4">
+                                <template x-for="(criterion, critIndex) in newRubric.criteria" :key="critIndex">
+                                    <div class="p-4 border border-gray-200 rounded-md bg-gray-50">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="text-md font-semibold text-gray-700"
+                                                x-text="'Criterio ' + (critIndex + 1)"></h4>
+                                            <button @click="removeCriterion(critIndex)"
+                                                class="text-red-600 hover:text-red-800">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                                            <div class="md:col-span-2">
+                                                <label :for="'critName' + critIndex"
+                                                    class="block text-sm font-medium text-gray-700">Nombre del
+                                                    Criterio</label>
+                                                <input type="text" :id="'critName' + critIndex" x-model="criterion.name"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                                    placeholder="Ej: Claridad del Contenido">
+                                            </div>
+                                            <div>
+                                                <label :for="'critWeight' + critIndex"
+                                                    class="block text-sm font-medium text-gray-700">Peso (%)</label>
+                                                <input type="number" :id="'critWeight' + critIndex"
+                                                    x-model.number="criterion.weight" min="0" max="100"
+                                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                                    placeholder="Ej: 20">
+                                            </div>
+                                        </div>
+
+                                        <h5 class="text-sm font-medium text-gray-600 mb-2">Niveles de Desempeño</h5>
+                                        <div class="space-y-3">
+                                            <template x-for="(level, levelIndex) in criterion.levels" :key="levelIndex">
+                                                <div class="p-3 border border-gray-100 rounded bg-white shadow-sm">
+                                                    <div class="flex justify-between items-start mb-1">
+                                                        <span class="text-sm font-semibold text-gray-600"
+                                                            x-text="'Nivel ' + (levelIndex + 1)"></span>
+                                                        <button @click="removeLevel(critIndex, levelIndex)"
+                                                            class="text-red-500 hover:text-red-700">
+                                                            <i data-lucide="x" class="w-3 h-3"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                                                        <div class="md:col-span-2">
+                                                            <label :for="'levelName' + critIndex + levelIndex"
+                                                                class="block text-xs font-medium text-gray-500">Nombre</label>
+                                                            <input type="text"
+                                                                :id="'levelName' + critIndex + levelIndex"
+                                                                x-model="level.name"
+                                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm text-xs"
+                                                                placeholder="Ej: Sobresaliente">
+                                                        </div>
+                                                        <div>
+                                                            <label :for="'levelScore' + critIndex + levelIndex"
+                                                                class="block text-xs font-medium text-gray-500">Puntaje</label>
+                                                            <input type="number"
+                                                                :id="'levelScore' + critIndex + levelIndex"
+                                                                x-model.number="level.score"
+                                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm text-xs"
+                                                                placeholder="Ej: 5">
+                                                        </div>
+                                                        <div class="md:col-span-2">
+                                                            <label :for="'levelDesc' + critIndex + levelIndex"
+                                                                class="block text-xs font-medium text-gray-500">Descripción</label>
+                                                            <textarea :id="'levelDesc' + critIndex + levelIndex"
+                                                                x-model="level.description" rows="2"
+                                                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm text-xs"
+                                                                placeholder="Descripción del nivel..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <button @click="addLevel(critIndex)"
+                                            class="mt-3 inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Añadir Nivel
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="flex justify-between items-center mt-4">
+                                <button @click="addCriterion()"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <i data-lucide="plus-circle" class="w-5 h-5 mr-2"></i> Añadir Criterio
+                                </button>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-gray-600">Peso Total: <span x-text="totalWeight"
+                                            :class="{ 'text-red-600': totalWeight !== 100, 'text-green-600': totalWeight === 100 }"></span>%
+                                    </p>
+                                    <p x-show="totalWeight !== 100" class="text-xs text-red-500">El peso total debe
+                                        sumar 100%.</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 text-right space-x-3">
+                                <button @click="downloadRubric" :disabled="!canSaveRubric"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="download" class="w-4 h-4 mr-2"></i> Descargar JSON
+                                </button>
+                                <button @click="saveRubric" :disabled="!canSaveRubric"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-pink hover:bg-accent-pink-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-pink disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="save" class="w-5 h-5 mr-2"></i> Guardar Rúbrica
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="currentTab === 'evaluator'" x-cloak>
+                        <h2
+                            class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
+                            Evaluador de OVC</h2>
+                        <div class="space-y-4" x-show="!evaluation.rubric">
+                            <label for="rubricSelect" class="block text-sm font-medium text-gray-700">Seleccionar
+                                Rúbrica</label>
+                            <select id="rubricSelect" x-model="selectedRubricTitle"
+                                @change="loadRubricForEvaluation($event.target.value)"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-accent-pink focus:border-accent-pink sm:text-sm rounded-md">
+                                <option value="">-- Elija una rúbrica --</option>
+                                <template x-for="rubric in savedRubrics" :key="rubric.title">
+                                    <option :value="rubric.title" x-text="rubric.title"></option>
+                                </template>
+                            </select>
+                            <p class="text-sm text-gray-500 mt-2">Primero debe <button
+                                    class="text-pink-600 hover:underline" @click="currentTab = 'designer'">crear y
+                                    guardar</button> una rúbrica.</p>
+                        </div>
+
+                        <div x-show="evaluation.rubric" class="space-y-6">
+                            <button @click="resetEvaluationForm"
+                                class="text-sm text-pink-600 hover:underline mb-4 inline-flex items-center">
+                                <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Cambiar Rúbrica
+                            </button>
+                            <h3 class="text-lg font-medium text-gray-800"
+                                x-text="'Evaluando con: ' + evaluation.rubric.title"></h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md">
+                                <div>
+                                    <label for="ovcTitle" class="block text-sm font-medium text-gray-700">Título del
+                                        OVC</label>
+                                    <input type="text" id="ovcTitle" x-model="evaluation.ovcTitle"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Nombre del Proyecto/OVC">
+                                </div>
+                                <div>
+                                    <label for="subject"
+                                        class="block text-sm font-medium text-gray-700">Asignatura</label>
+                                    <input type="text" id="subject" x-model="evaluation.subject"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Ej: Programación Web">
+                                </div>
+                                <div>
+                                    <label for="evaluatorName" class="block text-sm font-medium text-gray-700">Nombre
+                                        del Evaluador</label>
+                                    <input type="text" id="evaluatorName" x-model="evaluation.evaluatorName"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="evaluatorId" class="block text-sm font-medium text-gray-700">Cédula del
+                                        Evaluador</label>
+                                    <input type="text" id="evaluatorId" x-model="evaluation.evaluatorId"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="percentage" class="block text-sm font-medium text-gray-700">Porcentaje
+                                        en la Nota Final (%)</label>
+                                    <input type="number" id="percentage" x-model.number="evaluation.percentage" min="0"
+                                        max="100"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Ej: 30">
+                                </div>
+                            </div>
+
+                            <div class="space-y-5 mt-6">
+                                <template x-for="(criterion, critIndex) in evaluation.rubric.criteria" :key="critIndex">
+                                    <div class="p-4 border border-gray-200 rounded-md bg-gray-50">
+                                        <h4 class="text-md font-semibold text-gray-700 mb-1"
+                                            x-text="criterion.name + ' (' + criterion.weight + '%)'"></h4>
+                                        <p class="text-sm text-gray-500 mb-3">Seleccione un nivel:</p>
+                                        <div
+                                            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                                            <template x-for="(level, levelIndex) in criterion.levels" :key="levelIndex">
+                                                <div @click="selectLevel(critIndex, level.score)"
+                                                    :class="{ 'selected-level': evaluation.scores[critIndex] === level.score }"
+                                                    class="cursor-pointer p-3 border border-gray-300 rounded-md hover:border-accent-pink hover:bg-pink-50 transition duration-150 ease-in-out flex flex-col justify-between min-h-[100px]">
+                                                    <div>
+                                                        <p class="font-medium text-sm text-gray-800"
+                                                            x-text="level.name + ' (' + level.score + ' pts)'"></p>
+                                                        <p class="text-xs text-gray-600 mt-1"
+                                                            x-text="level.description"></p>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <p x-show="evaluation.scores[critIndex] === null"
+                                            class="text-xs text-red-500 mt-1">Debe seleccionar un nivel para este
+                                            criterio.</p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div>
+                                <label for="feedback" class="block text-sm font-medium text-gray-700">Retroalimentación
+                                    General</label>
+                                <textarea id="feedback" x-model="evaluation.feedback" rows="4"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                    placeholder="Comentarios adicionales sobre el OVC..."></textarea>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200 text-center">
+                                <p class="text-sm font-medium text-gray-700">Calificación Calculada:</p>
+                                <p class="text-2xl font-bold text-blue-600"
+                                    x-text="calculatedScore !== null ? calculatedScore.toFixed(2) : '--'"></p>
+                                <p x-show="!allLevelsSelected" class="text-xs text-red-500 mt-1">Complete todos los
+                                    criterios para calcular la nota.</p>
+                            </div>
+
+                            <div class="mt-6 text-right">
+                                <button @click="submitEvaluation" :disabled="!canSubmitEvaluation"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-pink hover:bg-accent-pink-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-pink disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> Guardar Evaluación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="currentTab === 'viewer'" x-cloak>
+                        <h2
+                            class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
+                            Visor de Promedios por OVC</h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="ovcSelect" class="block text-sm font-medium text-gray-700">Seleccionar
+                                    Título del OVC</label>
+                                <select id="ovcSelect" x-model="selectedOvcForAverage"
+                                    @change="calculateAverageScore($event.target.value)"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-accent-pink focus:border-accent-pink sm:text-sm rounded-md">
+                                    <option value="">-- Elija un OVC --</option>
+                                    <template x-for="ovcTitle in availableOvcTitles" :key="ovcTitle">
+                                        <option :value="ovcTitle" x-text="ovcTitle"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div x-show="selectedOvcForAverage && averageScore !== null"
+                                class="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">
+                                <h3 class="text-lg font-medium text-gray-800 mb-2">Resultados para: <span
+                                        class="font-bold" x-text="selectedOvcForAverage"></span></h3>
+                                <p class="text-sm text-gray-600">Número de Evaluaciones: <span class="font-semibold"
+                                        x-text="evaluationCount"></span></p>
+                                <p class="text-xl font-bold text-center accent-pink mt-3"
+                                    x-text="'Promedio: ' + averageScore.toFixed(2)"></p>
+
+                                <div class="mt-4">
+                                    <button @click="showIndividualEvaluations = !showIndividualEvaluations"
+                                        class="text-sm text-pink-600 hover:underline mb-3 inline-flex items-center">
+                                        <i :data-lucide="showIndividualEvaluations ? 'chevron-up' : 'chevron-down'"
+                                            class="w-4 h-4 mr-1"></i>
+                                        <span
+                                            x-text="showIndividualEvaluations ? 'Ocultar evaluaciones individuales' : 'Mostrar evaluaciones individuales'"></span>
+                                    </button>
+                                    <div x-show="showIndividualEvaluations" x-transition class="overflow-x-auto">
+                                        <table class="min-w-full bg-white minimal-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Evaluador</th>
+                                                    <th>Cédula</th>
+                                                    <th>Asignatura</th>
+                                                    <th>Nota</th>
+                                                    <th>Fecha</th>
+                                                    <th>Feedback</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template x-for="(indEval, index) in individualEvaluations"
+                                                    :key="index">
+                                                    <tr>
+                                                        <td x-text="indEval.evaluatorName || 'N/A'"></td>
+                                                        <td x-text="indEval.evaluatorId || 'N/A'"></td>
+                                                        <td x-text="indEval.subject || 'N/A'"></td>
+                                                        <td><span class="font-semibold"
+                                                                x-text="indEval.calculatedGrade.toFixed(2)"></span></td>
+                                                        <td x-text="new Date(indEval.timestamp).toLocaleDateString()">
+                                                        </td>
+                                                        <td class="text-xs text-gray-600"
+                                                            x-text="indEval.feedback || 'Sin feedback'"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div x-show="selectedOvcForAverage && averageScore === null"
+                                class="mt-4 text-center text-gray-500">
+                                No se encontraron evaluaciones para este OVC.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="currentTab === 'summary'" x-cloak>
+                        <h2
+                            class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
+                            Resumen de Rúbricas Guardadas</h2>
+                        <div class="space-y-4">
+                            <div x-show="savedRubrics.length === 0" class="text-center text-gray-500 py-4">
+                                No hay rúbricas guardadas todavía. Cree una en la pestaña 'Diseñar Rúbrica'.
+                            </div>
+                            <div x-show="savedRubrics.length > 0" class="overflow-x-auto">
+                                <table class="min-w-full bg-white minimal-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Título de la Rúbrica</th>
+                                            <th>Criterios</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(rubric, index) in savedRubrics" :key="index">
+                                            <tr>
+                                                <td x-text="rubric.title"></td>
+                                                <td x-text="rubric.criteria.length"></td>
+                                                <td>
+                                                    <button @click="editRubric(index)"
+                                                        class="text-blue-600 hover:text-blue-800 text-sm font-medium inline-flex items-center">
+                                                        <i data-lucide="edit-3" class="w-4 h-4 mr-1"></i> Editar
+                                                    </button>
+                                                    <button @click="confirmDeleteRubric(index)"
+                                                        class="text-red-600 hover:text-red-800 text-sm font-medium inline-flex items-center ml-3">
+                                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Eliminar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <footer class="bg-white border-t border-gray-200 p-3 text-center text-xs text-gray-500">
+                Todos los derechos reservados 2024 :: Universidad de Antioquia :: Vicerrectoría de Docencia
+            </footer>
+
+        </main>
+    </div>
+    <script>
+        // IMPORTANT: Replace 'YOUR_GOOGLE_API_KEY' with your actual Google AI API key
+        const GOOGLE_API_KEY = 'AIzaSyA5rWKqgBArqtg5aZiQiQFMRpZWcOsHwT0';
+        const AI_MODEL_NAME = 'gemini-1.5-flash-latest'; // Using a free, fast model
+
+        function rubricSystem() {
+            return {
+                // Keep existing data properties: currentTab, message, newRubric, etc.
+                currentTab: 'designer', // 'designer', 'evaluator', 'viewer', 'summary'
+                message: { text: '', type: 'info', timer: null }, // type: 'success', 'error', 'info'
+                newRubric: {
+                    title: '',
+                    criteria: []
+                },
+                savedRubrics: [], // Array to hold saved rubric objects
+                evaluation: { // Data for the current evaluation being performed
+                    ovcTitle: '',
+                    evaluatorName: '',
+                    evaluatorId: '',
+                    subject: '',
+                    percentage: null,
+                    rubric: null, // The selected rubric object
+                    scores: [], // Array to hold scores for each criterion [score1, score2, ...]
+                    feedback: '',
+                    calculatedGrade: null,
+                    timestamp: null
+                },
+                selectedRubricTitle: '', // Title of the rubric selected in the evaluator tab
+                allEvaluations: {}, // Object to hold all submitted evaluations { ovcTitle: [eval1, eval2], ... }
+                selectedOvcForAverage: '', // OVC title selected in the viewer tab
+                averageScore: null,
+                evaluationCount: 0,
+                individualEvaluations: [],
+                showIndividualEvaluations: false,
+                rubricToDeleteIndex: null, // Index of rubric marked for deletion
+                aiRubricTopic: '', // Input for AI generation
+                isGeneratingAiRubric: false, // Loading state for AI generation
+
+
+                // --- Computed property for dynamic page title ---
+                get pageTitle() {
+                    switch (this.currentTab) {
+                        case 'designer': return 'Diseñador de Rúbricas';
+                        case 'evaluator': return 'Evaluador de OVC';
+                        case 'viewer': return 'Visor de Promedios';
+                        case 'summary': return 'Resumen de Rúbricas'; // Added title for summary tab
+                        default: return 'Sistema de Evaluación';
+                    }
+                },
+
+                // Initialization
+                init() {
+                    console.log('Initializing Rubric System...');
+                    this.loadSavedRubrics(); // Load rubrics first
+                    this.loadSavedEvaluations();
+
+                    // Check if we need to load a rubric for editing
+                    try {
+                        const editIndexStr = localStorage.getItem('editRubricIndex');
+                        if (editIndexStr !== null) {
+                            const editIndex = parseInt(editIndexStr, 10);
+                            localStorage.removeItem('editRubricIndex'); // Remove immediately
+                            if (!isNaN(editIndex) && editIndex >= 0 && editIndex < this.savedRubrics.length) {
+                                console.log(`Found editRubricIndex: ${editIndex}. Loading rubric for editing.`);
+                                // Use $nextTick to ensure data is loaded before attempting edit
+                                this.$nextTick(() => {
+                                    this.editRubric(editIndex);
+                                });
+                            } else {
+                                console.warn(`Invalid editRubricIndex found: ${editIndexStr}`);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error reading editRubricIndex from localStorage:", e);
+                        localStorage.removeItem('editRubricIndex'); // Clean up potentially bad data
+                    }
+
+                    // Add a default criterion and level if empty AND not editing
+                    if (this.newRubric.criteria.length === 0 && localStorage.getItem('editRubricIndex') === null) { // Check again in case editRubric failed
+                        this.addCriterion();
+                    }
+
+                    // Use $nextTick to ensure Alpine is ready before initializing icons
+                    this.$nextTick(() => {
+                        lucide.createIcons(); // Initialize Lucide icons
+                    });
+
+                    // Watchers to re-render icons when dynamic content changes
+                    this.$watch('currentTab', () => this.$nextTick(() => lucide.createIcons()));
+                    this.$watch('newRubric.criteria', () => this.$nextTick(() => lucide.createIcons()), { deep: true });
+                    this.$watch('evaluation.rubric', () => this.$nextTick(() => lucide.createIcons()));
+                    this.$watch('showIndividualEvaluations', () => this.$nextTick(() => lucide.createIcons()));
+                    this.$watch('savedRubrics', () => this.$nextTick(() => lucide.createIcons())); // Watch savedRubrics for summary tab updates
+                },
+
+                // --- Rubric Designer Methods (Keep existing logic) ---
+                addCriterion() {
+                    this.newRubric.criteria.push({
+                        name: '',
+                        weight: null,
+                        levels: [{ name: '', score: null, description: '' }] // Start with one level
+                    });
+                },
+                removeCriterion(index) {
+                    this.newRubric.criteria.splice(index, 1);
+                },
+                addLevel(criterionIndex) {
+                    this.newRubric.criteria[criterionIndex].levels.push({ name: '', score: null, description: '' });
+                },
+                removeLevel(criterionIndex, levelIndex) {
+                    this.newRubric.criteria[criterionIndex].levels.splice(levelIndex, 1);
+                },
+                get totalWeight() {
+                    return this.newRubric.criteria.reduce((sum, crit) => sum + (Number(crit.weight) || 0), 0);
+                },
+                get canSaveRubric() {
+                    if (!this.newRubric.title.trim()) return false;
+                    if (this.newRubric.criteria.length === 0) return false;
+                    if (this.totalWeight !== 100) {
+                        // Only show weight error if criteria exist
+                        if (this.newRubric.criteria.length > 0 && this.newRubric.criteria.some(c => c.weight !== null && c.weight !== '')) {
+                            //this.showMessage('El peso total debe sumar 100%.', 'error'); // Avoid showing message constantly during input
+                        }
+                        return false;
+                    }
+                    let levelScoreError = false;
+                    let levelNameError = false;
+                    let critNameError = false;
+
+                    for (const crit of this.newRubric.criteria) {
+                        if (!crit.name.trim() || crit.weight === null || crit.weight <= 0) return false;
+                        if (crit.levels.length === 0) return false;
+                        for (const level of crit.levels) {
+                            if (!level.name.trim() || level.score === null) return false; // Description is optional
+                        }
+                        // Check for unique level scores within a criterion
+                        const scores = crit.levels.map(l => l.score).filter(s => s !== null); // Filter nulls before checking uniqueness
+                        if (new Set(scores).size !== scores.length) {
+                            levelScoreError = true;
+                        }
+                        // Check for unique level names within a criterion
+                        const names = crit.levels.map(l => l.name.trim().toLowerCase()).filter(n => n !== '');
+                        if (new Set(names).size !== names.length) {
+                            levelNameError = true;
+                        }
+                    }
+                    // Check for unique criterion names
+                    const critNames = this.newRubric.criteria.map(c => c.name.trim().toLowerCase()).filter(n => n !== '');
+                    if (new Set(critNames).size !== critNames.length) {
+                        critNameError = true;
+                    }
+
+                    // Show specific error messages only once if validation fails
+                    if (levelScoreError) this.showMessage('Los puntajes de los niveles dentro de un mismo criterio deben ser únicos.', 'error');
+                    if (levelNameError) this.showMessage('Los nombres de los niveles dentro de un mismo criterio deben ser únicos.', 'error');
+                    if (critNameError) this.showMessage('Los nombres de los criterios deben ser únicos.', 'error');
+
+                    return !levelScoreError && !levelNameError && !critNameError;
+                },
+                saveRubric() {
+                    if (!this.canSaveRubric) {
+                        // Specific error messages are now shown by canSaveRubric getter
+                        if (this.totalWeight !== 100) {
+                            this.showMessage('Por favor, asegúrese que los pesos sumen 100%.', 'error');
+                        } else {
+                            this.showMessage('Por favor, complete todos los campos requeridos de la rúbrica y verifique que no haya nombres/puntajes duplicados.', 'error');
+                        }
+                        return;
+                    }
+                    const rubricToSave = JSON.parse(JSON.stringify(this.newRubric));
+                    rubricToSave.criteria.forEach(crit => {
+                        crit.levels.sort((a, b) => a.score - b.score);
+                    });
+                    const existingIndex = this.savedRubrics.findIndex(r => r.title === rubricToSave.title);
+                    if (existingIndex !== -1) {
+                        this.savedRubrics[existingIndex] = rubricToSave;
+                        this.showMessage(`Rúbrica '${rubricToSave.title}' actualizada exitosamente.`, 'success');
+                    } else {
+                        this.savedRubrics.push(rubricToSave);
+                        this.showMessage(`Rúbrica '${rubricToSave.title}' guardada exitosamente.`, 'success');
+                    }
+                    localStorage.setItem('savedRubrics', JSON.stringify(this.savedRubrics));
+                    this.resetRubricForm(); // Optionally reset form after saving
+                    this.currentTab = 'summary'; // Switch to summary view after saving
+                },
+                downloadRubric() {
+                    if (!this.canSaveRubric) {
+                        this.showMessage('Complete la rúbrica antes de descargarla.', 'error');
+                        return;
+                    }
+                    const rubricToDownload = JSON.parse(JSON.stringify(this.newRubric));
+                    rubricToDownload.criteria.forEach(crit => {
+                        crit.levels.sort((a, b) => a.score - b.score);
+                    });
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rubricToDownload, null, 2));
+                    const downloadAnchorNode = document.createElement('a');
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    const fileName = rubricToDownload.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.json';
+                    downloadAnchorNode.setAttribute("download", fileName);
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                    this.showMessage('Archivo JSON de la rúbrica generado para descarga.', 'info');
+                },
+                resetRubricForm() {
+                    this.newRubric = { title: '', criteria: [] };
+                    this.addCriterion();
+                },
+                loadSavedRubrics() {
+                    const storedRubrics = localStorage.getItem('savedRubrics');
+                    if (storedRubrics) {
+                        try {
+                            this.savedRubrics = JSON.parse(storedRubrics);
+                        } catch (e) {
+                            console.error("Error loading saved rubrics:", e);
+                            localStorage.removeItem('savedRubrics'); // Clear corrupted data
+                            this.savedRubrics = [];
+                            this.showMessage('Error al cargar las rúbricas guardadas. Se han restablecido.', 'error');
+                        }
+                    }
+                },
+                // --- NEW: Rubric Summary/Edit Methods ---
+                editRubric(index) {
+                    const rubricToEdit = this.savedRubrics[index];
+                    if (rubricToEdit) {
+                        // Deep copy to avoid modifying the savedRubrics array directly
+                        this.newRubric = JSON.parse(JSON.stringify(rubricToEdit));
+                        this.currentTab = 'designer'; // Switch to designer tab
+                        this.showMessage(`Editando la rúbrica: ${rubricToEdit.title}`, 'info');
+                    } else {
+                        this.showMessage('Error: No se pudo encontrar la rúbrica para editar.', 'error');
+                    }
+                },
+                confirmDeleteRubric(index) {
+                    const rubricTitle = this.savedRubrics[index]?.title;
+                    if (rubricTitle && confirm(`¿Está seguro de que desea eliminar la rúbrica "${rubricTitle}"? Esta acción no se puede deshacer.`)) {
+                        this.deleteRubric(index);
+                    }
+                },
+                deleteRubric(index) {
+                    const deletedTitle = this.savedRubrics[index]?.title;
+                    this.savedRubrics.splice(index, 1);
+                    localStorage.setItem('savedRubrics', JSON.stringify(this.savedRubrics));
+                    this.showMessage(`Rúbrica "${deletedTitle}" eliminada exitosamente.`, 'success');
+                    // Also remove related evaluations? Optional, depends on requirements.
+                    // this.removeEvaluationsForRubric(deletedTitle);
+                },
+                // Optional: Function to remove evaluations associated with a deleted rubric
+                /*
+                removeEvaluationsForRubric(rubricTitle) {
+                    let evaluationsUpdated = false;
+                    for (const ovcKey in this.allEvaluations) {
+                        const initialLength = this.allEvaluations[ovcKey].length;
+                        this.allEvaluations[ovcKey] = this.allEvaluations[ovcKey].filter(
+                            eval => eval.rubricTitle !== rubricTitle
+                        );
+                        if (this.allEvaluations[ovcKey].length !== initialLength) {
+                            evaluationsUpdated = true;
+                        }
+                        // Remove OVC key if no evaluations remain
+                        if (this.allEvaluations[ovcKey].length === 0) {
+                            delete this.allEvaluations[ovcKey];
+                        }
+                    }
+                    if (evaluationsUpdated) {
+                        localStorage.setItem('allEvaluations', JSON.stringify(this.allEvaluations));
+                        this.showMessage(`Evaluaciones asociadas a "${rubricTitle}" también eliminadas.`, 'info');
+                        // Refresh viewer if currently showing data for a deleted rubric's OVC
+                        if (this.currentTab === 'viewer' && this.selectedOvcForAverage && !this.allEvaluations[this.selectedOvcForAverage]) {
+                            this.selectedOvcForAverage = '';
+                            this.averageScore = null;
+                            this.evaluationCount = 0;
+                        } else if (this.currentTab === 'viewer' && this.selectedOvcForAverage) {
+                             this.calculateAverageScore(this.selectedOvcForAverage); // Recalculate if OVC still exists
+                        }
+                    }
+                },
+                */
+
+                // --- Project Evaluator Methods (Keep existing logic) ---
+                loadRubricForEvaluation(title) {
+                    if (!title) {
+                        this.evaluation.rubric = null;
+                        return;
+                    }
+                    const selected = this.savedRubrics.find(r => r.title === title);
+                    if (selected) {
+                        this.evaluation.rubric = JSON.parse(JSON.stringify(selected)); // Use a copy
+                        this.evaluation.scores = Array(this.evaluation.rubric.criteria.length).fill(null);
+                        this.evaluation.calculatedGrade = null;
+                        this.$nextTick(() => lucide.createIcons());
+                    } else {
+                        this.showMessage(`Error: No se encontró la rúbrica '${title}'.`, 'error');
+                        this.evaluation.rubric = null;
+                    }
+                },
+                selectLevel(criterionIndex, score) {
+                    this.evaluation.scores[criterionIndex] = score;
+                    // No need to call calculateScore() explicitly if using the getter
+                },
+                get allLevelsSelected() {
+                    if (!this.evaluation.rubric) return false;
+                    // Ensure scores array has the correct length
+                    if (this.evaluation.scores.length !== this.evaluation.rubric.criteria.length) {
+                        // This might happen if the rubric structure changes unexpectedly
+                        // Initialize scores array again
+                        this.evaluation.scores = Array(this.evaluation.rubric.criteria.length).fill(null);
+                        return false;
+                    }
+                    return this.evaluation.scores.every(score => score !== null);
+                },
+                get calculatedScore() {
+                    if (!this.evaluation.rubric || !this.allLevelsSelected) {
+                        return null;
+                    }
+                    let totalScore = 0;
+                    let totalWeight = 0; // Recalculate total weight from rubric data for safety
+                    this.evaluation.rubric.criteria.forEach((criterion, index) => {
+                        const weight = (criterion.weight || 0) / 100; // Ensure weight is a number
+                        const score = this.evaluation.scores[index];
+                        if (typeof score === 'number') { // Ensure score is a number
+                            totalScore += weight * score;
+                            totalWeight += weight;
+                        }
+                    });
+                    // Normalize score in case weights don't exactly sum to 1 (or 100%) due to rounding
+                    if (totalWeight > 0 && Math.abs(totalWeight - 1.0) > 0.001) {
+                        console.warn("Rubric weights do not sum to 100%. Normalizing score.");
+                        //return totalScore / totalWeight; // Normalize based on actual weight sum
+                        // Or stick to the definition assuming weights SHOULD be 100%
+                    }
+
+                    return totalScore; // Return the calculated score based on defined weights
+                },
+                get canSubmitEvaluation() {
+                    return this.evaluation.rubric &&
+                        this.evaluation.ovcTitle.trim() &&
+                        this.evaluation.evaluatorName.trim() &&
+                        this.evaluation.evaluatorId.trim() &&
+                        this.evaluation.subject.trim() &&
+                        this.evaluation.percentage !== null && this.evaluation.percentage >= 0 && this.evaluation.percentage <= 100 &&
+                        this.allLevelsSelected &&
+                        this.calculatedScore !== null;
+                },
+                submitEvaluation() {
+                    if (!this.canSubmitEvaluation) {
+                        this.showMessage('Por favor, complete todos los campos de la evaluación y seleccione un nivel para cada criterio.', 'error');
+                        return;
+                    }
+                    const finalScore = this.calculatedScore; // Get the final score
+                    if (finalScore === null) {
+                        this.showMessage('Error al calcular la calificación final.', 'error');
+                        return;
+                    }
+
+                    const evaluationData = {
+                        evaluatorName: this.evaluation.evaluatorName,
+                        evaluatorId: this.evaluation.evaluatorId,
+                        rubricTitle: this.evaluation.rubric.title,
+                        subject: this.evaluation.subject,
+                        percentage: this.evaluation.percentage,
+                        feedback: this.evaluation.feedback,
+                        scores: {}, // Store scores mapped by criterion name for clarity
+                        calculatedGrade: finalScore,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    this.evaluation.rubric.criteria.forEach((criterion, index) => {
+                        evaluationData.scores[criterion.name] = this.evaluation.scores[index];
+                    });
+
+                    const ovcKey = this.evaluation.ovcTitle.trim();
+                    if (!this.allEvaluations[ovcKey]) {
+                        this.allEvaluations[ovcKey] = [];
+                    }
+                    this.allEvaluations[ovcKey].push(evaluationData);
+
+                    localStorage.setItem('allEvaluations', JSON.stringify(this.allEvaluations));
+                    this.showMessage(`Evaluación para '${ovcKey}' guardada exitosamente.`, 'success');
+                    this.resetEvaluationForm(); // Reset form after submission
+                },
+                resetEvaluationForm() {
+                    this.evaluation = {
+                        ovcTitle: '',
+                        evaluatorName: '',
+                        evaluatorId: '',
+                        subject: '',
+                        percentage: null,
+                        rubric: null,
+                        scores: [],
+                        feedback: '',
+                        calculatedGrade: null,
+                        timestamp: null
+                    };
+                    this.selectedRubricTitle = '';
+                },
+                loadSavedEvaluations() {
+                    const storedEvaluations = localStorage.getItem('allEvaluations');
+                    if (storedEvaluations) {
+                        try {
+                            this.allEvaluations = JSON.parse(storedEvaluations);
+                        } catch (e) {
+                            console.error("Error loading saved evaluations:", e);
+                            localStorage.removeItem('allEvaluations'); // Clear corrupted data
+                            this.allEvaluations = {};
+                            this.showMessage('Error al cargar las evaluaciones guardadas. Se han restablecido.', 'error');
+                        }
+                    }
+                },
+
+                // --- Evaluation Viewer Methods (Keep existing logic) ---
+                get availableOvcTitles() {
+                    return Object.keys(this.allEvaluations).sort(); // Sort titles alphabetically
+                },
+                calculateAverageScore(ovcTitle) {
+                    this.individualEvaluations = [];
+                    this.showIndividualEvaluations = false;
+                    if (!ovcTitle) {
+                        this.averageScore = null;
+                        this.evaluationCount = 0;
+                        return;
+                    }
+                    const evaluationsForOvc = this.allEvaluations[ovcTitle];
+                    if (!evaluationsForOvc || evaluationsForOvc.length === 0) {
+                        this.averageScore = null;
+                        this.evaluationCount = 0;
+                    } else {
+                        const validEvaluations = evaluationsForOvc.filter(e => typeof e.calculatedGrade === 'number');
+                        if (validEvaluations.length === 0) {
+                            this.averageScore = null;
+                            this.evaluationCount = 0;
+                            console.warn("No valid evaluations found for OVC:", ovcTitle);
+                        } else {
+                            const sum = validEvaluations.reduce((acc, curr) => acc + curr.calculatedGrade, 0);
+                            this.averageScore = sum / validEvaluations.length;
+                            this.evaluationCount = validEvaluations.length;
+                            this.individualEvaluations = validEvaluations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by date descending
+                        }
+                    }
+                },
+
+                // --- Utility Methods (Keep existing logic) ---
+                showMessage(text, type = 'info', duration = 5000) {
+                    // Clear any existing timer
+                    if (this.message.timer) {
+                        clearTimeout(this.message.timer);
+                    }
+                    this.message.text = text;
+                    this.message.type = type;
+                    // Set a new timer
+                    this.message.timer = setTimeout(() => {
+                        this.message.text = '';
+                        this.message.timer = null; // Clear the timer reference
+                    }, duration);
+                },
+
+                // --- NEW: AI Rubric Generation Method ---
+                async generateRubricWithAi() {
+                    if (!this.aiRubricTopic.trim()) {
+                        this.showMessage('Por favor, ingrese el tema para la rúbrica.', 'error');
+                        return;
+                    }
+                    if (!GOOGLE_API_KEY || GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
+                        this.showMessage('Error: La clave API de Google AI no está configurada. Reemplace YOUR_GOOGLE_API_KEY en el script.', 'error', 10000);
+                        return;
+                    }
+
+                    this.isGeneratingAiRubric = true;
+                    this.showMessage('Generando rúbrica con IA...', 'info', 15000); // Longer timeout for AI
+
+                    const prompt = `
+                       Por favor, crea una rúbrica de evaluación detallada en formato JSON para el siguiente tema o tarea: "${this.aiRubricTopic}".
+                       El JSON debe tener la siguiente estructura:
+                       {
+                         "title": "Un título descriptivo para la rúbrica relacionado con '${this.aiRubricTopic}'",
+                         "criteria": [
+                           {
+                             "name": "Nombre del criterio (ej: Claridad)",
+                             "weight": Un número entero representando el porcentaje de peso (distribuye los pesos para que sumen 100 entre todos los criterios),
+                             "levels": [
+                               {
+                                 "name": "Nombre del nivel (ej: Sobresaliente)",
+                                 "score": Un número entero para el puntaje del nivel (ej: 5),
+                                 "description": "Descripción clara y concisa de lo esperado en este nivel para este criterio."
+                               },
+                               // ... otros niveles (generalmente 3-5 niveles por criterio, ordenados de menor a mayor puntaje)
+                             ]
+                           },
+                           // ... otros criterios (generalmente 3-6 criterios en total)
+                         ]
+                       }
+
+                       Asegúrate de que:
+                       - El JSON sea válido.
+                       - Los pesos ("weight") de los criterios sumen exactamente 100.
+                       - Haya entre 3 y 6 criterios.
+                       - Cada criterio tenga entre 3 y 5 niveles de desempeño.
+                       - Los niveles dentro de cada criterio estén ordenados por puntaje ("score") de menor a mayor.
+                       - Las descripciones sean útiles y específicas para la evaluación.
+                       - El título sea relevante para "${this.aiRubricTopic}".
+                       - Solo responde con el objeto JSON, sin texto adicional antes o después.
+                   `;
+
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL_NAME}:generateContent?key=${GOOGLE_API_KEY}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: prompt }] }],
+                                // Optional: Add safety settings if needed
+                                // safetySettings: [
+                                //   { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+                                // ],
+                                generationConfig: {
+                                    // temperature: 0.7, // Adjust creativity vs. predictability
+                                    // maxOutputTokens: 2048,
+                                    responseMimeType: "application/json", // Request JSON output directly
+                                }
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            const errorBody = await response.json();
+                            console.error('Google AI API Error:', errorBody);
+                            throw new Error(`Error de la API de IA: ${errorBody.error?.message || response.statusText}`);
+                        }
+
+                        const data = await response.json();
+
+                        if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
+                            console.error('Invalid AI response structure:', data);
+                            throw new Error('La respuesta de la IA no tuvo el formato esperado.');
+                        }
+
+                        // The response might be wrapped in markdown ```json ... ```, try to extract it
+                        let jsonString = data.candidates[0].content.parts[0].text;
+                        const jsonMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+                        if (jsonMatch && jsonMatch[1]) {
+                            jsonString = jsonMatch[1];
+                        }
+
+                        // Parse the JSON string
+                        const generatedRubric = JSON.parse(jsonString);
+
+                        // Basic validation of the generated structure
+                        if (!generatedRubric || typeof generatedRubric !== 'object' || !generatedRubric.title || !Array.isArray(generatedRubric.criteria)) {
+                            console.error('Invalid generated rubric structure:', generatedRubric);
+                            throw new Error('La estructura de la rúbrica generada por la IA no es válida.');
+                        }
+                        // Deeper validation (optional but recommended)
+                        let validationError = null;
+                        let calculatedWeight = 0;
+                        if (generatedRubric.criteria.length === 0) validationError = "La IA no generó criterios.";
+                        generatedRubric.criteria.forEach(crit => {
+                            if (!crit.name || typeof crit.weight !== 'number' || !Array.isArray(crit.levels) || crit.levels.length === 0) {
+                                validationError = "Algunos criterios generados no tienen nombre, peso o niveles válidos.";
+                            }
+                            calculatedWeight += (crit.weight || 0);
+                            crit.levels.forEach(level => {
+                                if (!level.name || typeof level.score !== 'number' || !level.description) {
+                                    validationError = "Algunos niveles generados no tienen nombre, puntaje o descripción válidos.";
+                                }
+                            });
+                            // Ensure levels are sorted by score (AI might not always follow instructions perfectly)
+                            crit.levels.sort((a, b) => a.score - b.score);
+                        });
+
+                        if (Math.abs(calculatedWeight - 100) > 1) { // Allow small tolerance for rounding
+                            validationError = `Los pesos generados (${calculatedWeight}%) no suman 100%. Puedes ajustarlos manualmente.`;
+                            // Optionally try to normalize weights here, or just let the user fix it.
+                        }
+
+                        if (validationError) {
+                            this.showMessage(`Advertencia: ${validationError}`, 'error', 8000);
+                            // Still load the potentially flawed rubric for the user to edit
+                        } else {
+                            this.showMessage('Rúbrica generada por IA exitosamente. Revísala y ajústala si es necesario.', 'success');
+                        }
+
+                        // Update the newRubric object with the generated data
+                        this.newRubric = generatedRubric;
+                        // Ensure at least one criterion/level exists visually if AI failed partially
+                        if (this.newRubric.criteria.length === 0) {
+                            this.addCriterion();
+                        } else {
+                            this.newRubric.criteria.forEach((crit, index) => {
+                                if (crit.levels.length === 0) {
+                                    this.addLevel(index);
+                                }
+                            });
+                        }
+
+
+                    } catch (error) {
+                        console.error('Error generating rubric with AI:', error);
+                        this.showMessage(`Error al generar la rúbrica: ${error.message}`, 'error', 10000);
+                    } finally {
+                        this.isGeneratingAiRubric = false;
+                        this.$nextTick(() => lucide.createIcons()); // Refresh icons after adding elements
+                    }
+                }
+            }
+        }
+    </script>
+
+</body>
+
+</html>

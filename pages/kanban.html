@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero Kanban 📋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SortableJS for drag-and-drop subtasks -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="../css/kanban-styles.css">
+</head>
+
+<body class="p-4 md:p-8">
+    <h1>Kanban Board Loaded</h1>
+
+    <h1 class="text-3xl font-bold mb-4 text-left text-gray-800"><span class="emoji">📋</span>Tablero Kanban</h1>
+    <p class="text-gray-600 mb-6 text-left">Organiza tus tareas arrastrándolas entre columnas. Haz clic en una tarea
+        para editarla.</p>
+
+    <div class="kanban-container">
+        <div class="text-left mb-6">
+            <button id="addTaskBtn"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow hover:shadow-md transition duration-150 ease-in-out">
+                <span class="emoji">✨</span> Añadir Nueva Tarea
+            </button>
+        </div>
+
+        <div id="kanbanBoard" class="flex flex-col md:flex-row justify-between gap-4">
+            <div id="todo" class="kanban-column">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2"><span class="emoji">📝</span>Por
+                    Hacer</h2>
+                <div class="kanban-tasks" data-column-id="todo"></div>
+            </div>
+            <div id="in-progress" class="kanban-column">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2"><span class="emoji">⏳</span>En
+                    Progreso</h2>
+                <div class="kanban-tasks" data-column-id="in-progress"></div>
+            </div>
+            <div id="done" class="kanban-column">
+                <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2"><span class="emoji">✅</span>Hecho
+                </h2>
+                <div class="kanban-tasks" data-column-id="done"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contextMenu" class="context-menu">
+        <div class="context-menu-item" data-color="bg-task-default">
+            <span class="color-swatch" style="background-color: #d1d5db; border: 1px solid #9ca3af;"></span>
+            Predeterminado
+        </div>
+        <div class="context-menu-item" data-color="bg-task-red">
+            <span class="color-swatch" style="background-color: #fee2e2; border: 1px solid #fca5a5;"></span> Rojo
+        </div>
+        <div class="context-menu-item" data-color="bg-task-blue">
+            <span class="color-swatch" style="background-color: #dbeafe; border: 1px solid #93c5fd;"></span> Azul
+        </div>
+        <div class="context-menu-item" data-color="bg-task-green">
+            <span class="color-swatch" style="background-color: #d1fae5; border: 1px solid #6ee7b7;"></span> Verde
+        </div>
+        <div class="context-menu-item" data-color="bg-task-yellow">
+            <span class="color-swatch" style="background-color: #fef3c7; border: 1px solid #fde047;"></span> Amarillo
+        </div>
+        <div class="context-menu-item" data-color="bg-task-purple">
+            <span class="color-swatch" style="background-color: #e9d5ff; border: 1px solid #c4b5fd;"></span> Púrpura
+        </div>
+        <hr class="my-1 border-gray-200">
+        <div class="context-menu-item" data-action="delete">
+            <span class="emoji text-red-500">🗑️</span> <span class="text-red-600">Eliminar Tarea</span>
+        </div>
+    </div>
+
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 class="text-xl font-semibold mb-5"><span class="emoji">📋</span>Nueva Tarea</h2>
+            <form id="taskForm">
+                <div class="mb-4">
+                    <label for="taskDescription"
+                        class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                    <textarea id="taskDescription" name="description" rows="3"
+                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                        placeholder="Describe la tarea..." required></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="taskDueDate" class="block text-sm font-medium text-gray-700 mb-1">Fecha de
+                            Vencimiento</label>
+                        <input type="date" id="taskDueDate" name="dueDate"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2">
+                    </div>
+                    <div>
+                        <label for="taskAssignee"
+                            class="block text-sm font-medium text-gray-700 mb-1">Responsable</label>
+                        <input type="text" id="taskAssignee" name="assignee"
+                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                            placeholder="Nombre del responsable">
+                    </div>
+                </div>
+                <div class="text-right mt-6">
+                    <button type="button" onclick="closeModal()"
+                        class="mr-2 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Añadir Tarea
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- KanbanApp Module ---
+        const KanbanApp = (() => {
+            // --- State ---
+            let currentOvcId = null; // To store the OVC context
+            let columns = null; // Will be queried in init
+            let contextMenu = null;
+            let taskModal = null;
+            let addTaskBtn = null;
+            let taskForm = null;
+            let draggedTask = null;
+            let currentTaskElement = null; // For context menu
+            let currentEditingTask = null; // For edit mode
+
+            // --- Colores disponibles ---
+            const taskColorClasses = [
+                'bg-task-default', 'bg-task-red', 'bg-task-blue',
+                'bg-task-green', 'bg-task-yellow', 'bg-task-purple'
+            ];
+
+            // --- Funciones ---
+
+            function generateId(prefix = 'task') {
+                return `${prefix}-` + Date.now() + '-' + Math.floor(Math.random() * 1000);
+            }
+
+            function getTaskDataFromElement(taskElement) {
+                const description = taskElement.querySelector('p.font-medium')?.textContent || '';
+                // Busca el texto después del emoji
+                const dueDateText = taskElement.querySelector('.details p:first-child')?.textContent || '';
+                const assigneeText = taskElement.querySelector('.details p:last-child:not(:first-child)')?.textContent || ''; // Asegura que sea el segundo p si existe
+                const dueDate = dueDateText.includes(' ') ? dueDateText.substring(dueDateText.indexOf(' ') + 1).trim() : '';
+                const assignee = assigneeText.includes(' ') ? assigneeText.substring(assigneeText.indexOf(' ') + 1).trim() : '';
+                // Subtasks are not directly extracted from view mode DOM, they come from saved state
+                return { description, dueDate, assignee };
+            }
+
+            /**
+            * Renderiza el contenido de visualización normal de una tarjeta de tarea.
+            * @param {object} taskData - Datos de la tarea (description, dueDate, assignee, subtasks).
+            * @returns {string} HTML interno para la tarjeta en modo visualización.
+            */
+            function renderTaskViewContent(taskData) {
+                const subtasks = taskData.subtasks || [];
+                const completedSubtasks = subtasks.filter(st => st.completed).length;
+                const totalSubtasks = subtasks.length;
+                const subtasksExist = totalSubtasks > 0;
+
+                return `
+                <p class="font-medium text-gray-800">${taskData.description || 'Sin descripción'}</p>
+                <div class="details mt-2 text-xs">
+                    ${taskData.dueDate ? `<p class="flex items-center gap-1"><span class="emoji">📅</span> ${taskData.dueDate}</p>` : ''}
+                    ${taskData.assignee ? `<p class="flex items-center gap-1 mt-1"><span class="emoji">👤</span> ${taskData.assignee}</p>` : ''}
+                </div>
+                ${subtasksExist ? `
+                <button class="view-subtasks-btn" aria-expanded="false">
+                    <span class="arrow mr-1">▶</span><span class="emoji">📑</span> Subtareas (${completedSubtasks}/${totalSubtasks})
+                </button>
+                <div class="subtasks-list-view" style="display: none;">
+                    ${renderSubtasksView(subtasks, taskData.id)}
+                </div>
+                ` : ''}
+            `;
+            }
+
+            /**
+             * Renderiza la lista de subtareas para el modo de visualización.
+             * @param {Array} subtasks - Array de objetos de subtarea.
+             * @param {string} taskId - ID de la tarea padre.
+             * @returns {string} HTML de la lista de subtareas.
+             */
+            function renderSubtasksView(subtasks, taskId) {
+                if (!subtasks || subtasks.length === 0) return '<p class="text-xs text-gray-500 italic ml-1">No hay subtareas.</p>';
+                return `
+                <ul>
+                    ${subtasks.map(subtask => `
+                        <li class="subtask-item-view" data-subtask-id="${subtask.id}">
+                            <input type="checkbox" ${subtask.completed ? 'checked' : ''} onchange="toggleSubtaskCompletion(event, '${taskId}', '${subtask.id}')" aria-label="Marcar subtarea ${subtask.description} como completada">
+                            <span class="${subtask.completed ? 'completed' : ''}">${subtask.description}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            }
+
+            function createTaskElement(taskData) {
+                const taskElement = document.createElement('div');
+                taskElement.id = taskData.id;
+                taskElement.classList.add('task-card');
+                taskElement.draggable = true;
+
+                const colorClass = (taskData.color && taskColorClasses.includes(taskData.color)) ? taskData.color : 'bg-task-default';
+                taskElement.classList.add(colorClass);
+
+                // Store subtasks data. Using a property is better than dataset for complex objects.
+                taskElement._subtasks = taskData.subtasks || [];
+
+                taskElement.innerHTML = renderTaskViewContent(taskData);
+
+                taskElement.addEventListener('click', handleTaskClick);
+                taskElement.addEventListener('dragstart', handleDragStart);
+                taskElement.addEventListener('dragend', handleDragEnd);
+                taskElement.addEventListener('contextmenu', handleContextMenu);
+
+                // Event delegation for subtask button and checkbox clicks within the task card
+                taskElement.addEventListener('click', (event) => {
+                    // Toggle subtask view
+                    if (event.target.classList.contains('view-subtasks-btn') || event.target.closest('.view-subtasks-btn')) {
+                        const button = event.target.classList.contains('view-subtasks-btn') ? event.target : event.target.closest('.view-subtasks-btn');
+                        toggleSubtasksView(button);
+                        event.stopPropagation(); // Prevent task edit mode from triggering
+                    }
+                    // Prevent edit mode when clicking subtask checkbox
+                    if (event.target.matches('.subtask-item-view input[type="checkbox"]')) {
+                        event.stopPropagation(); // Prevent task edit mode from triggering
+                    }
+                });
+
+                return taskElement;
+            }
+
+            function addTask(taskData, save = true) {
+                if (!taskData.id) taskData.id = generateId('task');
+                if (!taskData.columnId) taskData.columnId = 'todo';
+                if (!taskData.color) taskData.color = 'bg-task-default';
+                if (!taskData.subtasks) taskData.subtasks = []; // Ensure subtasks array exists
+
+                const taskElement = createTaskElement(taskData);
+                const targetColumn = document.querySelector(`.kanban-tasks[data-column-id="${taskData.columnId}"]`);
+
+                if (targetColumn) {
+                    targetColumn.appendChild(taskElement);
+                    if (save) saveBoardState();
+                } else {
+                    console.error(`Columna con ID "${taskData.columnId}" no encontrada.`);
+                    const todoColumn = document.querySelector('.kanban-tasks[data-column-id="todo"]');
+                    if (todoColumn) {
+                        todoColumn.appendChild(taskElement);
+                        taskData.columnId = 'todo';
+                        if (save) saveBoardState();
+                    } else {
+                        console.error("Columna 'todo' tampoco encontrada.");
+                    }
+                }
+            }
+
+            function deleteTask(taskId) {
+                const taskElement = document.getElementById(taskId);
+                if (taskElement) {
+                    if (currentEditingTask && currentEditingTask.id === taskId) {
+                        disableEditMode(currentEditingTask, false);
+                    }
+                    taskElement.remove();
+                    saveBoardState();
+                    console.log(`Tarea ${taskId} eliminada.`);
+                } else {
+                    console.warn(`No se encontró la tarea con ID ${taskId} para eliminar.`);
+                }
+            }
+
+            // --- Manejadores de Eventos de Edición ---
+
+            function handleTaskClick(event) {
+                const taskCard = event.currentTarget;
+                // Prevent entering edit mode if the click was on the subtask section (button, list, checkbox)
+                if (event.target.closest('.view-subtasks-btn') || event.target.closest('.subtasks-list-view')) {
+                    return;
+                }
+                // Prevent entering edit mode if already editing, or if clicking edit controls, or right-click
+                if (currentEditingTask || taskCard.classList.contains('editing') || event.target.closest('.edit-actions') || event.button === 2) {
+                    return;
+                }
+                enableEditMode(taskCard);
+            }
+
+            function enableEditMode(taskElement) {
+                if (currentEditingTask && currentEditingTask !== taskElement) {
+                    disableEditMode(currentEditingTask, false);
+                }
+
+                currentEditingTask = taskElement;
+                taskElement.classList.add('editing');
+                taskElement.draggable = false;
+
+                const originalData = getTaskDataFromElement(taskElement);
+                const originalSubtasks = JSON.parse(JSON.stringify(taskElement._subtasks || [])); // Deep copy
+                taskElement.dataset.originalDescription = originalData.description;
+                taskElement.dataset.originalDueDate = originalData.dueDate;
+                taskElement.dataset.originalAssignee = originalData.assignee;
+                // Store original subtasks for cancellation
+                taskElement._originalSubtasks = originalSubtasks;
+
+                // --- Render Edit Form ---
+                taskElement.innerHTML = `
+                <textarea class="edit-input edit-textarea" placeholder="Descripción..." aria-label="Descripción de la tarea">${originalData.description}</textarea>
+                <input type="date" class="edit-input" value="${originalData.dueDate}" aria-label="Fecha de vencimiento">
+                <input type="text" class="edit-input" placeholder="Responsable..." value="${originalData.assignee}" aria-label="Responsable">
+
+                <div class="subtasks-section">
+                    <h4 class="text-sm font-medium text-gray-600 mb-2">Subtareas</h4>
+                    <ul class="subtasks-list-edit mb-3" aria-label="Lista de subtareas editables">
+                        ${renderSubtasksEdit(originalSubtasks)}
+                    </ul>
+                    <div class="add-subtask-container">
+                        <input type="text" class="add-subtask-input" placeholder="Añadir nueva subtarea..." aria-label="Nueva subtarea">
+                        <button type="button" class="edit-button add-subtask-btn bg-gray-200 hover:bg-gray-300 text-gray-700 border-gray-300" aria-label="Añadir subtarea">➕ Añadir</button>
+                    </div>
+                </div>
+
+                <div class="edit-actions">
+                    <button class="edit-button cancel-button"><span class="emoji">❌</span>Cancelar</button>
+                    <button class="edit-button save-button"><span class="emoji">💾</span>Guardar</button>
+                </div>
+            `;
+                // --- End Render Edit Form ---
+
+                // --- Add Event Listeners for Edit Mode ---
+                const subtaskListElement = taskElement.querySelector('.subtasks-list-edit');
+                const addSubtaskInput = taskElement.querySelector('.add-subtask-input');
+                const addSubtaskBtn = taskElement.querySelector('.add-subtask-btn');
+
+                taskElement.querySelector('.save-button').addEventListener('click', () => disableEditMode(taskElement, true));
+                taskElement.querySelector('.cancel-button').addEventListener('click', () => disableEditMode(taskElement, false));
+
+                // Add Subtask Button
+                addSubtaskBtn.addEventListener('click', () => {
+                    const description = addSubtaskInput.value.trim();
+                    if (description) {
+                        addSubtaskToEditList(subtaskListElement, description);
+                        addSubtaskInput.value = '';
+                        addSubtaskInput.focus();
+                    }
+                });
+                // Add Subtask on Enter
+                addSubtaskInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent form submission if inside a form
+                        addSubtaskBtn.click();
+                    }
+                });
+
+                // Delete Subtask Button (Event Delegation)
+                subtaskListElement.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('subtask-delete-btn')) {
+                        deleteSubtaskFromEditList(e.target.closest('.subtask-item-edit'));
+                    }
+                });
+
+                // Initialize SortableJS
+                Sortable.create(subtaskListElement, {
+                    animation: 150,
+                    ghostClass: 'sortable-ghost', // Class for the drop placeholder
+                    handle: '.subtask-drag-handle', // Specify drag handle
+                    forceFallback: true, // Improves compatibility
+                    fallbackOnBody: true, // Prevents issues with scrolling containers
+                    swapThreshold: 0.65
+                });
+                // --- End Event Listeners ---
+
+                taskElement.querySelector('textarea').focus();
+                document.addEventListener('click', handleClickOutsideEdit, true);
+            }
+
+            function disableEditMode(taskElement, saveData) {
+                if (!taskElement || !taskElement.classList.contains('editing')) return;
+
+                let updatedData = {};
+
+                if (saveData) {
+                    const newDescription = taskElement.querySelector('textarea').value.trim();
+                    const newDueDate = taskElement.querySelector('input[type="date"]').value;
+                    const newAssignee = taskElement.querySelector('input[type="text"]').value.trim();
+                    if (!newDescription) {
+                        alert("La descripción no puede estar vacía.");
+                        taskElement.querySelector('textarea').focus();
+                        return;
+                    }
+                    updatedData = {
+                        description: newDescription,
+                        dueDate: newDueDate,
+                        assignee: newAssignee,
+                        subtasks: getSubtasksFromEditList(taskElement.querySelector('.subtasks-list-edit'))
+                    };
+                    taskElement._subtasks = updatedData.subtasks; // Update internal data
+                } else {
+                    // Restore from original data stored on the element
+                    updatedData = {
+                        description: taskElement.dataset.originalDescription,
+                        dueDate: taskElement.dataset.originalDueDate,
+                        assignee: taskElement.dataset.originalAssignee,
+                        subtasks: taskElement._originalSubtasks || []
+                    };
+                    taskElement._subtasks = updatedData.subtasks; // Restore internal data
+                }
+
+                // Restaurar vista normal usando la función actualizada
+                taskElement.innerHTML = renderTaskViewContent(updatedData);
+                taskElement.classList.remove('editing');
+                taskElement.draggable = true;
+
+                delete taskElement.dataset.originalDescription;
+                delete taskElement.dataset.originalDueDate;
+                delete taskElement.dataset.originalAssignee;
+                delete taskElement._originalSubtasks; // Clean up stored original subtasks
+
+                // Re-attach core listeners
+                taskElement.addEventListener('click', handleTaskClick);
+                taskElement.addEventListener('dragstart', handleDragStart);
+                taskElement.addEventListener('dragend', handleDragEnd);
+                taskElement.addEventListener('contextmenu', handleContextMenu);
+                // The listener attached in createTaskElement handles subtask toggling via delegation.
+
+
+                currentEditingTask = null;
+                document.removeEventListener('click', handleClickOutsideEdit, true);
+
+                if (saveData) {
+                    saveBoardState(); // Save the entire board state including the updated task
+                }
+            }
+
+            function handleClickOutsideEdit(event) {
+                // Ignore clicks inside the context menu or the task being edited
+                if (contextMenu.contains(event.target) || (currentEditingTask && currentEditingTask.contains(event.target))) {
+                    return;
+                }
+                // If a task is being edited and the click is outside, cancel the edit
+                if (currentEditingTask) {
+                    // Check if the click was on a SortableJS helper element (often added to body)
+                    if (event.target.closest('.sortable-fallback') || event.target.closest('.sortable-ghost')) {
+                        return;
+                    }
+                    disableEditMode(currentEditingTask, false);
+                }
+            }
+
+            // --- Subtask Helper Functions ---
+
+            /**
+             * Renders the list of subtasks for the edit mode.
+             * @param {Array} subtasks - Array of subtask objects.
+             * @returns {string} HTML string for the list items.
+             */
+            function renderSubtasksEdit(subtasks) {
+                if (!subtasks || subtasks.length === 0) return '<p class="text-xs text-gray-500 italic px-1">No hay subtareas añadidas.</p>';
+                return subtasks.map(subtask => `
+                <li class="subtask-item-edit" data-subtask-id="${subtask.id}" data-completed="${subtask.completed}">
+                    <span class="subtask-drag-handle" title="Arrastrar para reordenar">⠿</span>
+                    <input type="text" value="${subtask.description}" placeholder="Descripción subtarea..." aria-label="Descripción de la subtarea ${subtask.description}">
+                    <button type="button" class="subtask-delete-btn" title="Eliminar subtarea">✖</button>
+                </li>
+            `).join('');
+            }
+
+            /**
+             * Adds a new subtask item to the edit list in the DOM.
+             * @param {HTMLElement} listElement - The UL element for subtasks.
+             * @param {string} description - The description of the new subtask.
+             */
+            function addSubtaskToEditList(listElement, description) {
+                // Remove the "No hay subtareas" message if it exists
+                const noSubtasksMsg = listElement.querySelector('p');
+                if (noSubtasksMsg) noSubtasksMsg.remove();
+
+                const newSubtaskId = generateId('sub');
+                const newSubtask = { id: newSubtaskId, description: description, completed: false };
+                const li = document.createElement('li');
+                li.className = 'subtask-item-edit';
+                li.dataset.subtaskId = newSubtask.id;
+                li.dataset.completed = 'false'; // New tasks are not completed
+                li.innerHTML = `
+                <span class="subtask-drag-handle" title="Arrastrar para reordenar">⠿</span>
+                <input type="text" value="${newSubtask.description}" placeholder="Descripción subtarea..." aria-label="Descripción de la subtarea ${newSubtask.description}">
+                <button type="button" class="subtask-delete-btn" title="Eliminar subtarea">✖</button>
+            `;
+                listElement.appendChild(li);
+            }
+
+            /**
+             * Removes a subtask item from the edit list in the DOM.
+             * @param {HTMLElement} subtaskItemElement - The LI element to remove.
+             */
+            function deleteSubtaskFromEditList(subtaskItemElement) {
+                const listElement = subtaskItemElement.parentElement;
+                subtaskItemElement.remove();
+                // If list is now empty, add back the placeholder message
+                if (listElement && !listElement.querySelector('.subtask-item-edit')) {
+                    listElement.innerHTML = '<p class="text-xs text-gray-500 italic px-1">No hay subtareas añadidas.</p>';
+                }
+            }
+
+            /**
+             * Retrieves the current state of subtasks from the edit list DOM, preserving order.
+             * @param {HTMLElement} listElement - The UL element containing subtask items.
+             * @returns {Array} Array of subtask objects.
+             */
+            function getSubtasksFromEditList(listElement) {
+                const subtaskItems = listElement.querySelectorAll('.subtask-item-edit');
+                const subtasks = [];
+                subtaskItems.forEach(item => {
+                    const input = item.querySelector('input[type="text"]');
+                    const description = input ? input.value.trim() : '';
+                    // Only add if description is not empty
+                    if (description) {
+                        subtasks.push({
+                            id: item.dataset.subtaskId,
+                            description: description,
+                            // Preserve completed status from original data stored in data-completed attribute
+                            completed: item.dataset.completed === 'true'
+                        });
+                    } else {
+                        console.warn("Subtarea vacía encontrada y omitida al guardar:", item.dataset.subtaskId);
+                    }
+                });
+                return subtasks;
+            }
+
+            /**
+             * Toggles the visibility of the subtask list in view mode.
+             * @param {HTMLElement} button - The button that was clicked.
+             */
+            function toggleSubtasksView(button) {
+                const subtaskList = button.nextElementSibling; // Assumes list is immediately after button
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                const arrow = button.querySelector('.arrow');
+                if (subtaskList) {
+                    subtaskList.style.display = isExpanded ? 'none' : 'block';
+                    button.setAttribute('aria-expanded', !isExpanded);
+                    if (arrow) {
+                        // arrow.textContent = isExpanded ? '▶' : '▼'; // Change arrow direction
+                        arrow.style.transform = isExpanded ? 'rotate(0deg)' : 'rotate(90deg)';
+                    }
+                }
+            }
+
+            /**
+             * Handles the change event for subtask completion checkboxes. Saves state.
+             * @param {Event} event - The change event.
+             * @param {string} taskId - The ID of the parent task.
+             * @param {string} subtaskId - The ID of the subtask being toggled.
+             */
+            function toggleSubtaskCompletion(event, taskId, subtaskId) {
+                const isChecked = event.target.checked;
+                const taskElement = document.getElementById(taskId);
+                if (taskElement && taskElement._subtasks) {
+                    const subtaskIndex = taskElement._subtasks.findIndex(st => st.id === subtaskId);
+                    if (subtaskIndex !== -1) {
+                        taskElement._subtasks[subtaskIndex].completed = isChecked;
+
+                        // Update the view immediately
+                        const subtaskSpan = event.target.nextElementSibling; // Assumes span is next sibling
+                        if (subtaskSpan) {
+                            subtaskSpan.classList.toggle('completed', isChecked);
+                        }
+                        // Update the summary button text
+                        const viewButton = taskElement.querySelector('.view-subtasks-btn');
+                        if (viewButton) {
+                            const completedCount = taskElement._subtasks.filter(st => st.completed).length;
+                            const totalCount = taskElement._subtasks.length;
+                            viewButton.innerHTML = `<span class="arrow mr-1" style="transform: ${viewButton.getAttribute('aria-expanded') === 'true' ? 'rotate(90deg)' : 'rotate(0deg)'};">▶</span><span class="emoji">📑</span> Subtareas (${completedCount}/${totalCount})`;
+                        }
+
+                        saveBoardState(); // Save changes immediately after toggle
+                    } else {
+                        console.error("Subtask not found in internal data:", subtaskId, "for task:", taskId);
+                    }
+                } else {
+                    console.error("Task element or internal subtask data not found:", taskId);
+                }
+            }
+
+            // --- Manejadores Drag & Drop (sin cambios lógicos) ---
+            function handleDragStart(event) {
+                if (event.target.classList.contains('editing')) {
+                    event.preventDefault(); return;
+                }
+                if (event.target.classList.contains('task-card')) {
+                    draggedTask = event.target;
+                    event.dataTransfer.setData('text/plain', event.target.id);
+                    event.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => { if (draggedTask) draggedTask.classList.add('dragging'); }, 0);
+                } else {
+                    event.preventDefault();
+                }
+            }
+            function handleDragEnd(event) {
+                if (draggedTask) draggedTask.classList.remove('dragging');
+                columns.forEach(col => col.classList.remove('drag-over'));
+                draggedTask = null;
+            }
+            function handleDragOver(event) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && (!draggedTask || !targetColumn.contains(draggedTask))) {
+                    columns.forEach(col => col !== targetColumn && col.classList.remove('drag-over'));
+                    targetColumn.classList.add('drag-over');
+                }
+            }
+            function handleDragEnter(event) {
+                event.preventDefault();
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && (!draggedTask || !targetColumn.contains(draggedTask))) {
+                    targetColumn.classList.add('drag-over');
+                }
+            }
+            function handleDragLeave(event) {
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && !targetColumn.contains(event.relatedTarget)) {
+                    targetColumn.classList.remove('drag-over');
+                }
+                if (!event.relatedTarget || !event.relatedTarget.closest('.kanban-tasks')) {
+                    columns.forEach(col => col.classList.remove('drag-over'));
+                }
+            }
+            function handleDrop(event) {
+                event.preventDefault();
+                const targetColumn = event.target.closest('.kanban-tasks');
+                if (targetColumn && draggedTask && targetColumn !== draggedTask.parentElement) {
+                    // Prevenir drop si la columna destino es la misma que origen (ya filtrado en dragover/enter?)
+                    // if (targetColumn === draggedTask.parentElement) {
+                    //      if(targetColumn) targetColumn.classList.remove('drag-over');
+                    //      return;
+                    // }
+                    targetColumn.appendChild(draggedTask);
+                    saveBoardState();
+                }
+                if (targetColumn) targetColumn.classList.remove('drag-over');
+            }
+
+            // --- Manejadores Menú Contextual (sin cambios lógicos) ---
+            function handleContextMenu(event) {
+                if (event.currentTarget.classList.contains('editing')) {
+                    event.preventDefault(); return;
+                }
+                event.preventDefault();
+                currentTaskElement = event.currentTarget;
+                if (!currentTaskElement) return;
+                // Lógica de posicionamiento (sin cambios)
+                const { clientX: mouseX, clientY: mouseY } = event;
+                contextMenu.style.display = 'block';
+                const { offsetWidth: menuWidth, offsetHeight: menuHeight } = contextMenu;
+                const { innerWidth, innerHeight } = window;
+                let top = mouseY, left = mouseX;
+                if (mouseY + menuHeight > innerHeight) top = mouseY - menuHeight;
+                if (mouseX + menuWidth > innerWidth) left = mouseX - menuWidth;
+                if (top < 0) top = 5;
+                if (left < 0) left = 5;
+                contextMenu.style.top = `${top}px`;
+                contextMenu.style.left = `${left}px`;
+                // Listeners de cierre (sin cambios)
+                setTimeout(() => {
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                    document.addEventListener('keydown', closeContextMenuOnEscape, { once: true });
+                }, 0);
+            }
+            function closeContextMenu() {
+                contextMenu.style.display = 'none';
+                currentTaskElement = null;
+                document.removeEventListener('click', closeContextMenuOnClickOutside, { capture: true });
+                document.removeEventListener('keydown', closeContextMenuOnEscape);
+            }
+            function closeContextMenuOnClickOutside(event) {
+                // Evitar cierre si se hizo clic en la tarea que se está editando
+                if (currentEditingTask && currentEditingTask.contains(event.target)) {
+                    // Re-añadir listener si no se cerró
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                    return;
+                }
+                if (!contextMenu.contains(event.target)) {
+                    closeContextMenu();
+                } else {
+                    // Re-añadir listener si se hizo clic dentro del menú pero no se cerró
+                    document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true, once: true });
+                }
+            }
+            function closeContextMenuOnEscape(event) {
+                if (event.key === 'Escape') {
+                    closeContextMenu();
+                } else {
+                    document.addEventListener('keydown', closeContextMenuOnEscape, { once: true });
+                }
+            }
+            function handleContextMenuAction(event) {
+                const menuItem = event.target.closest('.context-menu-item');
+                if (!menuItem || !currentTaskElement) {
+                    if (!menuItem && contextMenu.contains(event.target)) {
+                        // No cerrar automáticamente si se hace clic en padding? Opcional.
+                    }
+                    return;
+                }
+                const color = menuItem.dataset.color;
+                const action = menuItem.dataset.action;
+                if (color) {
+                    taskColorClasses.forEach(cls => currentTaskElement.classList.remove(cls));
+                    currentTaskElement.classList.add(color);
+                    saveBoardState();
+                } else if (action === 'delete') {
+                    const taskDescription = getTaskDataFromElement(currentTaskElement).description || 'esta tarea';
+                    if (confirm(`¿Estás seguro de que quieres eliminar "${taskDescription}"?`)) {
+                        deleteTask(currentTaskElement.id);
+                    }
+                }
+                closeContextMenu(); // Cerrar siempre después de una acción válida
+            }
+
+            // --- Manejadores Modal (sin cambios lógicos) ---
+            function openModal() {
+                taskForm.reset();
+                taskModal.style.display = 'block';
+                document.getElementById('taskDescription').focus();
+            }
+            function closeModal() {
+                taskModal.style.display = 'none';
+            }
+            function handleFormSubmit(event) {
+                event.preventDefault();
+                const formData = new FormData(taskForm);
+                const taskData = {
+                    description: formData.get('description').trim(),
+                    dueDate: formData.get('dueDate'),
+                    assignee: formData.get('assignee').trim(),
+                };
+                if (!taskData.description) {
+                    alert("La descripción de la tarea no puede estar vacía.");
+                    document.getElementById('taskDescription').focus();
+                    return;
+                }
+                addTask(taskData);
+                closeModal();
+            }
+
+            // --- Persistencia (LocalStorage) ---
+
+            /**
+             * Generates the localStorage key based on the current OVC ID.
+             * @returns {string} The localStorage key.
+             */
+            function getStorageKey() {
+                const baseKey = 'kanbanBoardState_v3'; // Keep version suffix for potential future migrations
+                return currentOvcId ? `${baseKey}_${currentOvcId}` : baseKey; // Use specific key if OVC ID exists
+            }
+
+            function saveBoardState() {
+                const storageKey = getStorageKey(); // Get dynamic key
+                if (currentEditingTask) {
+                    console.warn("Guardando con tarea en edición. Cancelando edición...");
+                    disableEditMode(currentEditingTask, false);
+                }
+                const boardState = [];
+                if (!columns) { // Ensure columns are queried
+                    console.error("Error saving: Columns not initialized.");
+                    return;
+                }
+                columns.forEach(column => {
+                    const columnId = column.dataset.columnId;
+                    const tasks = column.querySelectorAll('.task-card');
+                    tasks.forEach((taskElement, index) => {
+                        if (taskElement.classList.contains('editing')) {
+                            console.error("Error crítico: Guardando tarea aún en modo edición:", taskElement.id);
+                            return;
+                        }
+                        let taskColor = taskColorClasses.find(cls => taskElement.classList.contains(cls)) || 'bg-task-default';
+                        const taskData = getTaskDataFromElement(taskElement);
+                        const subtasks = taskElement._subtasks || [];
+                        boardState.push({
+                            id: taskElement.id,
+                            description: taskData.description,
+                            dueDate: taskData.dueDate,
+                            assignee: taskData.assignee,
+                            color: taskColor,
+                            columnId: columnId,
+                            order: index,
+                            subtasks: subtasks
+                        });
+                    });
+                });
+                // Sorting logic remains the same
+                boardState.sort((a, b) => {
+                    const columnOrder = ['todo', 'in-progress', 'done'];
+                    const columnAIndex = columnOrder.indexOf(a.columnId);
+                    const columnBIndex = columnOrder.indexOf(b.columnId);
+                    if (columnAIndex !== columnBIndex) return columnAIndex - columnBIndex;
+                    return (a.order || 0) - (b.order || 0);
+                });
+                try {
+                    localStorage.setItem(storageKey, JSON.stringify(boardState));
+                    console.log(`Estado del tablero guardado en ${storageKey}.`);
+                } catch (error) {
+                    console.error(`Error al guardar en localStorage (${storageKey}):`, error);
+                    alert("No se pudo guardar el estado del tablero.");
+                }
+            }
+
+            function loadBoardState() {
+                const storageKey = getStorageKey(); // Get dynamic key
+                console.log(`Cargando estado del tablero desde ${storageKey}...`);
+                if (!columns) { // Ensure columns are queried
+                    console.error("Error loading: Columns not initialized.");
+                    return;
+                }
+                // Clear existing tasks first
+                columns.forEach(col => col.innerHTML = '');
+
+                let savedState = localStorage.getItem(storageKey);
+                if (savedState) {
+                    try {
+                        let boardState = JSON.parse(savedState);
+                        // Sorting logic remains the same
+                        boardState.sort((a, b) => {
+                            const columnOrder = ['todo', 'in-progress', 'done'];
+                            const columnAIndex = columnOrder.indexOf(a.columnId);
+                            const columnBIndex = columnOrder.indexOf(b.columnId);
+                            if (columnAIndex === -1) return 1;
+                            if (columnBIndex === -1) return -1;
+                            if (columnAIndex !== columnBIndex) return columnAIndex - columnBIndex;
+                            return (a.order || 0) - (b.order || 0);
+                        });
+
+                        boardState.forEach(taskData => {
+                            if (!taskData.id) taskData.id = generateId('task');
+                            taskData.subtasks = (taskData.subtasks || []).map(st => ({
+                                ...st,
+                                id: st.id || generateId('sub'),
+                                completed: st.completed || false
+                            }));
+                            addTask(taskData, false); // Add task without triggering another save
+                        });
+                        console.log(`Estado del tablero cargado desde ${storageKey}.`);
+                    } catch (error) {
+                        console.error(`Error al cargar el estado del tablero desde ${storageKey}:`, error);
+                        localStorage.removeItem(storageKey); // Clear corrupted data
+                    }
+                } else {
+                    console.log(`No hay estado guardado en ${storageKey}, iniciando tablero vacío.`);
+                }
+            }
+
+            // --- Inicialización ---
+            /**
+             * Initializes the Kanban board application.
+             * @param {string|null} ovcIdContext - The ID of the OVC to load the board for.
+             */
+            function init(ovcIdContext = null) {
+                console.log(`KanbanApp.init called. Context OVC ID: ${ovcIdContext}`);
+                currentOvcId = ovcIdContext; // Store the OVC ID
+
+                // Query DOM elements *after* the content is loaded into index.html
+                columns = document.querySelectorAll('#kanbanBoard .kanban-tasks'); // Be more specific
+                contextMenu = document.getElementById('contextMenu');
+                taskModal = document.getElementById('taskModal');
+                addTaskBtn = document.getElementById('addTaskBtn');
+                taskForm = document.getElementById('taskForm');
+
+                if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
+                    console.error("Error: Uno o más elementos esenciales del Kanban no se encontraron en el DOM. La inicialización falló.");
+                    // Attempt to query again after a small delay?
+                    setTimeout(() => {
+                        console.log("Retrying DOM query...");
+                        columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
+                        contextMenu = document.getElementById('contextMenu');
+                        taskModal = document.getElementById('taskModal');
+                        addTaskBtn = document.getElementById('addTaskBtn');
+                        taskForm = document.getElementById('taskForm');
+                        if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
+                            console.error("Retry failed. Kanban elements still missing.");
+                            return; // Stop initialization if elements are missing
+                        } else {
+                            console.log("Retry successful. Continuing init.");
+                            setupListenersAndLoad();
+                        }
+                    }, 100); // Wait 100ms and retry
+                    return; // Stop initial attempt
+                }
+
+                setupListenersAndLoad();
+            }
+
+            function setupListenersAndLoad() {
+                console.log("Setting up listeners and loading board state...");
+                // Remove previous listeners to prevent duplicates if init is called multiple times
+                document.removeEventListener('click', closeContextMenuOnClickOutside, { capture: true });
+                document.removeEventListener('keydown', closeContextMenuOnEscape);
+                window.removeEventListener('click', closeModalOnWindowClick);
+                window.removeEventListener('keydown', handleEscapeKey);
+
+                // Clone elements to remove old listeners effectively
+                if (contextMenu) contextMenu.replaceWith(contextMenu.cloneNode(true));
+                if (addTaskBtn) addTaskBtn.replaceWith(addTaskBtn.cloneNode(true));
+                if (taskForm) taskForm.replaceWith(taskForm.cloneNode(true));
+
+                // Re-query fresh elements after cloning
+                contextMenu = document.getElementById('contextMenu');
+                addTaskBtn = document.getElementById('addTaskBtn');
+                taskForm = document.getElementById('taskForm');
+
+                // Setup Drag and Drop for columns using SortableJS
+                columns.forEach(column => {
+                    if (column.sortableInstance) { // Destroy existing instance if re-initializing
+                        column.sortableInstance.destroy();
+                    }
+                    column.sortableInstance = new Sortable(column, {
+                        group: 'kanban',
+                        animation: 150,
+                        ghostClass: 'dragging',
+                        onEnd: function (evt) {
+                            console.log("Tarea movida.");
+                            saveBoardState(); // Save state after moving task
+                        }
+                    });
+                    // Remove manual drag listeners if Sortable handles it
+                    // column.removeEventListener('dragover', handleDragOver);
+                    // column.removeEventListener('dragenter', handleDragEnter);
+                    // column.removeEventListener('dragleave', handleDragLeave);
+                    // column.removeEventListener('drop', handleDrop);
+                });
+
+                // Setup Context Menu Listeners
+                if (contextMenu) {
+                    contextMenu.addEventListener('click', handleContextMenuAction, true); // Use capture? Maybe not needed.
+                } else { console.error("Context menu element not found for listener setup."); }
+                document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true }); // Use capture to catch clicks before they bubble
+
+                // Setup Modal Listeners
+                if (addTaskBtn) {
+                    addTaskBtn.addEventListener('click', openModal);
+                } else { console.error("Add task button not found for listener setup."); }
+
+                if (taskForm) {
+                    taskForm.addEventListener('submit', handleFormSubmit);
+                } else { console.error("Task form not found for listener setup."); }
+
+                // Window listeners for modal close and escape key
+                window.addEventListener('click', closeModalOnWindowClick);
+                window.addEventListener('keydown', handleEscapeKey);
+
+                // Load initial state for the specific OVC
+                loadBoardState(); // Calls modified load
+            }
+
+            // Helper for window click listener
+            function closeModalOnWindowClick(event) {
+                if (taskModal && event.target == taskModal) {
+                    closeModal();
+                }
+            }
+            // Helper for escape key listener
+            function handleEscapeKey(event) {
+                if (event.key === 'Escape') {
+                    if (taskModal && taskModal.style.display === 'block') closeModal();
+                    else if (currentEditingTask) disableEditMode(currentEditingTask, false);
+                    else if (contextMenu && contextMenu.style.display === 'block') closeContextMenu();
+                }
+            }
+
+
+            // --- Public API ---
+            return {
+                init: init
+                // Expose other methods only if strictly necessary for external interaction
+            };
+
+        })();
+
+        // --- Inicialización ---
+        // REMOVED: Initialization is now triggered by index.html calling KanbanApp.init(ovcId)
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     KanbanApp.init(); // Default init without OVC ID if loaded standalone
+        // });
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluar OVC - Sistema de Evaluación UdeA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="../css/rubrics-styles.css">
+    <!-- Alpine.js script moved to end of body -->
+</head>
+
+<body x-data="rubricSystemComponent()">
+
+    <div class="flex h-screen bg-gray-100">
+
+
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <header>
+
+
+            </header>
+
+            <div class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+                <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+
+                    <!-- Message Display Area -->
+                    <div x-show="message.text" x-transition
+                        :class="{ 'bg-green-100 border-green-400 text-green-700': message.type === 'success', 'bg-red-100 border-red-400 text-red-700': message.type === 'error', 'bg-blue-100 border-blue-400 text-blue-700': message.type === 'info' }"
+                        class="border px-4 py-3 rounded relative mb-4" role="alert">
+                        <span class="block sm:inline" x-text="message.text"></span>
+                        <span @click="message.text = ''"
+                            class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">
+                            <svg class="fill-current h-6 w-6" role="button" xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 20 20">
+                                <title>Cerrar</title>
+                                <path
+                                    d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                            </svg>
+                        </span>
+                    </div>
+
+                    <!-- Evaluator Section (copied from rubrics.html) -->
+                    <div> <!-- Removed x-show as this is the main content -->
+                        <h2
+                            class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
+                            Evaluador de OVC</h2>
+                        <div class="space-y-4" x-show="!evaluation.rubric" x-cloak>
+                            <label for="rubricSelect" class="block text-sm font-medium text-gray-700">Seleccionar
+                                Rúbrica</label>
+                            <select id="rubricSelect" x-model="selectedRubricTitle"
+                                @change="loadRubricForEvaluation($event.target.value)"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-accent-pink focus:border-accent-pink sm:text-sm rounded-md">
+                                <option value="">-- Elija una rúbrica --</option>
+                                <template x-for="rubric in savedRubrics" :key="rubric.title">
+                                    <option :value="rubric.title" x-text="rubric.title"></option>
+                                </template>
+                            </select>
+                            <p class="text-sm text-gray-500 mt-2">Primero debe <a href="disenar_rubrica.html"
+                                    class="text-pink-600 hover:underline">crear y guardar</a> una rúbrica.</p>
+                        </div>
+
+                        <div x-show="evaluation.rubric" class="space-y-6" x-cloak>
+                            <button @click="resetEvaluationForm"
+                                class="text-sm text-pink-600 hover:underline mb-4 inline-flex items-center">
+                                <i data-lucide="arrow-left" class="w-4 h-4 mr-1"></i> Cambiar Rúbrica
+                            </button>
+                            <h3 class="text-lg font-medium text-gray-800"
+                                x-text="'Evaluando con: ' + evaluation.rubric.title"></h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-md">
+                                <div>
+                                    <label for="ovcTitle" class="block text-sm font-medium text-gray-700">Título del
+                                        OVC</label>
+                                    <input type="text" id="ovcTitle" x-model="evaluation.ovcTitle"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Nombre del Proyecto/OVC">
+                                </div>
+                                <div>
+                                    <label for="subject"
+                                        class="block text-sm font-medium text-gray-700">Asignatura</label>
+                                    <input type="text" id="subject" x-model="evaluation.subject"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Ej: Programación Web">
+                                </div>
+                                <div>
+                                    <label for="evaluatorName" class="block text-sm font-medium text-gray-700">Nombre
+                                        del Evaluador</label>
+                                    <input type="text" id="evaluatorName" x-model="evaluation.evaluatorName"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="evaluatorId" class="block text-sm font-medium text-gray-700">Cédula del
+                                        Evaluador</label>
+                                    <input type="text" id="evaluatorId" x-model="evaluation.evaluatorId"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="percentage" class="block text-sm font-medium text-gray-700">Porcentaje
+                                        en la Nota Final (%)</label>
+                                    <input type="number" id="percentage" x-model.number="evaluation.percentage" min="0"
+                                        max="100"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                        placeholder="Ej: 30">
+                                </div>
+                            </div>
+
+                            <div class="space-y-5 mt-6">
+                                <template x-for="(criterion, critIndex) in evaluation.rubric.criteria" :key="critIndex">
+                                    <div class="p-4 border border-gray-200 rounded-md bg-gray-50">
+                                        <h4 class="text-md font-semibold text-gray-700 mb-1"
+                                            x-text="criterion.name + ' (' + criterion.weight + '%)'"></h4>
+                                        <p class="text-sm text-gray-500 mb-3">Seleccione un nivel:</p>
+                                        <div
+                                            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+                                            <template x-for="(level, levelIndex) in criterion.levels" :key="levelIndex">
+                                                <div @click="selectLevel(critIndex, level.score)"
+                                                    :class="{ 'selected-level': evaluation.scores[critIndex] === level.score }"
+                                                    class="cursor-pointer p-3 border border-gray-300 rounded-md hover:border-accent-pink hover:bg-pink-50 transition duration-150 ease-in-out flex flex-col justify-between min-h-[100px]">
+                                                    <div>
+                                                        <p class="font-medium text-sm text-gray-800"
+                                                            x-text="level.name + ' (' + level.score + ' pts)'"></p>
+                                                        <p class="text-xs text-gray-600 mt-1"
+                                                            x-text="level.description"></p>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <p x-show="evaluation.scores[critIndex] === null"
+                                            class="text-xs text-red-500 mt-1">Debe seleccionar un nivel para este
+                                            criterio.</p>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div>
+                                <label for="feedback" class="block text-sm font-medium text-gray-700">Retroalimentación
+                                    General</label>
+                                <textarea id="feedback" x-model="evaluation.feedback" rows="4"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-accent-pink focus:ring-accent-pink sm:text-sm"
+                                    placeholder="Comentarios adicionales sobre el OVC..."></textarea>
+                            </div>
+
+                            <div class="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200 text-center">
+                                <p class="text-sm font-medium text-gray-700">Calificación Calculada:</p>
+                                <p class="text-2xl font-bold text-blue-600"
+                                    x-text="calculatedScore !== null ? calculatedScore.toFixed(2) : '--'"></p>
+                                <p x-show="!allLevelsSelected" class="text-xs text-red-500 mt-1">Complete todos los
+                                    criterios para calcular la nota.</p>
+                            </div>
+
+                            <div class="mt-6 text-right">
+                                <button @click="submitEvaluation" :disabled="!canSubmitEvaluation"
+                                    class="inline-flex items-center px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-accent-pink hover:bg-accent-pink-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-pink disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i> Guardar Evaluación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End Evaluator Section -->
+
+                </div>
+            </div>
+            <footer class="bg-white border-t border-gray-200 p-3 text-center text-xs text-gray-500">
+                Todos los derechos reservados 2024 :: Universidad de Antioquia :: Vicerrectoría de Docencia
+            </footer>
+        </main>
+    </div>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        // Function to get OVCs from localStorage (copied from index.html for standalone use)
+        function getOvcsFromStorage() {
+            const ovcsJson = localStorage.getItem('ovcData');
+            try {
+                return ovcsJson ? JSON.parse(ovcsJson) : [];
+            } catch (e) {
+                console.error("Error al analizar los datos de OVC:", e);
+                return [];
+            }
+        }
+
+        function rubricSystemComponent() {
+            return {
+                // --- State specific to Evaluator ---
+                savedRubrics: [], // Loaded from localStorage
+                selectedRubricTitle: '',
+                evaluation: {
+                    ovcTitle: '',
+                    evaluatorName: '',
+                    evaluatorId: '',
+                    subject: '',
+                    percentage: null,
+                    rubric: null, // The selected rubric object
+                    scores: [], // Array to hold scores for each criterion [score1, score2, ...]
+                    feedback: '',
+                    calculatedGrade: null,
+                    timestamp: null
+                },
+                allEvaluations: {}, // Loaded/Saved to localStorage
+                message: { text: '', type: 'info', timer: null },
+
+                // --- Computed property for dynamic page title ---
+                get pageTitle() {
+                    // Simplified for this page
+                    return 'Evaluador de OVC';
+                },
+
+                // --- Initialization ---
+                init() {
+                    console.log('Initializing Rubric Evaluator...');
+                    this.loadSavedRubrics();
+                    this.loadSavedEvaluations();
+                    // No need to add default criterion here
+                    this.$nextTick(() => {
+                        lucide.createIcons(); // Initialize Lucide icons
+                    });
+
+                    // --- Pre-fill OVC Title from URL ---
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const ovcIdParam = urlParams.get('ovcId');
+                    if (ovcIdParam) {
+                        console.log(`Found ovcId in URL: ${ovcIdParam}`);
+                        const ovcs = getOvcsFromStorage(); // Use the helper function
+                        const ovcToEvaluate = ovcs.find(ovc => ovc.id === Number(ovcIdParam));
+                        if (ovcToEvaluate) {
+                            console.log(`Found OVC to evaluate: ${ovcToEvaluate.titulo}`);
+                            this.evaluation.ovcTitle = ovcToEvaluate.titulo;
+                        } else {
+                            console.warn(`OVC with ID ${ovcIdParam} not found in localStorage.`);
+                            this.showMessage(`No se encontró el OVC con ID ${ovcIdParam} para pre-cargar el título.`, 'error');
+                        }
+                    } else {
+                        console.log("No ovcId found in URL parameters.");
+                    }
+                    // --- End Pre-fill ---
+
+
+                    // Watchers needed if dynamic content affects icons
+                    this.$watch('evaluation.rubric', () => this.$nextTick(() => lucide.createIcons()));
+                },
+
+                // --- Load/Save Logic ---
+                loadSavedRubrics() {
+                    const storedRubrics = localStorage.getItem('savedRubrics');
+                    if (storedRubrics) {
+                        try {
+                            this.savedRubrics = JSON.parse(storedRubrics);
+                            console.log(`Loaded ${this.savedRubrics.length} rubrics.`);
+                        } catch (e) {
+                            console.error("Error loading saved rubrics:", e);
+                            localStorage.removeItem('savedRubrics');
+                            this.savedRubrics = [];
+                            this.showMessage('Error al cargar las rúbricas guardadas.', 'error');
+                        }
+                    } else {
+                        this.savedRubrics = [];
+                    }
+                },
+                loadSavedEvaluations() {
+                    const storedEvaluations = localStorage.getItem('allEvaluations');
+                    if (storedEvaluations) {
+                        try {
+                            this.allEvaluations = JSON.parse(storedEvaluations);
+                            console.log(`Loaded evaluations for ${Object.keys(this.allEvaluations).length} OVCs.`);
+                        } catch (e) {
+                            console.error("Error loading saved evaluations:", e);
+                            localStorage.removeItem('allEvaluations');
+                            this.allEvaluations = {};
+                            this.showMessage('Error al cargar las evaluaciones guardadas.', 'error');
+                        }
+                    } else {
+                        this.allEvaluations = {};
+                    }
+                },
+
+                // --- Project Evaluator Methods ---
+                loadRubricForEvaluation(title) {
+                    if (!title) {
+                        this.evaluation.rubric = null;
+                        return;
+                    }
+                    const selected = this.savedRubrics.find(r => r.title === title);
+                    if (selected) {
+                        this.evaluation.rubric = JSON.parse(JSON.stringify(selected)); // Use a copy
+                        this.evaluation.scores = Array(this.evaluation.rubric.criteria.length).fill(null);
+                        this.evaluation.calculatedGrade = null; // Reset calculated grade
+                        this.$nextTick(() => lucide.createIcons()); // Update icons if needed
+                    } else {
+                        this.showMessage(`Error: No se encontró la rúbrica '${title}'.`, 'error');
+                        this.evaluation.rubric = null;
+                    }
+                },
+                selectLevel(criterionIndex, score) {
+                    this.evaluation.scores[criterionIndex] = score;
+                    // The calculatedScore getter will automatically update
+                },
+                get allLevelsSelected() {
+                    if (!this.evaluation.rubric) return false;
+                    // Ensure scores array has the correct length
+                    if (this.evaluation.scores.length !== this.evaluation.rubric.criteria.length) {
+                        this.evaluation.scores = Array(this.evaluation.rubric.criteria.length).fill(null);
+                        return false;
+                    }
+                    return this.evaluation.scores.every(score => score !== null);
+                },
+                get calculatedScore() {
+                    if (!this.evaluation.rubric || !this.allLevelsSelected) {
+                        return null;
+                    }
+                    let totalScore = 0;
+                    let totalWeight = 0;
+                    this.evaluation.rubric.criteria.forEach((criterion, index) => {
+                        const weight = (parseFloat(criterion.weight) || 0) / 100; // Ensure weight is a number
+                        const score = this.evaluation.scores[index];
+                        if (typeof score === 'number') {
+                            totalScore += weight * score;
+                            totalWeight += weight;
+                        }
+                    });
+                    // Optional: Normalize score if weights don't sum exactly to 1 (100%)
+                    // if (totalWeight > 0 && Math.abs(totalWeight - 1.0) > 0.001) {
+                    //     console.warn("Rubric weights do not sum to 100%. Normalizing score.");
+                    //     return totalScore / totalWeight;
+                    // }
+                    return totalScore; // Return score based on defined weights
+                },
+                get canSubmitEvaluation() {
+                    return this.evaluation.rubric &&
+                        this.evaluation.ovcTitle.trim() &&
+                        this.evaluation.evaluatorName.trim() &&
+                        this.evaluation.evaluatorId.trim() &&
+                        this.evaluation.subject.trim() &&
+                        this.evaluation.percentage !== null && this.evaluation.percentage >= 0 && this.evaluation.percentage <= 100 &&
+                        this.allLevelsSelected &&
+                        this.calculatedScore !== null;
+                },
+                submitEvaluation() {
+                    if (!this.canSubmitEvaluation) {
+                        this.showMessage('Por favor, complete todos los campos de la evaluación y seleccione un nivel para cada criterio.', 'error');
+                        return;
+                    }
+                    const finalScore = this.calculatedScore;
+                    if (finalScore === null) {
+                        this.showMessage('Error al calcular la calificación final.', 'error');
+                        return;
+                    }
+
+                    const evaluationData = {
+                        evaluatorName: this.evaluation.evaluatorName,
+                        evaluatorId: this.evaluation.evaluatorId,
+                        rubricTitle: this.evaluation.rubric.title,
+                        subject: this.evaluation.subject,
+                        percentage: this.evaluation.percentage,
+                        feedback: this.evaluation.feedback,
+                        scores: {}, // Store scores mapped by criterion name
+                        calculatedGrade: finalScore,
+                        timestamp: new Date().toISOString()
+                    };
+
+                    this.evaluation.rubric.criteria.forEach((criterion, index) => {
+                        evaluationData.scores[criterion.name] = this.evaluation.scores[index];
+                    });
+
+                    const ovcKey = this.evaluation.ovcTitle.trim();
+                    if (!this.allEvaluations[ovcKey]) {
+                        this.allEvaluations[ovcKey] = [];
+                    }
+                    this.allEvaluations[ovcKey].push(evaluationData);
+
+                    try {
+                        localStorage.setItem('allEvaluations', JSON.stringify(this.allEvaluations));
+                        this.showMessage(`Evaluación para '${ovcKey}' guardada exitosamente.`, 'success');
+                        this.resetEvaluationForm(); // Reset form after submission
+                    } catch (e) {
+                        console.error("Error saving evaluations to localStorage:", e);
+                        this.showMessage('Error al guardar la evaluación. Verifique el espacio de almacenamiento.', 'error');
+                        // Attempt to revert the in-memory change if save fails
+                        const indexToRemove = this.allEvaluations[ovcKey].length - 1;
+                        if (indexToRemove >= 0) {
+                            this.allEvaluations[ovcKey].splice(indexToRemove, 1);
+                            if (this.allEvaluations[ovcKey].length === 0) {
+                                delete this.allEvaluations[ovcKey];
+                            }
+                        }
+                    }
+                },
+                resetEvaluationForm() {
+                    this.evaluation = {
+                        ovcTitle: '', evaluatorName: '', evaluatorId: '', subject: '', percentage: null,
+                        rubric: null, scores: [], feedback: '', calculatedGrade: null, timestamp: null
+                    };
+                    this.selectedRubricTitle = '';
+                },
+
+                // --- Utility Methods ---
+                showMessage(text, type = 'info', duration = 5000) {
+                    if (this.message.timer) {
+                        clearTimeout(this.message.timer);
+                    }
+                    this.message.text = text;
+                    this.message.type = type;
+                    this.message.timer = setTimeout(() => {
+                        this.message.text = '';
+                        this.message.timer = null;
+                    }, duration);
+                },
+            }
+        }
+
+        // Initialize Alpine component when the DOM is ready
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('rubricSystemComponent', rubricSystemComponent);
+            // Initialize Lucide icons after Alpine is ready
+            Alpine.nextTick(() => lucide.createIcons());
+        });
+
+        // Hide sidebar if loaded inside an iframe (e.g., within index.html)
+        if (window.self !== window.top) {
+            const sidebar = document.querySelector('aside.w-64');
+            if (sidebar) {
+                sidebar.style.display = 'none'; // Hide sidebar
+            }
+            const mainElement = document.querySelector('main.flex-1');
+            if (mainElement) {
+                mainElement.style.marginLeft = '0'; // Remove margin if sidebar is hidden
+            }
+        }
+    </script>
+</body>
+
+</html>
