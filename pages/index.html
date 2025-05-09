@@ -15,6 +15,7 @@
     <!-- SortableJS for drag-and-drop subtasks -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Duplicate SortableJS removed -->
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -121,6 +122,11 @@
                                         id="search-input"
                                         class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent">
                                 </div>
+                                <button id="advanced-search-trigger" title="Búsqueda Avanzada" class="ml-2 p-2 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-pink-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3zm3.707 4.707A1 1 0 017 7h6a1 1 0 01.707.293l-2.828 2.828A1 1 0 0110 10.586v3.828l-1-1V10.586a1 1 0 01-.293-.707L6.707 7.707z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
                             </div>
                         </div>
                         <div class="bg-white p-6 rounded-lg shadow">
@@ -578,6 +584,63 @@
         </div>
     </div>
 
+    <!-- Advanced Search Modal -->
+    <div id="advanced-search-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" aria-labelledby="advanced-search-modal-title" role="dialog" aria-modal="true">
+        <div id="advanced-search-modal-overlay" class="absolute inset-0 bg-gray-800 bg-opacity-60 modal-overlay"></div>
+        <div class="modal-content bg-white rounded-lg shadow-xl overflow-hidden transform sm:max-w-lg sm:w-full mx-4">
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="advanced-search-modal-title">
+                        <span>⚙️</span> Búsqueda Avanzada
+                    </h3>
+                    <button id="advanced-search-modal-close-x" type="button" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <span>❌</span>
+                    </button>
+                </div>
+                <div class="mt-4 space-y-4">
+                    <!-- Campo para Búsqueda Descriptiva (IA) -->
+                    <div>
+                        <label for="ai-search-prompt" class="block text-sm font-medium text-gray-700">Búsqueda Descriptiva (IA)</label>
+                        <textarea id="ai-search-prompt" name="ai-search-prompt" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm" placeholder="Describa qué OVC busca..."></textarea>
+                    </div>
+
+                    <!-- Filtros por Campos Específicos -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Filtrar por Campos:</label>
+                        <div class="mt-2 space-y-2">
+                            <div class="flex items-center">
+                                <input id="filter-titulo" name="filter-fields" type="checkbox" value="titulo" class="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                                <label for="filter-titulo" class="ml-2 block text-sm text-gray-900">Título</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="filter-descripcion" name="filter-fields" type="checkbox" value="descripcion" class="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                                <label for="filter-descripcion" class="ml-2 block text-sm text-gray-900">Descripción</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="filter-palabras-clave" name="filter-fields" type="checkbox" value="palabrasClave" class="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                                <label for="filter-palabras-clave" class="ml-2 block text-sm text-gray-900">Palabras Clave</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Checkbox para Fuzzy Search -->
+                    <div class="flex items-center">
+                        <input id="fuzzy-search-checkbox" name="fuzzy-search" type="checkbox" class="h-4 w-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500">
+                        <label for="fuzzy-search-checkbox" class="ml-2 block text-sm text-gray-900">Incluir resultados aproximados (Fuzzy Search)</label>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 sm:flex sm:flex-row-reverse">
+                <button id="apply-advanced-search-button" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Aplicar Búsqueda Avanzada
+                </button>
+                <button id="advanced-search-modal-close-cancel" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="../js/rizoma.js"></script>
     <script>
@@ -707,7 +770,20 @@
             const deleteModalOverlay = document.getElementById('delete-modal-overlay');
             const deleteConfirmButton = document.getElementById('delete-confirm-button');
             const deleteCancelButton = document.getElementById('delete-cancel-button');
-
+        
+            // Elementos para Búsqueda Avanzada
+            const searchInput = document.getElementById('search-input'); // Ya existe, pero lo referenciamos aquí
+            const advancedSearchTriggerBtn = document.getElementById('advanced-search-trigger');
+            const advancedSearchModal = document.getElementById('advanced-search-modal');
+            const advancedSearchModalOverlay = document.getElementById('advanced-search-modal-overlay');
+            const advancedSearchModalCloseXBtn = document.getElementById('advanced-search-modal-close-x');
+            const advancedSearchModalCloseCancelBtn = document.getElementById('advanced-search-modal-close-cancel');
+            const applyAdvancedSearchBtn = document.getElementById('apply-advanced-search-button');
+            const aiSearchPromptInput = document.getElementById('ai-search-prompt');
+            const fuzzySearchCheckbox = document.getElementById('fuzzy-search-checkbox');
+            const filterFieldCheckboxes = document.querySelectorAll('#advanced-search-modal input[name="filter-fields"]');
+        
+        
             const sections = {
                 crear: document.getElementById('crear-section'),
                 listar: document.getElementById('listar-section'),
@@ -723,6 +799,22 @@
                 // Titles for rubric pages will be set dynamically
             };
             const OVC_STORAGE_KEY = 'ovcData';
+            const GOOGLE_API_KEY = 'AIzaSyA5rWKqgBArqtg5aZiQiQFMRpZWcOsHwT0'; // TODO: Replace if needed & secure for production
+            const AI_MODEL_NAME = 'gemini-1.5-flash-latest';
+            const DEFAULT_SEARCH_FIELDS = [
+                'titulo',
+                'descripcion',
+                'etiquetas',
+                'autores.nombre',
+                'autores.rol',
+                'asignaturas',
+                'semestre',
+                'licencia',
+                'enlaces.descripcion',
+                'archivo', // Contiene el nombre del archivo
+                'relaciones.ovc',
+                'relaciones.etiqueta'
+            ];
 
             // --- Estado de Edición ---
             let isEditMode = false;
@@ -899,9 +991,11 @@
                     }
                 }
             }
-            function renderOvcTable() { /* ... código sin cambios ... */
+            function renderOvcTable(ovcsToRender) {
                 if (!ovcTableBody) return;
-                const ovcs = getOvcsFromStorage();
+                // Si no se proveen OVCs para renderizar, obtener todos desde el storage (comportamiento original)
+                // Si se proveen, usar esa lista (para resultados de búsqueda)
+                const ovcs = ovcsToRender || getOvcsFromStorage();
                 ovcTableBody.innerHTML = '';
                 const paginationStart = document.getElementById('pagination-start');
                 const paginationEnd = document.getElementById('pagination-end');
@@ -1406,6 +1500,444 @@
             }
             console.log("DEBUG: Script inicializado.");
 
+            // --- Lógica para Modal de Búsqueda Avanzada ---
+            function showAdvancedSearchModal() {
+                if (advancedSearchModal) {
+                    advancedSearchModal.classList.remove('hidden');
+                    // Aquí podrías añadir lógica para animaciones si es necesario
+                }
+            }
+
+            function hideAdvancedSearchModal() {
+                if (advancedSearchModal) {
+                    advancedSearchModal.classList.add('hidden');
+                }
+            }
+
+            if (advancedSearchTriggerBtn) {
+                advancedSearchTriggerBtn.addEventListener('click', showAdvancedSearchModal);
+            }
+            if (advancedSearchModalOverlay) {
+                advancedSearchModalOverlay.addEventListener('click', hideAdvancedSearchModal);
+            }
+            if (advancedSearchModalCloseXBtn) {
+                advancedSearchModalCloseXBtn.addEventListener('click', hideAdvancedSearchModal);
+            }
+            if (advancedSearchModalCloseCancelBtn) {
+                advancedSearchModalCloseCancelBtn.addEventListener('click', hideAdvancedSearchModal);
+            }
+
+            if (applyAdvancedSearchBtn) {
+                applyAdvancedSearchBtn.addEventListener('click', function() {
+                    // Lógica para aplicar búsqueda avanzada se implementará aquí
+                    console.log("Aplicar búsqueda avanzada clickeado");
+                    const aiPrompt = aiSearchPromptInput.value.trim();
+                    const useFuzzy = fuzzySearchCheckbox.checked;
+                    const selectedFields = Array.from(filterFieldCheckboxes)
+                                                .filter(cb => cb.checked)
+                                                .map(cb => cb.value);
+
+                    console.log("AI Prompt:", aiPrompt);
+                    console.log("Usar Fuzzy:", useFuzzy);
+                    console.log("Campos seleccionados:", selectedFields);
+                    
+                    // Aquí se llamaría a la función principal de búsqueda con estos criterios
+                    // performFullSearch({ query: searchInput.value, advanced: { aiPrompt, useFuzzy, fields: selectedFields } });
+                    hideAdvancedSearchModal();
+                });
+            }
+
+const DEBUG_SIMPLE_SEARCH = true; // Forzando a true para asegurar logs
+
+function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_FIELDS) {
+    console.log(`[SS_DEBUG_ENTRY] Called with query: "${query}"`); // Log incondicional al entrar
+    if (!query) return ovcs;
+    const lowerCaseQuery = query.toLowerCase();
+    if (DEBUG_SIMPLE_SEARCH) console.log(`[SS_DEBUG] Effective Query: "${lowerCaseQuery}", OVCs count: ${ovcs.length}, Fields:`, fieldsToSearch);
+
+    return ovcs.filter(ovc => {
+        if (DEBUG_SIMPLE_SEARCH) console.log(`[SS_DEBUG] --- Checking OVC ID: ${ovc.id} (Titulo: ${ovc.titulo}) ---`);
+        
+        return fieldsToSearch.some(fieldPath => {
+            if (DEBUG_SIMPLE_SEARCH) console.log(`[SS_DEBUG]   FieldPath: ${fieldPath}`);
+            const parts = fieldPath.split('.');
+            let valueToTest; // Puede ser un valor único o un array de valores a testear
+
+            if (parts.length === 1) { // Campo simple o array de strings en el nivel raíz
+                const fieldName = parts[0];
+                if (ovc.hasOwnProperty(fieldName)) {
+                    valueToTest = ovc[fieldName];
+                }
+            } else if (parts.length === 2) { // Campo anidado de un nivel, ej: "autores.nombre"
+                const arrayName = parts[0];
+                const propertyName = parts[1];
+                if (ovc.hasOwnProperty(arrayName) && Array.isArray(ovc[arrayName])) {
+                    const baseArray = ovc[arrayName];
+                    // Recolectar todos los valores anidados relevantes
+                    valueToTest = baseArray.map(item => {
+                        if (item && typeof item === 'object' && item.hasOwnProperty(propertyName)) {
+                            return item[propertyName];
+                        }
+                        return undefined;
+                    }).filter(val => val !== undefined && val !== null);
+                    // valueToTest es ahora un array de los valores de la propiedad anidada (ej. todos los nombres de autores)
+                    // Si está vacío, significa que no se encontraron valores o la propiedad no existía en los items.
+                }
+            }
+            // Se podrían añadir más 'else if' para mayor profundidad de anidamiento si fuera necesario
+
+            if (valueToTest === undefined || valueToTest === null || (Array.isArray(valueToTest) && valueToTest.length === 0) ) {
+                if (DEBUG_SIMPLE_SEARCH) console.log(`[SS_DEBUG]     No value or empty array for "${fieldPath}"`);
+                return false;
+            }
+            
+            let matchThisField = false;
+            // Asegurar que valueToTest sea un array para la lógica .some()
+            const valuesArray = Array.isArray(valueToTest) ? valueToTest : [valueToTest];
+
+            matchThisField = valuesArray.some(val => {
+                if (val === null || val === undefined) return false;
+                return val.toString().toLowerCase().includes(lowerCaseQuery);
+            });
+            
+            if (DEBUG_SIMPLE_SEARCH) {
+                if (matchThisField) console.log(`[SS_DEBUG]     MATCH in "${fieldPath}" for query "${lowerCaseQuery}" (Values tested: ${JSON.stringify(valuesArray)})`);
+                // else console.log(`[SS_DEBUG]     No match in "${fieldPath}" for query "${lowerCaseQuery}" (Values tested: ${JSON.stringify(valuesArray)})`);
+            }
+            return matchThisField;
+        });
+    });
+}
+            // --- Lógica de Búsqueda ---
+            function performSimpleSearch(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_FIELDS) {
+                if (!query) return ovcs;
+                const lowerCaseQuery = query.toLowerCase();
+
+                return ovcs.filter(ovc => {
+                    return fieldsToSearch.some(fieldPath => {
+                        const parts = fieldPath.split('.'); // e.g., "autores.nombre" or "titulo"
+                        let currentContext = ovc;
+
+                        // Navigate to the parent object/array if path is nested
+                        // For "autores.nombre", loop runs for "autores". currentContext becomes ovc.autores (array)
+                        // For "titulo", loop doesn't run. currentContext remains ovc.
+                        for (let i = 0; i < parts.length - 1; i++) {
+                            const part = parts[i];
+                            if (currentContext && typeof currentContext === 'object' && currentContext.hasOwnProperty(part)) {
+                                currentContext = currentContext[part];
+                            } else {
+                                return false; // Invalid path part before the end
+                            }
+                        }
+
+                        if (currentContext === null || currentContext === undefined) return false;
+
+                        const finalPropertyKey = parts[parts.length - 1];
+
+                        // Case 1: currentContext is an array (e.g., ovc.autores, ovc.enlaces, ovc.relaciones, or ovc.etiquetas, ovc.asignaturas)
+                        if (Array.isArray(currentContext)) {
+                            return currentContext.some(item => {
+                                if (item && typeof item === 'object' && item.hasOwnProperty(finalPropertyKey)) {
+                                    // This handles 'autores.nombre', 'enlaces.descripcion', etc.
+                                    // 'item' is an author object, 'finalPropertyKey' is 'nombre'.
+                                    const val = item[finalPropertyKey];
+                                    return val && val.toString().toLowerCase().includes(lowerCaseQuery);
+                                } else if (typeof item === 'string' && parts.length === 1 && finalPropertyKey === fieldPath) {
+                                    // This handles 'etiquetas', 'asignaturas' where fieldPath is just the array name (e.g. "etiquetas")
+                                    // 'item' is a string from the array. finalPropertyKey is, for example, "etiquetas"
+                                    return item.toString().toLowerCase().includes(lowerCaseQuery);
+                                }
+                                return false;
+                            });
+                        }
+                        // Case 2: currentContext is an object (or the OVC itself for non-nested paths like "titulo", "semestre")
+                        else if (typeof currentContext === 'object' && currentContext.hasOwnProperty(finalPropertyKey)) {
+                            const val = currentContext[finalPropertyKey];
+                             // This handles 'titulo', 'descripcion', 'semestre', 'licencia', 'archivo'
+                            if (Array.isArray(val)) {
+                                // This case handles if a direct property of an object is an array of strings (e.g. ovc.etiquetas if fieldPath was 'etiquetas')
+                                return val.some(s => s && s.toString().toLowerCase().includes(lowerCaseQuery));
+                            }
+                            return val && val.toString().toLowerCase().includes(lowerCaseQuery);
+                        }
+                        return false;
+                    });
+                });
+            }
+
+            function performBooleanSearch(queryString, ovcs, fieldsToSearch = DEFAULT_SEARCH_FIELDS) {
+                // Implementación simplificada de operadores booleanos.
+                // Prioridad implícita: NOT > AND > OR (debido al orden de procesamiento)
+                console.log("Boolean search for:", queryString, "in fields:", fieldsToSearch);
+                let results = ovcs;
+                const originalQuery = queryString;
+
+                // 1. Manejo de NOT
+                // Dividir la query por "NOT" (insensible a mayúsculas)
+                // Ejemplo: "terminoA AND terminoB NOT terminoC OR terminoD NOT terminoE"
+                // notParts = ["terminoA AND terminoB ", " terminoC OR terminoD ", " terminoE"]
+                const notSplitRegex = /\s+NOT\s+/i;
+                const notParts = originalQuery.split(notSplitRegex);
+                let currentResults = ovcs; // Empezar con todos los OVCs para la primera parte positiva
+
+                if (notParts.length > 0 && notParts[0].trim() !== "") {
+                     // Procesar la primera parte (antes del primer NOT, o toda la query si no hay NOT) para AND/OR
+                    currentResults = processAndOr(notParts[0].trim(), ovcs, fieldsToSearch);
+                } else if (originalQuery.toUpperCase().startsWith("NOT ")) {
+                    // Caso especial: la query empieza con NOT, ej "NOT algo"
+                    // notParts[0] será ""
+                    // notParts[1] será "algo"
+                    if (notParts.length > 1 && notParts[1].trim() !== "") {
+                        const termToExclude = notParts[1].trim().toLowerCase();
+                        currentResults = ovcs.filter(ovc => !performSimpleSearch(termToExclude, [ovc], fieldsToSearch).length);
+                        // El resto de notParts (desde el índice 2) se procesarán como exclusiones adicionales si existen
+                        for (let i = 2; i < notParts.length; i++) {
+                            const termToExcludeFurther = notParts[i].trim().toLowerCase();
+                            if (termToExcludeFurther) {
+                                currentResults = currentResults.filter(ovc => !performSimpleSearch_DEBUG(termToExcludeFurther, [ovc], fieldsToSearch).length);
+                            }
+                        }
+                        return currentResults;
+                    } else { // Query es solo "NOT" o "NOT "
+                        return ovcs; // No hay nada que excluir
+                    }
+                }
+
+
+                // Procesar las partes subsiguientes de NOT (exclusiones)
+                for (let i = 1; i < notParts.length; i++) {
+                    const termToExcludeString = notParts[i].trim();
+                    if (termToExcludeString) {
+                        // Lo que sigue a un NOT podría ser un término simple o una subexpresión AND/OR
+                        // Para simplificar, trataremos lo que sigue a NOT como términos simples a excluir.
+                        // Una implementación más avanzada parsearía la subexpresión.
+                        const exclusionTerms = termToExcludeString.toLowerCase().split(/\s+/).filter(t => t); // Dividir por si acaso
+                        exclusionTerms.forEach(exTerm => {
+                            if (exTerm) {
+                                currentResults = currentResults.filter(ovc => !performSimpleSearch(exTerm, [ovc], fieldsToSearch).length);
+                            }
+                        });
+                    }
+                }
+                return currentResults;
+            }
+
+            // Función auxiliar para procesar AND y OR dentro de una sub-cadena (ej., antes de un NOT, o la query completa)
+            function processAndOr(subQuery, ovcs, fieldsToSearch) {
+                let currentResults = ovcs;
+                const andSplitRegex = /\s+AND\s+/i;
+
+                if (subQuery.toUpperCase().includes(" AND ")) {
+                    const andTerms = subQuery.split(andSplitRegex);
+                    if (andTerms.length > 0 && andTerms[0].trim() !== "") {
+                        currentResults = performSimpleSearch_DEBUG(andTerms[0].trim(), ovcs, fieldsToSearch);
+                    } else if (andTerms.length > 1 && andTerms[0].trim() === "") {
+                        // Caso como " AND término" (inválido, pero para no romper)
+                        // o si la query era solo "AND"
+                        currentResults = performSimpleSearch_DEBUG(andTerms[1].trim(), ovcs, fieldsToSearch);
+                        andTerms.splice(0,1); // Remover el primer "AND" o el vacío
+                    }
+
+
+                    for (let i = 1; i < andTerms.length; i++) {
+                        const term = andTerms[i].trim();
+                        if (term === "") continue;
+                        const termResults = performSimpleSearch_DEBUG(term, ovcs, fieldsToSearch);
+                        currentResults = currentResults.filter(ovc => termResults.includes(ovc));
+                    }
+                    return currentResults;
+
+                } else if (subQuery.toUpperCase().includes(" OR ")) {
+                    const orSplitRegex = /\s+OR\s+/i;
+                    const orTerms = subQuery.split(orSplitRegex);
+                    const resultSet = new Set();
+                    orTerms.forEach(term => {
+                        const termToSearch = term.trim();
+                        if (termToSearch) {
+                            performSimpleSearch_DEBUG(termToSearch, ovcs, fieldsToSearch).forEach(ovc => resultSet.add(ovc));
+                        }
+                    });
+                    return Array.from(resultSet);
+                }
+                return performSimpleSearch_DEBUG(subQuery, ovcs, fieldsToSearch);
+            }
+
+
+            async function searchWithAI(aiPrompt, ovcsToSearchIn, fieldsToSearch = DEFAULT_SEARCH_FIELDS) {
+                if (!aiPrompt) return ovcsToSearchIn;
+                if (!GOOGLE_API_KEY || GOOGLE_API_KEY === 'YOUR_API_KEY_HERE' || GOOGLE_API_KEY.includes("YOUR_API_KEY") || GOOGLE_API_KEY.length < 30) {
+                    console.warn("Búsqueda con IA deshabilitada: GOOGLE_API_KEY no está configurada correctamente, es un placeholder evidente o es demasiado corta.");
+                    return ovcsToSearchIn;
+                }
+
+                console.log("Iniciando búsqueda con IA para prompt:", aiPrompt);
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL_NAME}:generateContent?key=${GOOGLE_API_KEY}`;
+                
+                const requestBody = {
+                    contents: [{
+                        parts: [{
+                            text: `Dada la siguiente consulta de un usuario que busca Objetos Virtuales Creativos (OVCs): "${aiPrompt}". Extrae y devuelve una lista concisa de 3 a 5 palabras clave o conceptos de búsqueda principales y relevantes, separados por comas. Estas palabras clave se usarán para filtrar una base de datos de OVCs. Prioriza los términos más distintivos y útiles para la búsqueda. Si la consulta es muy vaga o no parece una búsqueda, devuelve una lista vacía o la palabra 'N/A'.`
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.3,
+                        maxOutputTokens: 60
+                    }
+                };
+
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        console.error(`Error en API de Gemini: ${response.status} ${response.statusText}`, errorBody);
+                        // alert(`Error al contactar la IA: ${response.statusText}. Se mostrarán resultados sin filtro de IA.`);
+                        return ovcsToSearchIn; // Devuelve los OVCs sin filtrar en caso de error de API
+                    }
+
+                    const data = await response.json();
+                    
+                    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0) {
+                        const rawKeywordsText = data.candidates[0].content.parts[0].text;
+                        console.log("Texto de palabras clave de IA:", rawKeywordsText);
+                        if (rawKeywordsText.trim().toUpperCase() === 'N/A' || rawKeywordsText.trim() === '') {
+                            console.log("IA no devolvió palabras clave útiles.");
+                            return ovcsToSearchIn; // O podría ser un array vacío si la IA es el único criterio
+                        }
+                        const keywords = rawKeywordsText.split(',').map(kw => kw.trim().toLowerCase()).filter(kw => kw.length > 1);
+                        
+                        if (keywords.length === 0) {
+                             console.log("No se extrajeron palabras clave válidas de la respuesta de la IA.");
+                             return ovcsToSearchIn;
+                        }
+                        console.log("Palabras clave procesadas de IA:", keywords);
+
+                        // Filtrar OVCs que contengan AL MENOS UNA de las palabras clave en los campos especificados
+                        const matchedOvcs = ovcsToSearchIn.filter(ovc => {
+                            return keywords.some(keyword => {
+                                if (fieldsToSearch.includes('titulo') && ovc.titulo && ovc.titulo.toLowerCase().includes(keyword)) return true;
+                                if (fieldsToSearch.includes('descripcion') && ovc.descripcion && ovc.descripcion.toLowerCase().includes(keyword)) return true;
+                                if (fieldsToSearch.includes('etiquetas') && ovc.etiquetas && ovc.etiquetas.some(et => et.toLowerCase().includes(keyword))) return true;
+                                return false;
+                            });
+                        });
+                        console.log("OVCs coincidentes con IA:", matchedOvcs.length);
+                        return matchedOvcs;
+                    } else {
+                        console.warn("Respuesta de IA no contenía palabras clave esperadas:", data);
+                        return ovcsToSearchIn;
+                    }
+                } catch (error) {
+                    console.error("Error durante la llamada fetch a la API de Gemini:", error);
+                    // alert("Error de conexión con el servicio de IA. Se mostrarán resultados sin filtro de IA.");
+                    return ovcsToSearchIn; // Devuelve los OVCs sin filtrar en caso de error de red/fetch
+                }
+            }
+
+            async function performFullSearch(criteria) { // Convertida a async
+                console.log("Performing full search with criteria:", criteria);
+                let allOvcs = getOvcsFromStorage();
+                let filteredOvcs = allOvcs;
+                const rawMainQuery = criteria.query ? criteria.query.trim() : ""; // Mantener mayúsculas para operadores
+
+                let fieldsForMainQuery = DEFAULT_SEARCH_FIELDS; // Usar la lista expandida por defecto
+
+                if (criteria.advanced) {
+                    console.log("Criterios avanzados recibidos:", criteria.advanced);
+                    const adv = criteria.advanced;
+
+                    // 1. Filtro por campos específicos (si se seleccionaron en el modal)
+                    if (adv.fields && adv.fields.length > 0) {
+                        fieldsForMainQuery = adv.fields;
+                        console.log("Buscando query principal solo en campos:", fieldsForMainQuery);
+                    }
+                    
+                    // 2. Búsqueda con IA (si hay prompt)
+                    // Si se usa IA, esta podría ser la fuente principal de resultados o refinar la query.
+                    // Por ahora, si hay aiPrompt, este filtrará los OVCs.
+                    // Los filtros de texto (rawMainQuery, fuzzy) se aplicarán DESPUÉS o sobre estos resultados.
+                    if (adv.aiPrompt) {
+                        console.log("Aplicando búsqueda con AI Prompt:", adv.aiPrompt);
+                        filteredOvcs = await searchWithAI(adv.aiPrompt, filteredOvcs, fieldsForMainQuery);
+                        // Después de la IA, si hay un rawMainQuery, podría usarse para refinar aún más los resultados de la IA.
+                        // O, el rawMainQuery podría ignorarse si la IA es la búsqueda principal.
+                        // Decisión de diseño: Por ahora, si hay AI prompt, el rawMainQuery refina los resultados de la IA.
+                    }
+
+                    // 3. Aplicar búsqueda principal (fuzzy, booleana o simple) sobre los OVCs (posiblemente ya filtrados por IA)
+                    if (rawMainQuery) {
+                        if (adv.useFuzzy) {
+                            console.log("Aplicando Fuzzy Search para query principal:", rawMainQuery, "en campos:", fieldsForMainQuery);
+                            filteredOvcs = performFuzzySearch(rawMainQuery, filteredOvcs, fieldsForMainQuery);
+                        } else if (rawMainQuery.includes(" AND ") || rawMainQuery.includes(" OR ") || rawMainQuery.toUpperCase().includes(" NOT ")) {
+                            console.log("Detectada query booleana en input principal:", rawMainQuery, "en campos:", fieldsForMainQuery);
+                            filteredOvcs = performBooleanSearch(rawMainQuery, filteredOvcs, fieldsForMainQuery);
+                        } else {
+                            console.log("Aplicando búsqueda simple para query principal:", rawMainQuery, "en campos:", fieldsForMainQuery);
+                            filteredOvcs = performSimpleSearch(rawMainQuery, filteredOvcs, fieldsForMainQuery);
+                        }
+                    } else if (adv.useFuzzy) {
+                        // Si no hay query principal pero fuzzy está activo en el modal, no tiene efecto por sí solo.
+                        // Fuzzy necesita un término de búsqueda para operar sobre la query principal.
+                        console.log("Fuzzy search activado en modal pero no hay query principal en el input.");
+                    }
+                    // Nota: La lógica de AI se aplicaría aquí también, potencialmente modificando 'filteredOvcs'.
+
+
+                } else if (rawMainQuery) {
+                    // Solo búsqueda desde el input principal (simple o booleana)
+                    if (rawMainQuery.includes(" AND ") || rawMainQuery.includes(" OR ") || rawMainQuery.toUpperCase().includes(" NOT ")) {
+                        console.log("Detectada query booleana en input principal.");
+                        filteredOvcs = performBooleanSearch(rawMainQuery, filteredOvcs, fieldsForMainQuery); // Esta llamada ya usa performSimpleSearch_DEBUG indirectamente
+                    } else {
+                        filteredOvcs = performSimpleSearch_DEBUG(rawMainQuery, filteredOvcs, fieldsForMainQuery);
+                    }
+                } else {
+                    // Sin query y sin criterios avanzados, mostrar todos.
+                    filteredOvcs = allOvcs;
+                }
+                
+                renderOvcTable(filteredOvcs);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const query = searchInput.value; // No convertir a lowercase aquí, se hace en las funciones de búsqueda
+                    performFullSearch({ query: query });
+                });
+            }
+
+            if (applyAdvancedSearchBtn) {
+                applyAdvancedSearchBtn.addEventListener('click', function() {
+                    const aiPrompt = aiSearchPromptInput.value.trim();
+                    const useFuzzy = fuzzySearchCheckbox.checked;
+                    const selectedFields = Array.from(filterFieldCheckboxes)
+                                                .filter(cb => cb.checked)
+                                                .map(cb => cb.value);
+
+                    const mainQueryFromInput = searchInput.value.trim();
+
+                    console.log("Aplicando búsqueda avanzada con:");
+                    console.log("Query Principal:", mainQueryFromInput);
+                    console.log("AI Prompt:", aiPrompt);
+                    console.log("Usar Fuzzy:", useFuzzy);
+                    console.log("Campos seleccionados:", selectedFields);
+                    
+                    performFullSearch({
+                        query: mainQueryFromInput, // Usar el query del input principal también
+                        advanced: {
+                            aiPrompt: aiPrompt,
+                            useFuzzy: useFuzzy,
+                            fields: selectedFields
+                        }
+                    });
+                    hideAdvancedSearchModal();
+                });
+            }
 
             // --- Function to Load Rubric Pages into Content Area ---
             function loadPageInContentArea(url, clickedLink) {

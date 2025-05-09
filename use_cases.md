@@ -351,13 +351,13 @@ graph TD
 graph TD
     subgraph Proceso en SGOVC
         A["Estudiante: Visualiza OVC con Asset Unity/3D"] --> B{¿OVC Elegible?};
-        B -- Sí --> C["Estudiante: Clic en "Exportar a Videojuego""];
-        C --> D["SGOVC: Marca OVC "Pendiente de Aprobación""];
+        B -- Sí --> C["Estudiante: Clic en \"Exportar a Videojuego\""];
+        C --> D["SGOVC: Marca OVC \"Pendiente de Aprobación\""];
         D --> E["SGOVC: Notifica a Supervisores"];
         E --> F["Supervisor: Accede a Cola de Revisión"];
         F --> G["Supervisor: Revisa OVC"];
         G --> H{¿Aprueba OVC?};
-        H -- Sí --> I["SGOVC: Marca OVC "Aprobado""];
+        H -- Sí --> I["SGOVC: Marca OVC \"Aprobado\""];
         I --> J["SGOVC: Envía Asset vía API al Servidor del Videojuego"];
     end
 
@@ -370,12 +370,12 @@ graph TD
 
     subgraph Resultados y Notificaciones en SGOVC
         J --> K;
-        O --> P["SGOVC: Actualiza Estado a "Exportado e Incluido""];
+        O --> P["SGOVC: Actualiza Estado a \"Exportado e Incluido\""];
         P --> Q["SGOVC: Notifica Éxito al Estudiante"];
-        H -- No --> R["SGOVC: Marca OVC "Rechazado""];
+        H -- No --> R["SGOVC: Marca OVC \"Rechazado\""];
         R --> S["SGOVC: Notifica Rechazo al Estudiante"];
         M -- No --> T["Videojuego: (Opcional) Notifica Fallo a SGOVC vía API"];
-        T --> U["SGOVC: Actualiza Estado a "Fallo en Exportación""];
+        T --> U["SGOVC: Actualiza Estado a \"Fallo en Exportación\""];
         U --> V["SGOVC: Notifica Fallo al Estudiante y Supervisor"];
     end
 
@@ -1022,12 +1022,83 @@ graph TD
     K --> L([Fin Notificación Atendida])
     H -- "Descarta/Cierra panel" --> M([Fin Notificación Vista])
 ```
+### 3.8. Búsqueda y Descubrimiento
+
+**UC-702: Buscar OVCs Avanzado**
+
+*   **Goal:** Un Actor desea encontrar OVCs específicos utilizando criterios de búsqueda avanzados y flexibles, incluyendo búsqueda por términos en campos específicos, operadores booleanos, búsqueda semántica mediante IA (Gemini API) y búsqueda por similitud (fuzzy search).
+*   **Actor(s):** Estudiante, Profesor, Administrador, Invitado.
+*   **Preconditions:**
+    *   El Actor ha accedido al sistema.
+    *   Existen OVCs en el sistema.
+    *   La funcionalidad de búsqueda avanzada está disponible y, para la búsqueda semántica, la API de Gemini (o similar) está configurada y operativa.
+*   **Flow of Events:**
+    *   **Basic Flow - Acceso a Búsqueda Avanzada:**
+        1.  El Actor accede a la interfaz de búsqueda avanzada de OVCs (ej. a través de una barra de búsqueda principal con opción "Avanzada" o una sección dedicada).
+        2.  El sistema presenta una interfaz de búsqueda que permite múltiples tipos de consulta.
+    *   **Sub-Flow 1 - Búsqueda por Términos y Campos Específicos:**
+        1.  El Actor ingresa uno o más términos de búsqueda en un campo general.
+        2.  (Opcional) El Actor puede especificar campos individuales del OVC donde aplicar la búsqueda (ej. Título, Descripción, Autor, Palabras Clave, Contenido de Archivos Indexados).
+        3.  El Actor ejecuta la búsqueda.
+        4.  El sistema procesa la consulta buscando los términos en los campos especificados (o en todos los campos relevantes si no se especifica).
+        5.  El sistema muestra una lista de OVCs que coinciden, resaltando los términos de búsqueda si es posible.
+    *   **Sub-Flow 2 - Búsqueda con Operadores Booleanos:**
+        1.  Dentro del campo de búsqueda (o mediante una interfaz específica), el Actor utiliza operadores booleanos (ej. AND, OR, NOT, Y, O, NO) para combinar términos o refinar la búsqueda. Ejemplo: `("arte digital" AND "UdeA") OR "instalación interactiva" NOT "videojuego"`.
+        2.  El Actor ejecuta la búsqueda.
+        3.  El sistema interpreta los operadores booleanos y filtra los resultados de acuerdo a la lógica especificada.
+        4.  El sistema muestra la lista de OVCs resultantes.
+    *   **Sub-Flow 3 - Búsqueda Semántica con IA (Gemini API):**
+        1.  El Actor selecciona la opción de "Búsqueda Descriptiva" o "Búsqueda con IA".
+        2.  El sistema presenta un campo de texto para que el Actor describa lo que busca en lenguaje natural (prompt).
+        3.  El Actor ingresa su prompt. Ejemplo: "Busco OVCs relacionados con la creación de personajes 3D para animación que hayan sido bien evaluados por profesores".
+        4.  El Actor ejecuta la búsqueda.
+        5.  El sistema envía el prompt (y potencialmente metadatos contextuales de los OVCs si la API lo permite para mejorar la relevancia) a la API de Gemini.
+        6.  La API de Gemini procesa el prompt y devuelve una lista de OVCs considerados semánticamente relevantes.
+        7.  El sistema muestra los OVCs sugeridos por la IA, idealmente con una indicación de por qué se consideraron relevantes o el grado de coincidencia.
+    *   **Sub-Flow 4 - Búsqueda por Similitud (Fuzzy Search):**
+        1.  El Actor ingresa términos de búsqueda en el campo general.
+        2.  El sistema, de forma automática o mediante una opción explícita ("Incluir resultados aproximados"), aplica algoritmos de búsqueda difusa.
+        3.  El Actor ejecuta la búsqueda.
+        4.  El sistema busca coincidencias exactas y también aquellas que son similares (ej. errores tipográficos, variaciones morfológicas, sinónimos si el motor lo soporta).
+        5.  El sistema muestra los resultados, indicando si una coincidencia es exacta o aproximada.
+    *   **Alternative Flow - Sin Resultados:**
+        *   Si ninguna búsqueda (en cualquiera de los sub-flujos) devuelve resultados.
+        *   El sistema muestra un mensaje indicando "No se encontraron OVCs que coincidan con sus criterios de búsqueda".
+        *   (Opcional) El sistema ofrece sugerencias para refinar la búsqueda (ej. "verifique la ortografía", "intente con términos más generales", "pruebe la búsqueda descriptiva").
+*   **Postconditions:**
+    *   El Actor visualiza una lista de OVCs que coinciden con los criterios de búsqueda ingresados.
+    *   Si no hay coincidencias, el Actor recibe una notificación apropiada.
+*   **Diagrama de Flujo para UC-702 (Mermaid):**
+
+    ```mermaid
+    graph TD
+        A["Actor accede a Búsqueda Avanzada OVCs"] --> B{Selecciona tipo de búsqueda o combina criterios};
+        B -- "Términos y/o Campos" --> C1["Ingresa términos, (opc) selecciona campos"];
+        C1 --> D["Ejecuta Búsqueda"];
+        B -- "Operadores Booleanos" --> C2["Ingresa términos con AND, OR, NOT"];
+        C2 --> D;
+        B -- "Búsqueda Semántica IA (Gemini)" --> C3["Ingresa prompt descriptivo"];
+        C3 --> D_IA["Ejecuta Búsqueda IA"];
+        B -- "Búsqueda por Similitud (Fuzzy)" --> C4["Ingresa términos (sistema aplica fuzzy)"];
+        C4 --> D;
+
+        D --> E{Sistema procesa consulta};
+        D_IA --> E_IA["Sistema envía prompt a Gemini API"];
+        E_IA --> F_IA["Gemini API devuelve resultados relevantes"];
+        F_IA --> G["Sistema muestra resultados"];
+
+        E -- "Resultados Encontrados" --> G;
+        E -- "Sin Resultados" --> H["Sistema muestra 'No hay resultados'"];
+        H --> I["(Opcional) Sistema ofrece sugerencias"];
+        I --> J([Fin Búsqueda]);
+        G --> J;
+    ```
+
 ## 4. Otros posibles casos de uso para más adelante
 
 | Nombre del Caso de Uso                                  | Breve Descripción                                                                                                                               |
 | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **UC-701: Gestionar Portafolio Personal de OVCs**       | Permitir a los usuarios (especialmente estudiantes) curar y presentar una selección de sus OVCs como un portafolio personal o profesional.        |
-| **UC-702: Buscar OVCs Avanzado**                        | Mejorar la búsqueda actual con filtros más detallados (por tipo, fecha, popularidad, etc.) y potencialmente búsqueda semántica.                  |
 | **UC-703: Recomendar OVCs**                             | Implementar un sistema que sugiera OVCs a los usuarios basándose en sus intereses, historial de visualización o evaluaciones.                   |
 | **UC-704: Integración con Repositorios Externos**       | Permitir la importación/exportación o enlace de OVCs con repositorios externos (ej. GitHub, Figshare, Sketchfab).                               |
 | **UC-705: Analíticas de Uso de OVCs**                   | Proveer a los creadores y profesores estadísticas sobre cómo se visualizan, evalúan o utilizan sus OVCs (vistas, descargas, tiempo de interacción). |
