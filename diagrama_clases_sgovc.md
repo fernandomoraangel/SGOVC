@@ -46,8 +46,19 @@ classDiagram
         +Array<OVC> getConnectedOvcs()
     }
 
-   class Autor {
-        +string nombre
+   class Rizoma {
+       +Array<OVC> ovcs // Colección de todos los OVCs en el Rizoma
+       --
+       +void addOvc(OVC ovc)
+       +void addRelationship(string ovcId1, string ovcId2, string etiqueta, string direccion)
+       +OVC getOvcById(string ovcId)
+       +Array<OVC> getAllOvcs()
+       +Array<RelacionOVC> getRelationships(string ovcId)
+       % ... otros métodos para gestionar y navegar el Rizoma
+   }
+
+  class Autor {
+       +string nombre
         +string rol
         +string email
         +number participacion
@@ -224,6 +235,7 @@ classDiagram
     Sistema SGOVC ..> Foro : gestiona
     Sistema SGOVC ..> Usuario : gestiona
     Sistema SGOVC ..> Curso : gestiona
+    Sistema SGOVC ..> Rizoma : gestiona
 ```
 
 ## Descripción de Clases y Relaciones
@@ -459,6 +471,22 @@ La clase `RelacionOVC` es fundamental en esta conceptualización, ya que define 
 
 Al visualizar y navegar esta red de OVCs como un Rizoma/Cerebro Digital, el sistema SGOVC se convierte en una plataforma dinámica para la creación, evolución y descubrimiento de conocimiento, reflejando la naturaleza interconectada y fluida de las ideas creativas.
 
+### Rizoma
+
+Representa la colección total de OVCs y sus interconexiones, conceptualizada como una estructura de Rizoma o Cerebro Digital. Esta clase actúa como el punto central para gestionar la red de conocimiento.
+
+*   **Atributos:** `ovcs` (un array que contiene todas las instancias de `OVC` en el sistema).
+*   **Relaciones:** Gestiona múltiples `OVC`s.
+*   **Métodos:**
+    *   `addOvc(OVC ovc)`: Añade un nuevo OVC a la colección.
+    *   `addRelationship(string ovcId1, string ovcId2, string etiqueta, string direccion)`: Establece una `RelacionOVC` entre dos OVCs existentes.
+    *   `getOvcById(string ovcId)`: Recupera un OVC específico por su ID.
+    *   `getAllOvcs()`: Devuelve todos los OVCs en el Rizoma.
+    *   `getRelationships(string ovcId)`: Devuelve todas las relaciones asociadas a un OVC específico.
+    *   `findPath(string startOvcId, string endOvcId)`: (Más avanzado) Implementa un algoritmo de búsqueda para encontrar un camino entre dos OVCs en el Rizoma.
+    *   `getConnectedComponent(string ovcId)`: (Más avanzado) Devuelve todos los OVCs que están conectados a un OVC dado.
+    *   `analyzeStructure()`: (Más avanzado) Realiza análisis sobre la estructura del Rizoma (ej: densidad de conexiones, identificación de nodos centrales).
+
 ## Decisiones de Diseño
 
 *   Se ha optado por representar las relaciones "muchos a muchos" (como OVCs y Cursos, o Tareas y Responsables) mediante arrays de IDs en las clases correspondientes para simplificar el modelo a nivel conceptual. La implementación real podría requerir tablas de unión en una base de datos relacional.
@@ -470,3 +498,4 @@ Al visualizar y navegar esta red de OVCs como un Rizoma/Cerebro Digital, el sist
 *   Se han incorporado atributos y métodos a la clase `OVC` para modelar conceptos de memética y computación evolutiva, permitiendo tratar los OVCs como entidades que pueden evolucionar.
 *   Se han sugerido atributos y métodos adicionales para la clase `OVC` con el fin de enriquecer su definición como Objeto Virtual de Aprendizaje (OVA), alineándose con estándares educativos y facilitando su uso en contextos pedagógicos.
 *   Se ha añadido una sección para conceptualizar el grafo de OVCs como un Rizoma/Cerebro Digital, destacando la importancia de las relaciones (`RelacionOVC`) y sugiriendo métodos para la navegación del grafo.
+*   Se ha introducido la clase `Rizoma` para gestionar la colección de OVCs y sus interconexiones, representando la estructura global del sistema desde la perspectiva del Rizoma.
