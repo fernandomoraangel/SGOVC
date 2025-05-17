@@ -5,15 +5,16 @@
  * @returns {Promise<{nodes: Array, links: Array}>} Una promesa que resuelve al objeto de datos para D3.
  */
 async function getGraphDataForD3() {
-  // ... (código sin cambios) ...
   return new Promise((resolve, reject) => {
     try {
+      console.log('DEBUG: Obteniendo datos de OVCs desde localStorage...');
       const rawData = localStorage.getItem("ovcData");
       if (!rawData) {
         console.warn(
           "No se encontraron datos de OVCs en localStorage ('ovcData')."
         );
-        resolve({ nodes: [], links: [] });
+        // Devolver datos vacíos pero válidos
+        resolve({ nodes: [], links: [], originalOvcs: [] });
         return;
       }
 
@@ -114,10 +115,12 @@ async function getGraphDataForD3() {
         (link) => validNodeIds.has(link.source) && validNodeIds.has(link.target)
       );
 
+      console.log(`DEBUG: Datos procesados para D3: ${validNodes.length} nodos, ${validLinks.length} enlaces`);
       resolve({ nodes: validNodes, links: validLinks, originalOvcs: ovcs }); // Devolver también los OVCs originales
     } catch (error) {
       console.error("Error al obtener o procesar datos de OVCs:", error);
-      reject(error);
+      // Devolver datos vacíos pero válidos en caso de error
+      resolve({ nodes: [], links: [], originalOvcs: [] });
     }
   });
 }
@@ -127,10 +130,21 @@ async function getGraphDataForD3() {
  * @param {string} containerId El ID del elemento SVG contenedor.
  */
 async function verRizoma(containerId) {
+  console.log(`DEBUG: Iniciando verRizoma con contenedor: ${containerId}`);
+  
+  // Verificar que el contenedor exista
+  if (!document.querySelector(containerId)) {
+    console.error(`ERROR: No se encontró el contenedor ${containerId}`);
+    return;
+  }
+  
   let data;
   try {
+    console.log('DEBUG: Obteniendo datos para el rizoma...');
     data = await getGraphDataForD3();
+    console.log('DEBUG: Datos obtenidos correctamente:', data);
   } catch (error) {
+    console.error('ERROR al cargar los datos del rizoma:', error);
     const container = d3.select(containerId);
     container.html(
       `<div style="color: red; padding: 10px;">Error al cargar los datos: ${error.message}</div>`
@@ -710,3 +724,32 @@ async function verRizoma(containerId) {
 // document.addEventListener('DOMContentLoaded', () => {
 //     verRizoma('#rizoma-container');
 // });
+
+// Función para renderizar el grafo de rizoma
+function renderRizomaGraph() {
+  console.log('DEBUG: Ejecutando renderRizomaGraph');
+  // Verificar que D3 esté disponible
+  if (typeof d3 === 'undefined') {
+    console.error('ERROR: D3.js no está disponible. Asegúrate de que se haya cargado correctamente.');
+    return;
+  }
+  
+  // Verificar que el elemento SVG exista
+  const svgElement = document.getElementById('rizoma-graph');
+  if (!svgElement) {
+    console.error('ERROR: No se encontró el elemento SVG con ID rizoma-graph');
+    return;
+  }
+  
+  console.log('DEBUG: D3 y elemento SVG disponibles, llamando a verRizoma');
+  // Usar el ID correcto del elemento SVG en el HTML
+  verRizoma('#rizoma-graph');
+}
+
+// Exportar las funciones globalmente
+window.renderRizomaGraph = renderRizomaGraph;
+window.verRizoma = verRizoma;
+
+// Ejemplo de cómo llamarlo (asegúrate de que exista un <svg id="rizoma-container"></svg> en tu HTML)
+// verRizoma('#rizoma-container');
+// window.verRizoma ya se exportó en renderRizomaGraph

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test OVC Storage</title>
+    <script src="js/ovcStorage.js"></script>
+    <script>
+        function testStorage() {
+            // Crear algunos OVCs de prueba
+            const testOvcs = [
+                {
+                    id: 1,
+                    titulo: "OVC de Prueba 1",
+                    descripcion: "Este es un OVC de prueba",
+                    autores: [{nombre: "Autor 1", rol: "Desarrollador"}],
+                    etiquetas: ["prueba", "test"],
+                    asignaturas: ["Programación"],
+                    semestre: "2023-1"
+                },
+                {
+                    id: 2,
+                    titulo: "OVC de Prueba 2",
+                    descripcion: "Este es otro OVC de prueba",
+                    autores: [{nombre: "Autor 2", rol: "Diseñador"}],
+                    etiquetas: ["prueba", "diseño"],
+                    asignaturas: ["Diseño"],
+                    semestre: "2023-2"
+                }
+            ];
+            
+            // Guardar en localStorage
+            saveOvcsToStorage(testOvcs);
+            
+            // Recuperar y mostrar
+            const ovcs = getOvcsFromStorage();
+            document.getElementById('result').textContent = JSON.stringify(ovcs, null, 2);
+        }
+    </script>
+</head>
+<body>
+    <h1>Test de Almacenamiento de OVCs</h1>
+    <button onclick="testStorage()">Probar Almacenamiento</button>
+    <pre id="result"></pre>
+</body>
+</html>

@@ -12,6 +12,7 @@
     <!-- SortableJS for drag-and-drop subtasks -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="stylesheet" href="../css/kanban-styles.css">
+    <!-- No necesitamos cargar kanban-simple.js ya que tenemos la implementaciu00f3n completa en este archivo -->
 </head>
 
 <body class="p-4 md:p-8">
@@ -201,63 +202,184 @@
             }
 
             function createTaskElement(taskData) {
+                console.log(`DEBUG: Creando elemento de tarea con ID ${taskData.id}`);
+                
+                // Crear el elemento principal de la tarea
                 const taskElement = document.createElement('div');
                 taskElement.id = taskData.id;
                 taskElement.classList.add('task-card');
                 taskElement.draggable = true;
 
+                // Asignar la clase de color correcta
                 const colorClass = (taskData.color && taskColorClasses.includes(taskData.color)) ? taskData.color : 'bg-task-default';
                 taskElement.classList.add(colorClass);
 
-                // Store subtasks data. Using a property is better than dataset for complex objects.
-                taskElement._subtasks = taskData.subtasks || [];
+                // Almacenar datos de subtareas como propiedad (mejor que dataset para objetos complejos)
+                taskElement._subtasks = Array.isArray(taskData.subtasks) ? [...taskData.subtasks] : [];
+                
+                // Asegurarse de que cada subtarea tenga un ID válido y estado completed
+                taskElement._subtasks = taskElement._subtasks.map(st => ({
+                    ...st,
+                    id: st.id || generateId('sub'),
+                    completed: typeof st.completed === 'boolean' ? st.completed : false
+                }));
 
-                taskElement.innerHTML = renderTaskViewContent(taskData);
+                // Renderizar el contenido HTML de la tarea
+                taskElement.innerHTML = renderTaskViewContent({
+                    ...taskData,
+                    subtasks: taskElement._subtasks
+                });
 
+                console.log(`DEBUG: Añadiendo event listeners a tarea ${taskData.id}`);
+                
+                // Añadir event listeners principales
                 taskElement.addEventListener('click', handleTaskClick);
                 taskElement.addEventListener('dragstart', handleDragStart);
                 taskElement.addEventListener('dragend', handleDragEnd);
                 taskElement.addEventListener('contextmenu', handleContextMenu);
 
-                // Event delegation for subtask button and checkbox clicks within the task card
+                // Delegación de eventos para botón de subtareas y clicks en checkboxes dentro de la tarjeta
                 taskElement.addEventListener('click', (event) => {
-                    // Toggle subtask view
+                    // Alternar vista de subtareas
                     if (event.target.classList.contains('view-subtasks-btn') || event.target.closest('.view-subtasks-btn')) {
                         const button = event.target.classList.contains('view-subtasks-btn') ? event.target : event.target.closest('.view-subtasks-btn');
                         toggleSubtasksView(button);
-                        event.stopPropagation(); // Prevent task edit mode from triggering
+                        event.stopPropagation(); // Evitar que se active el modo de edición de la tarea
                     }
-                    // Prevent edit mode when clicking subtask checkbox
+                    
+                    // Evitar el modo de edición al hacer clic en el checkbox de subtarea
                     if (event.target.matches('.subtask-item-view input[type="checkbox"]')) {
-                        event.stopPropagation(); // Prevent task edit mode from triggering
+                        event.stopPropagation(); // Evitar que se active el modo de edición de la tarea
                     }
                 });
-
+                
+                // Verificar que los elementos de subtareas tengan los event listeners correctos
+                setTimeout(() => {
+                    const subtaskCheckboxes = taskElement.querySelectorAll('.subtask-item-view input[type="checkbox"]');
+                    if (subtaskCheckboxes.length > 0) {
+                        console.log(`DEBUG: Encontrados ${subtaskCheckboxes.length} checkboxes de subtareas en tarea ${taskData.id}`);
+                        
+                        // Verificar que cada checkbox tenga el listener correcto
+                        subtaskCheckboxes.forEach(checkbox => {
+                            const subtaskId = checkbox.closest('.subtask-item-view').dataset.subtaskId;
+                            if (!subtaskId) {
+                                console.error(`ERROR: Checkbox de subtarea sin ID en tarea ${taskData.id}`);
+                            }
+                        });
+                    }
+                    
+                    // Verificar que el botón de subtareas funcione correctamente
+                    const subtasksButton = taskElement.querySelector('.view-subtasks-btn');
+                    if (subtasksButton) {
+                        console.log(`DEBUG: Botón de subtareas encontrado en tarea ${taskData.id}`);
+                    }
+                }, 0);
+                
+                console.log(`DEBUG: Elemento de tarea ${taskData.id} creado correctamente`);
                 return taskElement;
             }
 
             function addTask(taskData, save = true) {
+                // Validar y asignar valores por defecto
                 if (!taskData.id) taskData.id = generateId('task');
+                if (!taskData.title) taskData.title = 'Tarea sin título';
+                if (!taskData.description) taskData.description = '';
                 if (!taskData.columnId) taskData.columnId = 'todo';
                 if (!taskData.color) taskData.color = 'bg-task-default';
-                if (!taskData.subtasks) taskData.subtasks = []; // Ensure subtasks array exists
+                if (!Array.isArray(taskData.subtasks)) taskData.subtasks = []; // Asegurar que subtasks sea un array
 
+                console.log(`DEBUG: Añadiendo tarea: ${JSON.stringify({
+                    id: taskData.id,
+                    title: taskData.title,
+                    columnId: taskData.columnId,
+                    subtasks: taskData.subtasks.length
+                })}`);
+
+                // Crear el elemento de la tarea
                 const taskElement = createTaskElement(taskData);
-                const targetColumn = document.querySelector(`.kanban-tasks[data-column-id="${taskData.columnId}"]`);
+                
+                console.log(`DEBUG: Buscando columna para tarea ${taskData.id} con columnId=${taskData.columnId}`);
+                
+                // Verificar que tengamos columnas válidas
+                if (!columns || columns.length === 0) {
+                    console.error("ERROR: No hay columnas disponibles para añadir la tarea.");
+                    console.log("Reintentando obtener columnas...");
+                    columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
+                    
+                    if (!columns || columns.length === 0) {
+                        console.error("ERROR FATAL: No se pudieron encontrar las columnas en el DOM después de reintentar.");
+                        return false; // Indicar que la tarea no se pudo añadir
+                    }
+                }
+                
+                // Buscar la columna objetivo
+                let targetColumn = null;
+                const columnIds = ['todo', 'in-progress', 'done']; // IDs válidos de columnas
+                
+                // Verificar que el columnId sea válido
+                if (!columnIds.includes(taskData.columnId)) {
+                    console.warn(`ADVERTENCIA: ColumnId '${taskData.columnId}' no es válido, usando 'todo' como predeterminado`);
+                    taskData.columnId = 'todo';
+                }
+                
+                // Intentar múltiples métodos para encontrar la columna correcta
+                // 1. Primero intentar con querySelector
+                targetColumn = document.querySelector(`.kanban-tasks[data-column-id="${taskData.columnId}"]`);
+                
+                // 2. Si no funciona, buscar en la colección de columnas
+                if (!targetColumn && columns) {
+                    for (let i = 0; i < columns.length; i++) {
+                        if (columns[i].dataset.columnId === taskData.columnId) {
+                            targetColumn = columns[i];
+                            console.log(`DEBUG: Columna '${taskData.columnId}' encontrada en el índice ${i}`);
+                            break;
+                        }
+                    }
+                }
+
+                // 3. Si aún no se encuentra, intentar con la primera columna disponible
+                if (!targetColumn && columns.length > 0) {
+                    console.warn(`ADVERTENCIA: No se encontró la columna '${taskData.columnId}', usando la primera columna disponible`);
+                    targetColumn = columns[0];
+                    taskData.columnId = targetColumn.dataset.columnId || 'todo';
+                }
 
                 if (targetColumn) {
-                    targetColumn.appendChild(taskElement);
-                    if (save) saveBoardState();
-                } else {
-                    console.error(`Columna con ID "${taskData.columnId}" no encontrada.`);
-                    const todoColumn = document.querySelector('.kanban-tasks[data-column-id="todo"]');
-                    if (todoColumn) {
-                        todoColumn.appendChild(taskElement);
-                        taskData.columnId = 'todo';
-                        if (save) saveBoardState();
-                    } else {
-                        console.error("Columna 'todo' tampoco encontrada.");
+                    console.log(`DEBUG: Columna encontrada para '${taskData.columnId}', añadiendo tarea ${taskData.id}`);
+                    
+                    // Añadir la tarea a la columna
+                    try {
+                        targetColumn.appendChild(taskElement);
+                        console.log(`DEBUG: Tarea ${taskData.id} añadida correctamente a columna '${taskData.columnId}'`);
+                        
+                        // Verificar que la tarea se haya añadido correctamente
+                        const addedTask = document.getElementById(taskData.id);
+                        if (!addedTask) {
+                            console.error(`ERROR: La tarea ${taskData.id} no se encuentra en el DOM después de añadirla`);
+                        }
+                        
+                        // Guardar el estado del tablero si es necesario
+                        if (save) {
+                            console.log(`DEBUG: Guardando estado del tablero después de añadir tarea ${taskData.id}`);
+                            saveBoardState();
+                        }
+                        
+                        return true; // Indicar que la tarea se añadió correctamente
+                    } catch (error) {
+                        console.error(`ERROR: No se pudo añadir la tarea ${taskData.id} a la columna:`, error);
+                        return false; // Indicar que la tarea no se pudo añadir
                     }
+                } else {
+                    console.error(`ERROR FATAL: No se pudo encontrar ninguna columna válida para añadir la tarea ${taskData.id}`);
+                    console.log('DEBUG: Estado actual de las columnas:');
+                    if (columns) {
+                        columns.forEach((col, i) => {
+                            console.log(`DEBUG: Columna ${i}: id=${col.dataset.columnId || 'sin ID'}`);
+                        });
+                    } else {
+                        console.log('DEBUG: Variable columns es null o undefined');
+                    }
+                    return false; // Indicar que la tarea no se pudo añadir
                 }
             }
 
@@ -810,20 +932,116 @@
             }
 
             function loadBoardState() {
-                const storageKey = getStorageKey(); // Get dynamic key
-                console.log(`Cargando estado del tablero desde ${storageKey}...`);
-                if (!columns) { // Ensure columns are queried
+                const storageKey = getStorageKey(); // Obtener clave dinámica
+                console.log(`DEBUG: Cargando estado del tablero desde ${storageKey}...`);
+                
+                // Verificar que las columnas estén inicializadas
+                if (!columns || !columns.length) {
                     console.error("Error loading: Columns not initialized.");
-                    return;
+                    console.log("Reintentando obtener columnas...");
+                    columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
+                    if (!columns || !columns.length) {
+                        console.error("Error crítico: No se pudieron encontrar las columnas en el DOM.");
+                        // Intentar nuevamente después de un breve retraso
+                        setTimeout(() => {
+                            console.log("Reintentando obtener columnas después de un retraso...");
+                            columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
+                            if (columns && columns.length) {
+                                console.log("Columnas encontradas después del retraso. Continuando carga...");
+                                loadBoardState(); // Intentar cargar de nuevo
+                            } else {
+                                console.error("Error fatal: No se pudieron encontrar las columnas después de múltiples intentos.");
+                            }
+                        }, 300);
+                        return;
+                    }
                 }
-                // Clear existing tasks first
-                columns.forEach(col => col.innerHTML = '');
+                
+                // Mostrar información de depuración sobre las columnas
+                console.log(`DEBUG: Columnas encontradas: ${columns.length}`);
+                columns.forEach((col, index) => {
+                    console.log(`DEBUG: Columna ${index}: id=${col.dataset.columnId}`);
+                });
+                
+                // Limpiar las tareas existentes primero
+                columns.forEach(col => {
+                    // Guardar el ID de la columna antes de limpiarla
+                    const columnId = col.dataset.columnId;
+                    console.log(`DEBUG: Limpiando columna ${columnId}`);
+                    col.innerHTML = '';
+                });
 
-                let savedState = localStorage.getItem(storageKey);
+                // Cargar tareas desde localStorage
+                let savedState = null;
+                try {
+                    savedState = localStorage.getItem(storageKey);
+                } catch (error) {
+                    console.error(`ERROR: No se pudo acceder a localStorage para la clave ${storageKey}:`, error);
+                }
+                
+                // Si no hay estado guardado, crear tareas de ejemplo
+                if (!savedState) {
+                    console.log(`DEBUG: No hay estado guardado en ${storageKey}, creando tareas de ejemplo.`);
+                    // Crear algunas tareas de ejemplo
+                    const exampleTasks = [
+                        {
+                            id: generateId('task'),
+                            title: 'Ejemplo: Crear documentación',
+                            description: 'Crear documentación para el proyecto',
+                            columnId: 'todo',
+                            color: 'bg-task-default',
+                            subtasks: [
+                                { id: generateId('sub'), description: 'Escribir introducción', completed: false },
+                                { id: generateId('sub'), description: 'Documentar API', completed: false }
+                            ]
+                        },
+                        {
+                            id: generateId('task'),
+                            title: 'Ejemplo: Diseñar interfaz',
+                            description: 'Crear mockups para la interfaz de usuario',
+                            columnId: 'in-progress',
+                            color: 'bg-task-blue',
+                            subtasks: [
+                                { id: generateId('sub'), description: 'Diseñar página principal', completed: true },
+                                { id: generateId('sub'), description: 'Diseñar panel de control', completed: false }
+                            ]
+                        },
+                        {
+                            id: generateId('task'),
+                            title: 'Ejemplo: Investigar tecnologías',
+                            description: 'Investigar nuevas tecnologías para el proyecto',
+                            columnId: 'done',
+                            color: 'bg-task-green',
+                            subtasks: [
+                                { id: generateId('sub'), description: 'Investigar frameworks', completed: true },
+                                { id: generateId('sub'), description: 'Evaluar opciones', completed: true }
+                            ]
+                        }
+                    ];
+                    
+                    // Guardar tareas de ejemplo en localStorage
+                    try {
+                        localStorage.setItem(storageKey, JSON.stringify(exampleTasks));
+                        savedState = localStorage.getItem(storageKey);
+                        console.log(`DEBUG: Tareas de ejemplo guardadas en ${storageKey}`);
+                    } catch (error) {
+                        console.error(`ERROR: No se pudieron guardar las tareas de ejemplo en localStorage:`, error);
+                        savedState = JSON.stringify(exampleTasks); // Usar directamente sin guardar en localStorage
+                    }
+                }
+                
                 if (savedState) {
                     try {
                         let boardState = JSON.parse(savedState);
-                        // Sorting logic remains the same
+                        console.log(`DEBUG: Tareas cargadas: ${boardState.length}`);
+                        
+                        // Validar que boardState sea un array
+                        if (!Array.isArray(boardState)) {
+                            console.error(`ERROR: El estado cargado no es un array válido`);
+                            boardState = [];
+                        }
+                        
+                        // Ordenar tareas por columna y orden
                         boardState.sort((a, b) => {
                             const columnOrder = ['todo', 'in-progress', 'done'];
                             const columnAIndex = columnOrder.indexOf(a.columnId);
@@ -834,22 +1052,88 @@
                             return (a.order || 0) - (b.order || 0);
                         });
 
+                        // Añadir cada tarea al tablero
+                        let tasksAdded = 0;
+                        let tasksWithErrors = 0;
+                        
                         boardState.forEach(taskData => {
-                            if (!taskData.id) taskData.id = generateId('task');
-                            taskData.subtasks = (taskData.subtasks || []).map(st => ({
-                                ...st,
-                                id: st.id || generateId('sub'),
-                                completed: st.completed || false
-                            }));
-                            addTask(taskData, false); // Add task without triggering another save
+                            try {
+                                // Validar y corregir datos de la tarea
+                                if (!taskData.id) {
+                                    console.log(`DEBUG: Tarea sin ID, generando uno nuevo`);
+                                    taskData.id = generateId('task');
+                                }
+                                
+                                if (!taskData.title) {
+                                    console.log(`DEBUG: Tarea ${taskData.id} sin título, asignando uno por defecto`);
+                                    taskData.title = 'Tarea sin título';
+                                }
+                                
+                                // Asegurarse de que la tarea tenga una columna válida
+                                if (!taskData.columnId) {
+                                    console.log(`DEBUG: Tarea ${taskData.id} sin columnId, asignando 'todo'`);
+                                    taskData.columnId = 'todo';
+                                }
+                                
+                                // Verificar que la columna exista
+                                const targetColumn = Array.from(columns).find(col => col.dataset.columnId === taskData.columnId);
+                                if (!targetColumn) {
+                                    console.log(`DEBUG: Columna ${taskData.columnId} no encontrada para tarea ${taskData.id}, usando 'todo'`);
+                                    taskData.columnId = 'todo';
+                                }
+                                
+                                // Asegurarse de que las subtareas tengan IDs válidos y estado completed
+                                taskData.subtasks = Array.isArray(taskData.subtasks) ? taskData.subtasks : [];
+                                taskData.subtasks = taskData.subtasks.map(st => ({
+                                    ...st,
+                                    id: st.id || generateId('sub'),
+                                    description: st.description || 'Subtarea sin descripción',
+                                    completed: typeof st.completed === 'boolean' ? st.completed : false
+                                }));
+                                
+                                // Añadir la tarea al tablero
+                                console.log(`DEBUG: Añadiendo tarea ${taskData.id} a columna ${taskData.columnId}`);
+                                addTask(taskData, false); // Añadir tarea sin disparar otro guardado
+                                tasksAdded++;
+                            } catch (taskError) {
+                                console.error(`ERROR: No se pudo añadir la tarea ${taskData.id || 'desconocida'}:`, taskError);
+                                tasksWithErrors++;
+                            }
                         });
-                        console.log(`Estado del tablero cargado desde ${storageKey}.`);
+                        
+                        console.log(`DEBUG: Estado del tablero cargado desde ${storageKey}. Tareas añadidas: ${tasksAdded}, con errores: ${tasksWithErrors}`);
+                        
+                        // Verificar que se hayan añadido tareas correctamente
+                        if (tasksAdded === 0 && boardState.length > 0) {
+                            console.error(`ERROR: No se pudo añadir ninguna tarea a pesar de tener ${boardState.length} en el estado`);
+                        }
+                        
+                        // Configurar listeners para las tareas recién añadidas
+                        document.querySelectorAll('.task-card').forEach(taskCard => {
+                            console.log(`DEBUG: Verificando listeners para tarea ${taskCard.id}`);
+                            // Asegurarse de que la tarea tenga el listener de menú contextual
+                            if (!taskCard._hasContextMenuListener) {
+                                taskCard.addEventListener('contextmenu', handleContextMenu);
+                                taskCard._hasContextMenuListener = true;
+                            }
+                        });
+                        
                     } catch (error) {
-                        console.error(`Error al cargar el estado del tablero desde ${storageKey}:`, error);
-                        localStorage.removeItem(storageKey); // Clear corrupted data
+                        console.error(`ERROR: Error al cargar el estado del tablero desde ${storageKey}:`, error);
+                        
+                        // Intentar limpiar datos corruptos
+                        try {
+                            localStorage.removeItem(storageKey);
+                            console.log(`DEBUG: Datos corruptos eliminados de localStorage`);
+                        } catch (removeError) {
+                            console.error(`ERROR: No se pudieron eliminar datos corruptos:`, removeError);
+                        }
+                        
+                        // Intentar cargar de nuevo con un tablero vacío
+                        setTimeout(() => loadBoardState(), 200);
                     }
                 } else {
-                    console.log(`No hay estado guardado en ${storageKey}, iniciando tablero vacío.`);
+                    console.error(`ERROR: No se pudo cargar el estado del tablero desde ${storageKey}.`);
                 }
             }
 
@@ -861,6 +1145,9 @@
             function init(ovcIdContext = null) {
                 console.log(`KanbanApp.init called. Context OVC ID: ${ovcIdContext}`);
                 currentOvcId = ovcIdContext; // Store the OVC ID
+                
+                // Marcar que la inicialización ha comenzado
+                window.kanbanInitialized = true;
 
                 // Query DOM elements *after* the content is loaded into index.html
                 columns = document.querySelectorAll('#kanbanBoard .kanban-tasks'); // Be more specific
@@ -868,6 +1155,14 @@
                 taskModal = document.getElementById('taskModal');
                 addTaskBtn = document.getElementById('addTaskBtn');
                 taskForm = document.getElementById('taskForm');
+
+                console.log('DEBUG: Elementos del DOM encontrados:', {
+                    columns: columns.length,
+                    contextMenu: !!contextMenu,
+                    taskModal: !!taskModal,
+                    addTaskBtn: !!addTaskBtn,
+                    taskForm: !!taskForm
+                });
 
                 if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
                     console.error("Error: Uno o más elementos esenciales del Kanban no se encontraron en el DOM. La inicialización falló.");
@@ -879,6 +1174,13 @@
                         taskModal = document.getElementById('taskModal');
                         addTaskBtn = document.getElementById('addTaskBtn');
                         taskForm = document.getElementById('taskForm');
+                        console.log('DEBUG: Segundo intento de encontrar elementos:', {
+                            columns: columns.length,
+                            contextMenu: !!contextMenu,
+                            taskModal: !!taskModal,
+                            addTaskBtn: !!addTaskBtn,
+                            taskForm: !!taskForm
+                        });
                         if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
                             console.error("Retry failed. Kanban elements still missing.");
                             return; // Stop initialization if elements are missing
@@ -895,64 +1197,137 @@
 
             function setupListenersAndLoad() {
                 console.log("Setting up listeners and loading board state...");
-                // Remove previous listeners to prevent duplicates if init is called multiple times
+                
+                // Asegurarse de que todos los elementos DOM estén disponibles
+                if (!columns || !columns.length) {
+                    console.log("Reintentando obtener columnas en setupListenersAndLoad...");
+                    columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
+                }
+                
+                if (!contextMenu) {
+                    console.log("Reintentando obtener contextMenu en setupListenersAndLoad...");
+                    contextMenu = document.getElementById('contextMenu');
+                }
+                
+                if (!taskModal) {
+                    console.log("Reintentando obtener taskModal en setupListenersAndLoad...");
+                    taskModal = document.getElementById('taskModal');
+                }
+                
+                if (!addTaskBtn) {
+                    console.log("Reintentando obtener addTaskBtn en setupListenersAndLoad...");
+                    addTaskBtn = document.getElementById('addTaskBtn');
+                }
+                
+                if (!taskForm) {
+                    console.log("Reintentando obtener taskForm en setupListenersAndLoad...");
+                    taskForm = document.getElementById('taskForm');
+                }
+                
+                // Verificar nuevamente si tenemos todos los elementos necesarios
+                if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
+                    console.error("Error: Aún faltan elementos esenciales del Kanban. Reintentando en 200ms...");
+                    setTimeout(setupListenersAndLoad, 200);
+                    return;
+                }
+                
+                // Eliminar listeners previos para evitar duplicados si init se llama múltiples veces
                 document.removeEventListener('click', closeContextMenuOnClickOutside, { capture: true });
                 document.removeEventListener('keydown', closeContextMenuOnEscape);
                 window.removeEventListener('click', closeModalOnWindowClick);
                 window.removeEventListener('keydown', handleEscapeKey);
 
-                // Clone elements to remove old listeners effectively
-                if (contextMenu) contextMenu.replaceWith(contextMenu.cloneNode(true));
-                if (addTaskBtn) addTaskBtn.replaceWith(addTaskBtn.cloneNode(true));
-                if (taskForm) taskForm.replaceWith(taskForm.cloneNode(true));
+                // Clonar elementos para eliminar listeners antiguos de manera efectiva
+                if (contextMenu) {
+                    const newContextMenu = contextMenu.cloneNode(true);
+                    contextMenu.parentNode.replaceChild(newContextMenu, contextMenu);
+                    contextMenu = newContextMenu;
+                }
+                
+                if (addTaskBtn) {
+                    const newAddTaskBtn = addTaskBtn.cloneNode(true);
+                    addTaskBtn.parentNode.replaceChild(newAddTaskBtn, addTaskBtn);
+                    addTaskBtn = newAddTaskBtn;
+                }
+                
+                if (taskForm) {
+                    const newTaskForm = taskForm.cloneNode(true);
+                    taskForm.parentNode.replaceChild(newTaskForm, taskForm);
+                    taskForm = newTaskForm;
+                }
 
-                // Re-query fresh elements after cloning
-                contextMenu = document.getElementById('contextMenu');
-                addTaskBtn = document.getElementById('addTaskBtn');
-                taskForm = document.getElementById('taskForm');
-
-                // Setup Drag and Drop for columns using SortableJS
-                columns.forEach(column => {
-                    if (column.sortableInstance) { // Destroy existing instance if re-initializing
+                // Configurar Drag and Drop para columnas usando SortableJS
+                console.log(`DEBUG: Configurando SortableJS para ${columns.length} columnas`);
+                columns.forEach((column, index) => {
+                    console.log(`DEBUG: Configurando columna ${index}: ${column.dataset.columnId}`);
+                    
+                    // Destruir instancia existente si se está reinicializando
+                    if (column.sortableInstance) {
+                        console.log(`DEBUG: Destruyendo instancia anterior de SortableJS para columna ${column.dataset.columnId}`);
                         column.sortableInstance.destroy();
                     }
-                    column.sortableInstance = new Sortable(column, {
-                        group: 'kanban',
-                        animation: 150,
-                        ghostClass: 'dragging',
-                        onEnd: function (evt) {
-                            console.log("Tarea movida.");
-                            saveBoardState(); // Save state after moving task
-                        }
-                    });
-                    // Remove manual drag listeners if Sortable handles it
-                    // column.removeEventListener('dragover', handleDragOver);
-                    // column.removeEventListener('dragenter', handleDragEnter);
-                    // column.removeEventListener('dragleave', handleDragLeave);
-                    // column.removeEventListener('drop', handleDrop);
+                    
+                    try {
+                        column.sortableInstance = new Sortable(column, {
+                            group: 'kanban',
+                            animation: 150,
+                            ghostClass: 'dragging',
+                            onEnd: function (evt) {
+                                console.log(`DEBUG: Tarea movida en columna ${column.dataset.columnId}`);
+                                saveBoardState(); // Guardar estado después de mover la tarea
+                            }
+                        });
+                        console.log(`DEBUG: SortableJS configurado correctamente para columna ${column.dataset.columnId}`);
+                    } catch (error) {
+                        console.error(`ERROR: No se pudo configurar SortableJS para columna ${column.dataset.columnId}:`, error);
+                    }
                 });
 
-                // Setup Context Menu Listeners
+                // Configurar listeners del menú contextual
                 if (contextMenu) {
-                    contextMenu.addEventListener('click', handleContextMenuAction, true); // Use capture? Maybe not needed.
-                } else { console.error("Context menu element not found for listener setup."); }
-                document.addEventListener('click', closeContextMenuOnClickOutside, { capture: true }); // Use capture to catch clicks before they bubble
-
-                // Setup Modal Listeners
+                    console.log('DEBUG: Configurando listeners para menú contextual');
+                    contextMenu.addEventListener('click', handleContextMenuAction);
+                    
+                    // Configurar listeners para todas las tareas existentes
+                    document.querySelectorAll('.task-card').forEach(taskCard => {
+                        taskCard.addEventListener('contextmenu', handleContextMenu);
+                    });
+                } else { 
+                    console.error("Context menu element not found for listener setup."); 
+                }
+                
+                // Configurar listeners para el modal
                 if (addTaskBtn) {
+                    console.log('DEBUG: Configurando listener para botón de añadir tarea');
                     addTaskBtn.addEventListener('click', openModal);
-                } else { console.error("Add task button not found for listener setup."); }
+                } else { 
+                    console.error("Add task button not found for listener setup."); 
+                }
 
                 if (taskForm) {
+                    console.log('DEBUG: Configurando listener para formulario de tarea');
                     taskForm.addEventListener('submit', handleFormSubmit);
-                } else { console.error("Task form not found for listener setup."); }
+                    
+                    // También configurar el botón de cerrar modal
+                    const closeButton = taskModal.querySelector('.close-button');
+                    if (closeButton) {
+                        closeButton.addEventListener('click', closeModal);
+                    }
+                } else { 
+                    console.error("Task form not found for listener setup."); 
+                }
 
-                // Window listeners for modal close and escape key
+                // Listeners globales para cerrar modal y tecla escape
                 window.addEventListener('click', closeModalOnWindowClick);
                 window.addEventListener('keydown', handleEscapeKey);
 
-                // Load initial state for the specific OVC
-                loadBoardState(); // Calls modified load
+                console.log('DEBUG: Todos los listeners configurados correctamente');
+                
+                // Cargar estado inicial para el OVC específico
+                console.log('DEBUG: Cargando estado del tablero...');
+                loadBoardState();
+                
+                console.log('DEBUG: Inicialización de Kanban completada con éxito');
             }
 
             // Helper for window click listener
@@ -972,18 +1347,88 @@
 
 
             // --- Public API ---
-            return {
-                init: init
+            const publicApi = {
+                init: init,
                 // Expose other methods only if strictly necessary for external interaction
+                _instance: null // Add a reference to the instance if needed
             };
 
+            // Store the instance in the global scope
+            window.KanbanApp = publicApi;
+            
+            // Initialize the instance reference
+            publicApi._instance = publicApi;
+            
+            console.log('KanbanApp expuesto en el objeto window');
+            
+            return publicApi;
         })();
 
         // --- Inicialización ---
-        // REMOVED: Initialization is now triggered by index.html calling KanbanApp.init(ovcId)
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     KanbanApp.init(); // Default init without OVC ID if loaded standalone
-        // });
+        // Función para inicializar el Kanban con un ID de OVC específico
+        function initializeKanban(ovcId = null) {
+            console.log('Inicializando Kanban con OVC ID:', ovcId);
+            KanbanApp.init(ovcId);
+        }
+
+        // Manejar mensajes de la ventana principal
+        window.addEventListener('message', function(event) {
+            console.log('Mensaje recibido en kanban.html:', event.data);
+            
+            // Verificar el origen del mensaje para mayor seguridad (opcional)
+            // if (event.origin !== window.location.origin) {
+            //     console.warn('Mensaje de origen no confiable:', event.origin);
+            //     return;
+            // }
+            
+            if (event.data && event.data.type === 'INIT_KANBAN') {
+                console.log('Inicializando Kanban con datos:', event.data);
+                console.log('KanbanApp disponible:', typeof window.KanbanApp !== 'undefined');
+                
+                // Esperar un momento para asegurar que todo esté listo
+                setTimeout(() => {
+                    try {
+                        initializeKanban(event.data.ovcId);
+                        console.log('Kanban inicializado correctamente');
+                    } catch (error) {
+                        console.error('Error al inicializar Kanban:', error);
+                    }
+                }, 100);
+            }
+        });
+
+        // Inicializar cuando se carga la página, pero también permitir inicialización externa
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DEBUG: kanban.html DOMContentLoaded event fired');
+            
+            // Notificar a la ventana padre que estamos listos para recibir la inicialización
+            if (window.self !== window.top) {
+                console.log('DEBUG: kanban.html cargado en iframe, notificando a la ventana padre');
+                try {
+                    window.parent.postMessage({ type: 'KANBAN_READY' }, '*');
+                    console.log('DEBUG: Mensaje KANBAN_READY enviado a la ventana padre');
+                } catch (e) {
+                    console.error('ERROR: No se pudo enviar mensaje a la ventana padre:', e);
+                }
+            } else {
+                console.log('DEBUG: Inicializando KanbanApp directamente (carga independiente)');
+                // Si se carga directamente, inicializar sin ID de OVC
+                initializeKanban();
+            }
+        });
+        
+        // También notificar cuando la ventana esté completamente cargada como respaldo
+        window.addEventListener('load', function() {
+            if (window.self !== window.top) {
+                console.log('DEBUG: kanban.html completamente cargado, notificando a la ventana padre');
+                try {
+                    window.parent.postMessage({ type: 'KANBAN_READY' }, '*');
+                    console.log('DEBUG: Mensaje KANBAN_READY enviado a la ventana padre (evento load)');
+                } catch (e) {
+                    console.error('ERROR: No se pudo enviar mensaje a la ventana padre (evento load):', e);
+                }
+            }
+        });
 
     </script>
 

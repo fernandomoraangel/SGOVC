@@ -7,7 +7,52 @@
     <title>Gestión de OVC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../css/main.css">
+    <!-- Cargar D3.js para la visualización del rizoma y biblioteca D3.js para visualización de grafos -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="../js/navigation.js"></script>
+    <script src="../js/ovcStorage.js" defer></script>
+    <script src="../js/ovcDisplay.js" defer></script>
+    <script src="../js/ovcForm.js" defer></script>
+    <script src="../js/utils.js" defer></script>
+    <!-- Scripts específicos para Rizoma y Kanban -->
+    <script src="../js/rizoma-simple.js"></script>
+    <script src="../js/kanban-simple.js"></script>
     <script>
+    // Definir la función showSection directamente en el HTML para asegurar que esté disponible
+    window.showSection = function(sectionId, contextId = null, contextTitle = null) {
+        console.log(`DEBUG: Mostrando sección desde window.showSection en HTML: ${sectionId}`, contextId ? `(Context ID: ${contextId}, Title: ${contextTitle})` : '');
+        
+        // Verificar si existe la implementación en navigation.js y usarla si está disponible
+        if (window.navigationShowSection && typeof window.navigationShowSection === 'function') {
+            console.log('DEBUG: Delegando a la implementación en navigation.js');
+            return window.navigationShowSection(sectionId, contextId, contextTitle);
+        }
+        
+        // Implementación de respaldo si navigation.js no está cargado aún
+        const sections = {
+            crear: document.getElementById('crear-section'),
+            listar: document.getElementById('listar-section'),
+            rizoma: document.getElementById('rizoma-section'),
+            kanban: document.getElementById('kanban-section')
+        };
+        
+        // Ocultar todas las secciones
+        Object.values(sections).forEach(section => {
+            if (section) section.classList.add('hidden');
+        });
+        
+        // Mostrar la sección seleccionada
+        if (sections[sectionId]) {
+            sections[sectionId].classList.remove('hidden');
+            
+            // Si es la sección de rizoma, intentar renderizar el grafo
+            if (sectionId === 'rizoma' && typeof window.renderRizomaGraph === 'function') {
+                console.log('DEBUG: Renderizando rizoma desde la implementación HTML de showSection');
+                setTimeout(() => window.renderRizomaGraph(), 100);
+            }
+        }
+    };
     </script>
     <script>
         // Listeners DOMContentLoaded de líneas 171-228 eliminados (redundantes con lógica principal en 846+)
@@ -110,6 +155,9 @@
 
             <main class="flex-1 p-6 lg:p-8"> <!-- Removed overflow-y-auto -->
                 <div id="content-area" class="flex flex-col flex-1 min-h-0 h-full"> <!-- Added h-full -->
+                    <!-- La secciu00f3n para crear OVC se encuentra mu00e1s abajo -->
+
+                    <!-- Secciu00f3n para listar OVCs -->
                     <div id="listar-section" class="space-y-6">
                         <div class="flex justify-between items-center mb-6">
 
@@ -188,6 +236,13 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Sección para visualizar el rizoma eliminada para evitar duplicidad de IDs -->
+
+                    <!-- Sección para el tablero Kanban -->
+                    <div id="kanban-section" class="hidden space-y-6">
+                        <!-- El contenido se cargará dinámicamente desde kanban.html mediante un iframe -->
                     </div>
 
                     <!-- Eliminado div duplicado con id="rizoma-section" que estaba aquí -->
@@ -441,27 +496,32 @@
                     </div>
 
 
-                    <div id="rizoma-section" class="hidden flex flex-col flex-1 min-h-0 h-full"> <!-- Added h-full -->
+                    <div id="rizoma-section" class="hidden flex flex-col flex-1 min-h-0 h-full"> 
 
-                        <div class="flex justify-between items-center mb-6">
+                        <div class="flex justify-end mb-4">
 
-                            <div class="relative">
-                                <span class="search-icon">🔍</span>
-                                <input type="text" placeholder="Buscar..." id="rizoma-search-input"
-                                    class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                            <div class="flex items-center space-x-4">
+                                <button id="rizoma-create-ovc-btn" onclick="window.showSection('crear')"
+                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-pink-600 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500">
+                                    <span class="mr-2">➕</span> Crear OVC
+                                </button>
+                                <div class="relative">
+                                    <span class="search-icon">🔍</span>
+                                    <input type="text" placeholder="Buscar..." id="rizoma-search-input"
+                                        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="bg-white rounded-lg shadow flex-1 flex flex-col text-gray-500 min-h-0 h-full">
-                            <!-- Removed min-h-[600px] test class -->
-                            <svg id="rizoma-graph" class="w-full h-full"></svg>
+                        <div class="bg-white rounded-lg shadow flex-1 flex flex-col text-gray-500 min-h-0 h-full p-4">
+
+                            <div class="flex-1 min-h-0">
+                                <svg id="rizoma-graph" class="w-full h-full border border-gray-200 rounded"></svg>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Placeholder for Kanban Board -->
-                    <div id="kanban-section" class="hidden flex flex-col flex-1 min-h-0 h-full">
-                        <!-- Kanban content will be loaded here -->
-                    </div>
+                    <!-- Placeholder for Kanban Board eliminado para evitar duplicidad de IDs -->
 
                 </div>
 
@@ -642,29 +702,8 @@
     </div>
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="../js/rizoma.js"></script>
-    <script>
-        /**
-         * ADVERTENCIA IMPORTANTE SOBRE LOCALSTORAGE Y ARCHIVOS:
-         * Guardar imágenes (o archivos grandes) como Base64 en localStorage
-         * NO es recomendable para aplicaciones reales. localStorage tiene límites
-         * de tamaño estrictos (5-10MB) que se alcanzan rápidamente.
-         * La solución estándar es subir los archivos a un servidor y guardar
-         * solo la URL en localStorage o en una base de datos.
-         * Esta implementación con Base64 es solo para fines de DEMOSTRACIÓN
-         * en este entorno limitado.
-         */
-        // Función para obtener OVCs desde localStorage
-        function getOvcsFromStorage() {
-            const ovcsJson = localStorage.getItem('ovcData');
-            try {
-                return ovcsJson ? JSON.parse(ovcsJson) : [];
-            } catch (e) {
-                console.error("Error al analizar los datos de OVC:", e);
-                return [];
-            }
-        }
 
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const summaryModal = document.getElementById('ovc-summary-modal');
             const summaryModalOverlay = document.getElementById('ovc-summary-modal-overlay');
@@ -672,59 +711,9 @@
             const summaryModalOk = document.getElementById('ovc-summary-modal-ok');
             const summaryModalContent = document.getElementById('ovc-summary-modal-content');
 
-            // Función para mostrar el modal con el resumen del OVC
-            window.showSummaryModal = function (ovcId) { // Hacer la función global
-                const ovcs = getOvcsFromStorage();
-                const ovc = ovcs.find(ovc => ovc.id === Number(ovcId));
 
-                if (!ovc) {
-                    console.error(`Error: No se encontró el OVC con ID ${ovcId}`);
-                    return;
-                }
 
-                // Generar contenido del resumen
-                summaryModalContent.innerHTML = `
-            <div class="p-4 bg-white rounded-lg shadow-lg space-y-4">
-                <div>
-                    ${ovc.imagen && ovc.imagen.dataUrl ? `<img src="${ovc.imagen.dataUrl}" alt="Imagen de Portada" class="w-full h-auto rounded-md">` : '<span>No disponible</span>'}
-                </div>
-                <div>
-                    <strong>Título:</strong> ${ovc.titulo || 'N/A'}
-                </div>
-                <div>
-                    <strong>Descripción:</strong> ${ovc.descripcion || 'N/A'}
-                </div>
-                <div>
-                    <strong>Autores:</strong> ${ovc.autores.map(a => `${a.nombre} (${a.rol})`).join(', ') || 'N/A'}
-                </div>
-                <div>
-                    <strong>Semestre:</strong> ${ovc.semestre || 'N/A'}
-                </div>
-                <div>
-                    <strong>Etiquetas:</strong> ${ovc.etiquetas.join(', ') || 'N/A'}
-                </div>
-                <div>
-                    <strong>Relaciones:</strong> ${ovc.relaciones.map(r => `${r.ovc} (${r.etiqueta})`).join(', ') || 'N/A'}
-                </div>
-                <div>
-                    <strong>Enlaces Externos:</strong><br>
-                    ${ovc.enlaces.map(e => `<a href="${e.url}" target="_blank" class="text-blue-600 underline">${e.descripcion}</a>`).join('<br>') || 'N/A'}
-                </div>
-            </div>
-        `;
 
-                // Mostrar el modal con animación
-                summaryModal.classList.remove('hidden');
-                summaryModal.classList.add('opacity-0', 'transition-opacity', 'duration-300');
-                setTimeout(() => {
-                    summaryModal.classList.remove('opacity-0');
-                }, 10);
-            }
-
-            // Función para ocultar el modal
-            function hideSummaryModal() {
-                summaryModal.classList.add('hidden');
-            }
 
             // Listeners para cerrar el modal
             summaryModalOverlay.addEventListener('click', hideSummaryModal);
@@ -798,7 +787,7 @@
                 kanban: '<span>📋</span> Tablero Kanban', // Added Kanban title
                 // Titles for rubric pages will be set dynamically
             };
-            const OVC_STORAGE_KEY = 'ovcData';
+            // OVC_STORAGE_KEY se define en ovcStorage.js
             const GOOGLE_API_KEY = 'AIzaSyA5rWKqgBArqtg5aZiQiQFMRpZWcOsHwT0'; // TODO: Replace if needed & secure for production
             const AI_MODEL_NAME = 'gemini-1.5-flash-latest';
             const DEFAULT_SEARCH_FIELDS = [
@@ -817,132 +806,9 @@
             ];
 
             // --- Estado de Edición ---
-            let isEditMode = false;
-            let currentEditOvcId = null;
-            let ovcIdToDeleteConfirm = null;
+            // Las variables isEditMode, currentEditOvcId y ovcIdToDeleteConfirm se han movido a js/ovcForm.js
 
-            // --- Navegación ---
-            function showSection(sectionId, contextId = null, contextTitle = null) { // Added context params
-                console.log(`DEBUG: Mostrando sección interna: ${sectionId}`, contextId ? `(Context ID: ${contextId}, Title: ${contextTitle})` : '');
-                // Clear iframe if it exists
-                const contentArea = document.getElementById('content-area');
-                const existingIframe = contentArea.querySelector('iframe');
-                if (existingIframe) {
-                    existingIframe.remove();
-                }
-
-                // Hide all regular sections
-                Object.values(sections).forEach(section => {
-                    if (section) section.classList.add('hidden');
-                });
-                // Deactivate all links first
-                sidebarLinks.forEach(link => link.classList.remove('active'));
-                // Deactivate rubric parent toggle if active
-                rubricasToggle.classList.remove('active');
-
-
-                const activeSection = sections[sectionId];
-                if (activeSection) {
-                    activeSection.classList.remove('hidden');
-                } else {
-                    console.warn(`Sección con ID '${sectionId}' no encontrada.`);
-                }
-
-
-                if (sectionId !== 'crear' && isEditMode) {
-                    resetFormToCreateMode();
-                }
-
-                // Update section title - Use contextTitle if provided for Kanban
-                if (sectionId === 'kanban' && contextTitle) {
-                    sectionTitle.innerHTML = `<span>📋</span> Tablero Kanban - ${contextTitle}`;
-                } else if (sectionTitles[sectionId]) {
-                    sectionTitle.innerHTML = sectionTitles[sectionId];
-                } else {
-                    // Keep previous title or set a default if navigating from iframe?
-                    // For now, let's assume sectionTitles covers all main sections.
-                }
-
-                // Activate the correct link
-                const activeLink = document.querySelector(`.sidebar-link[data-section="${sectionId}"]`);
-                if (activeLink) {
-                    activeLink.classList.add('active');
-                }
-
-
-                if (sectionId === 'listar') {
-                    renderOvcTable();
-                } else if (sectionId === 'crear' && !isEditMode) {
-                    resetFormToCreateMode();
-                } else if (sectionId === 'rizoma') {
-                    // Retrasar ligeramente la renderización para dar tiempo al layout
-                    setTimeout(() => {
-                        console.log("DEBUG: Llamando a renderRizomaGraph desde showSection (retrasado)");
-                        renderRizomaGraph(); // Renderizar el grafo
-                    }, 50); // Un retraso corto debería ser suficiente
-                } else if (sectionId === 'kanban') {
-                    const kanbanSection = sections['kanban'];
-                    if (kanbanSection && !kanbanSection.dataset.loaded) { // Check a flag
-                        console.log("DEBUG: Cargando contenido de kanban.html...");
-                        fetch('kanban.html')
-                            .then(response => {
-                                if (!response.ok) {
-                                    throw new Error(`HTTP error! status: ${response.status}`);
-                                }
-                                return response.text();
-                            })
-                            .then(html => {
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(html, 'text/html');
-
-                                // Extract specific elements needed for Kanban
-                                const title = doc.querySelector('h1'); // First h1
-                                const description = doc.querySelector('p'); // First p
-                                const container = doc.querySelector('.kanban-container');
-                                const contextMenu = doc.getElementById('contextMenu');
-                                const taskModal = doc.getElementById('taskModal');
-
-                                if (title && description && container && contextMenu && taskModal) {
-                                    // Clear previous content and append new elements
-                                    kanbanSection.innerHTML = '';
-                                    kanbanSection.appendChild(title.cloneNode(true));
-                                    kanbanSection.appendChild(description.cloneNode(true));
-                                    kanbanSection.appendChild(container.cloneNode(true));
-                                    kanbanSection.appendChild(contextMenu.cloneNode(true));
-                                    kanbanSection.appendChild(taskModal.cloneNode(true));
-                                    kanbanSection.dataset.loaded = 'true'; // Set flag
-
-                                    console.log("DEBUG: Contenido de Kanban cargado. Inicializando KanbanApp con retraso...");
-
-                                    // Initialize KanbanApp after a short delay to ensure DOM is ready
-                                    setTimeout(() => {
-                                        if (typeof KanbanApp !== 'undefined' && typeof KanbanApp.init === 'function') {
-                                            // Pass contextId (OVC ID) to KanbanApp initialization
-                                            console.log(`DEBUG: Initializing KanbanApp with OVC ID: ${contextId}`);
-                                            KanbanApp.init(contextId); // Pass the OVC ID here
-                                        } else {
-                                            console.error("KanbanApp or KanbanApp.init is not defined or cannot accept parameters.");
-                                        }
-                                    }, 50); // 50ms delay
-
-                                } else {
-                                    console.error("Error: No se pudieron encontrar todos los elementos necesarios en kanban.html.");
-                                    kanbanSection.innerHTML = '<p class="text-red-500">Error al extraer contenido del tablero Kanban.</p>';
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error al cargar o procesar kanban.html:', error);
-                                kanbanSection.innerHTML = '<p class="text-red-500">Error al cargar el tablero Kanban.</p>';
-                                delete kanbanSection.dataset.loaded; // Reset flag on error
-                            });
-                    } else if (kanbanSection) {
-                        console.log("DEBUG: Sección Kanban ya cargada, mostrando.");
-                        // If already loaded, just ensure it's visible. Re-init might be needed if state can change externally.
-                    }
-                }
-            }
-
-            // --- Navigation Handling ---
+            // --- Navegación --- (La función showSection se movió a js/navigation.js)
             sidebarLinks.forEach(link => {
                 link.addEventListener('click', function (event) {
                     const sectionId = this.getAttribute('data-section');
@@ -952,7 +818,7 @@
                     if (sectionId) {
                         // Handle regular section toggle
                         event.preventDefault();
-                        showSection(sectionId);
+                        window.showSection(sectionId);
                         // Ensure submenu is closed if a main section is clicked
                         if (!this.closest('.submenu') && rubricasSubmenu.classList.contains('open')) {
                             rubricasToggle.click(); // Simulate click to close
@@ -967,78 +833,15 @@
             });
             if (goToCreateBtn) { /* ... */
                 goToCreateBtn.addEventListener('click', () => {
-                    resetFormToCreateMode();
-                    showSection('crear');
+                    window.resetFormToCreateMode();
+                    window.showSection('crear');
                 });
             }
 
             // --- LocalStorage y Renderizado Tabla ---
 
-            function saveOvcsToStorage(ovcs) {
-                try {
-                    if (!Array.isArray(ovcs)) { console.error("Error: Not an array:", ovcs); return; }
-                    const dataToSave = JSON.stringify(ovcs);
-                    // console.log(`DEBUG: Guardando en localStorage (${OVC_STORAGE_KEY}):`, dataToSave); // Opcional: muy verboso con Base64
-                    localStorage.setItem(OVC_STORAGE_KEY, dataToSave);
-                    console.log("DEBUG: Guardado/Actualizado exitoso en localStorage.");
-                } catch (e) {
-                    console.error("Error saving OVC data to localStorage:", e);
-                    // Podría ser un error de cuota si las imágenes son muy grandes
-                    if (e.name === 'QuotaExceededError') {
-                        alert('Error: No se pudo guardar. El almacenamiento local está lleno.\n(Guardar imágenes directamente tiene límites).');
-                    } else {
-                        alert('Error inesperado al guardar los datos.');
-                    }
-                }
-            }
-            function renderOvcTable(ovcsToRender) {
-                if (!ovcTableBody) return;
-                // Si no se proveen OVCs para renderizar, obtener todos desde el storage (comportamiento original)
-                // Si se proveen, usar esa lista (para resultados de búsqueda)
-                const ovcs = ovcsToRender || getOvcsFromStorage();
-                ovcTableBody.innerHTML = '';
-                const paginationStart = document.getElementById('pagination-start');
-                const paginationEnd = document.getElementById('pagination-end');
-                const paginationTotal = document.getElementById('pagination-total');
-                if (paginationStart && paginationEnd && paginationTotal) {
-                    paginationStart.textContent = ovcs.length > 0 ? '1' : '0';
-                    paginationEnd.textContent = ovcs.length;
-                    paginationTotal.textContent = ovcs.length;
-                }
-                if (ovcs.length === 0) {
-                    ovcTableBody.innerHTML = `<tr class="empty-table-row"><td colspan="6">No hay OVCs guardados.</td></tr>`;
-                } else {
-                    ovcs.forEach((ovc) => {
-                        const row = document.createElement('tr');
-                        const truncate = (str, num) => str && str.length > num ? str.slice(0, num) + "..." : str;
-                        const displayAutores = (autores) => {
-                            if (!autores || !Array.isArray(autores) || autores.length === 0) return 'N/A';
-                            const firstAuthor = autores[0].nombre || 'Autor Desconocido';
-                            const remainingCount = autores.length - 1;
-                            return `${firstAuthor}${remainingCount > 0 ? ` (+${remainingCount})` : ''}`;
-                        };
-                        const asignaturasStr = Array.isArray(ovc.asignaturas) ? ovc.asignaturas.join(', ') : '';
-                        const etiquetasStr = Array.isArray(ovc.etiquetas) ? ovc.etiquetas.join(', ') : '';
-                        row.innerHTML = `
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${ovc.titulo || 'N/A'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${displayAutores(ovc.autores)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${truncate(asignaturasStr, 30) || 'N/A'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${ovc.semestre || 'N/A'}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500 break-words">${truncate(etiquetasStr, 40) || 'N/A'}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900 action-btn edit-ovc-btn" title="Editar" data-id="${ovc.id}">✏️</a>
-                                <a href="#" class="text-blue-600 hover:text-blue-900 ml-4 action-btn view-ovc-btn" title="Ver" data-id="${ovc.id}">🔍</a>
-                                <a href="#" class="text-red-600 hover:text-red-900 ml-4 action-btn delete-ovc-btn" title="Eliminar" data-id="${ovc.id}">🗑️</a>
-                                <a href="foro.html?ovcId=${ovc.id}" class="text-green-600 hover:text-green-900 ml-4 action-btn forum-ovc-btn" title="Foro" data-id="${ovc.id}">💬</a>
-                                <a href="evaluar_ovc.html?ovcId=${ovc.id}" class="text-purple-600 hover:text-purple-900 ml-4 action-btn evaluate-ovc-btn" title="Evaluar" data-id="${ovc.id}">✔️</a>
-                                <a href="ver_promedios.html?ovcId=${ovc.id}" class="text-cyan-600 hover:text-cyan-900 ml-4 action-btn view-averages-btn" title="Ver Promedios" data-id="${ovc.id}">📈</a>
-                                <a href="#" class="text-orange-600 hover:text-orange-900 ml-4 action-btn kanban-ovc-btn" title="Tablero Kanban" data-id="${ovc.id}" data-title="${ovc.titulo || ''}">📋</a>
-                           </td>
-                        `;
-                        ovcTableBody.appendChild(row);
-                    });
-                }
-            }
+
+
 
             // --- Funcionalidad Formulario Crear/Editar OVC ---
 
@@ -1094,193 +897,36 @@
                 });
             }
 
-            // Listas dinámicas (sin cambios)
-            function setupDynamicList(containerId, addButtonId, itemSelector) { /* ... */
-                const container = document.getElementById(containerId);
-                const addButton = document.getElementById(addButtonId);
-                if (!container || !addButton) return;
-                const template = container.querySelector(itemSelector);
-                if (!template) return;
-                const templateHTML = template.cloneNode(true);
-                addButton.addEventListener('click', () => { /* ... */
-                    const newItem = templateHTML.cloneNode(true);
-                    newItem.querySelectorAll('input, select, textarea').forEach(input => {
-                        if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
-                        else input.value = '';
-                    });
-                    container.appendChild(newItem);
-                });
-                container.addEventListener('click', (event) => { /* ... */
-                    const removeButton = event.target.closest('.remove-item');
-                    if (removeButton) {
-                        const itemToRemove = removeButton.closest(itemSelector);
-                        if (container.querySelectorAll(itemSelector).length > 1) {
-                            if (itemToRemove) itemToRemove.remove();
-                        } else {
-                            itemToRemove.querySelectorAll('input, select, textarea').forEach(input => {
-                                if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
-                                else input.value = '';
-                            });
-                        }
-                    }
-                });
-            }
+            // Listas dinámicas (funciones movidas a js/utils.js)
+            // setupDynamicList('autores-container', 'add-autor', '.autor-item');
+            // setupDynamicList('etiquetas-container', 'add-etiqueta', '.etiqueta-item');
+            // setupDynamicList('enlaces-container', 'add-enlace', '.enlace-item');
+            // setupDynamicList('relaciones-container', 'add-relacion', '.relacion-item');
             setupDynamicList('autores-container', 'add-autor', '.autor-item');
             setupDynamicList('etiquetas-container', 'add-etiqueta', '.etiqueta-item');
             setupDynamicList('enlaces-container', 'add-enlace', '.enlace-item');
             setupDynamicList('relaciones-container', 'add-relacion', '.relacion-item');
 
             // --- Lógica de Edición ---
-            function populateFormForEdit(ovcId) {
-                console.log(`DEBUG: Iniciando populateFormForEdit para ID: ${ovcId}`);
-                const ovcs = getOvcsFromStorage();
-                const ovcData = ovcs.find(ovc => ovc.id === Number(ovcId));
+            // La función populateFormForEdit se ha movido a js/ovcForm.js
 
-                if (!ovcData) { /* ... error handling ... */
-                    console.error(`Error: No se encontró OVC con ID ${ovcId} para editar.`);
-                    resetFormToCreateMode(); return;
-                }
+            <!-- Helper para poblar listas dinámicas (función movida a js/utils.js) -->
 
-                // console.log("DEBUG: Datos del OVC a editar:", ovcData); // Opcional: puede ser muy verboso con Base64
-                isEditMode = true;
-                currentEditOvcId = ovcData.id;
-                editOvcIdInput.value = ovcData.id;
-                // El título de la sección 'crear' se actualiza en showSection
-                // Ya no se necesita manipular #crear-title aquí.
-                formSubmitButtonText.textContent = 'Actualizar OVC';
-
-                // Rellenar campos simples
-                document.getElementById('ovc-titulo').value = ovcData.titulo || '';
-                document.getElementById('ovc-descripcion').value = ovcData.descripcion || '';
-                document.getElementById('ovc-semestre').value = ovcData.semestre || '2025-1';
-                document.getElementById('ovc-licencia').value = ovcData.licencia || 'CC BY';
-
-                // --- Manejo de Imagen Guardada (Base64) ---
-                imagenInput.value = ''; // Limpiar input file
-                imagenDataUrlInput.value = ''; // Limpiar DataURL temporal
-                if (ovcData.imagen && ovcData.imagen.dataUrl && typeof ovcData.imagen.dataUrl === 'string' && ovcData.imagen.dataUrl.startsWith('data:image')) {
-                    console.log("DEBUG: Mostrando imagen guardada (Base64)");
-                    imagePreviewContainer.innerHTML = `<img src="${ovcData.imagen.dataUrl}" alt="Previsualización guardada">`;
-                    imagenFilenameSpan.textContent = `Archivo actual: ${ovcData.imagen.filename || 'Desconocido'}`;
-                    // Guardar nombre original en data attribute por si no se cambia la imagen
-                    imagenFilenameSpan.dataset.originalName = ovcData.imagen.filename || '';
-                } else {
-                    console.log("DEBUG: No hay imagen guardada o dataUrl inválido.");
-                    imagePreviewContainer.innerHTML = '<span>No hay imagen guardada</span>';
-                    imagenFilenameSpan.textContent = '';
-                    imagenFilenameSpan.dataset.originalName = '';
-                }
-
-                // Archivo principal (solo nombre)
-                archivoFilenameSpan.textContent = ovcData.archivo ? `Archivo actual: ${ovcData.archivo.replace('Archivo seleccionado: ', '')}` : '';
-                archivoInput.value = '';
-
-                // Rellenar checkboxes y listas dinámicas (sin cambios)
-                document.querySelectorAll('input[name="asignaturas[]"]').forEach(checkbox => { /* ... */
-                    checkbox.checked = ovcData.asignaturas?.includes(checkbox.value) || false;
-                });
-                populateDynamicListField('autores-container', '.autor-item', ovcData.autores || [], (item, data) => { /* ... */
-                    item.querySelector('input[name="autor_nombre[]"]').value = data.nombre || '';
-                    item.querySelector('input[name="autor_rol[]"]').value = data.rol || '';
-                    item.querySelector('input[name="autor_email[]"]').value = data.email || '';
-                    item.querySelector('input[name="autor_participacion[]"]').value = data.participacion || '';
-                });
-                populateDynamicListField('etiquetas-container', '.etiqueta-item', ovcData.etiquetas || [], (item, data) => { /* ... */
-                    item.querySelector('input[name="etiquetas[]"]').value = data || '';
-                });
-                populateDynamicListField('enlaces-container', '.enlace-item', ovcData.enlaces || [], (item, data) => { /* ... */
-                    item.querySelector('input[name="enlace_desc[]"]').value = data.descripcion || '';
-                    item.querySelector('input[name="enlace_url[]"]').value = data.url || '';
-                });
-                populateDynamicListField('relaciones-container', '.relacion-item', ovcData.relaciones || [], (item, data) => { /* ... */
-                    item.querySelector('input[name="relacion_ovc[]"]').value = data.ovc || '';
-                    item.querySelector('input[name="relacion_etiqueta[]"]').value = data.etiqueta || '';
-                    item.querySelector('select[name="relacion_direccion[]"]').value = data.direccion || 'saliente';
-                });
-
-                console.log("DEBUG: Formulario poblado para edición.");
-            }
-
-            // Helper para poblar listas dinámicas (sin cambios)
-            function populateDynamicListField(containerId, itemSelector, dataArray, fillFunction) { /* ... código sin cambios ... */
-                const container = document.getElementById(containerId);
-                if (!container) return;
-                const template = container.querySelector(itemSelector);
-                if (!template) return;
-                container.querySelectorAll(`${itemSelector}:not(:first-child)`).forEach(el => el.remove());
-                const firstItem = container.querySelector(itemSelector);
-                if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                    firstItem.querySelectorAll('input, select, textarea').forEach(input => {
-                        if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
-                        else input.value = '';
-                    });
-                } else {
-                    dataArray.forEach((data, index) => {
-                        let currentItem = (index === 0) ? firstItem : template.cloneNode(true);
-                        if (index > 0) container.appendChild(currentItem);
-                        fillFunction(currentItem, data);
-                    });
-                }
-            }
-
-            // Función para resetear el formulario a modo creación (actualizada para DataURL)
-            function resetFormToCreateMode() {
-                console.log("DEBUG: Reseteando formulario a modo creación.");
-                isEditMode = false;
-                currentEditOvcId = null;
-                editOvcIdInput.value = '';
-                // crearTitle.innerHTML = '<span>➕</span> Crear Nuevo Objeto Virtual Creativo'; // Eliminado: Título gestionado por showSection
-                formSubmitButtonText.textContent = 'Guardar OVC';
-                crearOvcForm.reset();
-                if (imagePreviewContainer) imagePreviewContainer.innerHTML = '<span>Previsualización</span>';
-                if (imagenFilenameSpan) {
-                    imagenFilenameSpan.textContent = '';
-                    imagenFilenameSpan.dataset.originalName = ''; // Limpiar data attribute
-                }
-                if (archivoFilenameSpan) archivoFilenameSpan.textContent = '';
-                if (imagenDataUrlInput) imagenDataUrlInput.value = ''; // Limpiar DataURL oculto
-                // Limpiar listas dinámicas
-                ['autores-container', 'etiquetas-container', 'enlaces-container', 'relaciones-container'].forEach(containerId => { /* ... */
-                    const container = document.getElementById(containerId);
-                    if (!container) return;
-                    const itemSelector = `#${containerId} > div`;
-                    container.querySelectorAll(`${itemSelector}:not(:first-child)`).forEach(el => el.remove());
-                    const firstItem = container.querySelector(itemSelector);
-                    if (firstItem) {
-                        firstItem.querySelectorAll('input, select, textarea').forEach(input => {
-                            if (input.type === 'checkbox' || input.type === 'radio') input.checked = false;
-                            else input.value = '';
-                        });
-                    }
-                });
-                console.log("DEBUG: Formulario reseteado.");
-            }
+            // La función resetFormToCreateMode se ha movido a js/ovcForm.js
 
 
             // --- Guardado (Crear y Actualizar) y Modal Confirmación ---
-            function showConfirmationModal(isUpdate = false) { /* ... código sin cambios ... */
-                if (confirmationModal) {
-                    confirmationModalText.textContent = isUpdate ? '¡El OVC se ha actualizado correctamente!' : '¡El OVC se ha guardado correctamente!';
-                    confirmationModal.classList.remove('hidden');
-                    modalOverlay.classList.add('opacity-100');
-                    confirmationModal.querySelector('.modal-content').classList.add('scale-100');
-                }
-            }
-            function hideConfirmationModal() { /* ... código sin cambios ... */
-                if (confirmationModal) {
-                    modalOverlay.classList.remove('opacity-100');
-                    confirmationModal.querySelector('.modal-content').classList.remove('scale-100');
-                    setTimeout(() => { confirmationModal.classList.add('hidden'); }, 300);
-                }
-            }
+            // Las funciones showConfirmationModal y hideConfirmationModal se han movido a js/ovcForm.js
 
             // Submit del formulario (Maneja Crear y Actualizar con Base64)
             if (crearOvcForm) {
                 crearOvcForm.addEventListener('submit', function (event) {
                     event.preventDefault();
+                    const isEditMode = window.getIsEditMode();
+                    const currentEditOvcId = window.getCurrentEditOvcId();
                     console.log(`DEBUG: Formulario enviado. Modo Edición: ${isEditMode}`);
 
-                    const ovcs = getOvcsFromStorage();
+                    const ovcs = window.getOvcsFromStorage();
                     let originalOvc = null;
                     if (isEditMode && currentEditOvcId) {
                         originalOvc = ovcs.find(ovc => ovc.id === Number(currentEditOvcId));
@@ -1355,65 +1001,53 @@
                         if (index !== -1) {
                             console.log(`DEBUG: Actualizando OVC en índice ${index}`);
                             ovcs[index] = formData;
-                            saveOvcsToStorage(ovcs);
-                            showConfirmationModal(true);
-                            resetFormToCreateMode();
-                            showSection('listar');
+                            window.saveOvcsToStorage(ovcs);
+                            window.showConfirmationModal(true);
+                            window.resetFormToCreateMode();
+                            window.showSection('listar');
                         } else { /* ... error handling ... */
                             console.error(`Error: No se encontró OVC con ID ${formData.id} para actualizar.`);
                             alert("Error al actualizar el OVC. No se encontró el original.");
-                            resetFormToCreateMode();
+                            window.resetFormToCreateMode();
                         }
                     } else {
                         console.log("DEBUG: Creando nuevo OVC.");
                         ovcs.push(formData);
-                        saveOvcsToStorage(ovcs);
-                        showConfirmationModal(false);
-                        resetFormToCreateMode();
+                        window.saveOvcsToStorage(ovcs);
+                        window.showConfirmationModal(false);
+                        window.resetFormToCreateMode();
                     }
                 });
             }
 
             // Cerrar modal de confirmación
-            if (modalOverlay) modalOverlay.addEventListener('click', hideConfirmationModal);
-            if (modalCloseButtonX) modalCloseButtonX.addEventListener('click', hideConfirmationModal);
-            if (modalCloseButtonOk) modalCloseButtonOk.addEventListener('click', hideConfirmationModal);
+            if (modalOverlay) modalOverlay.addEventListener('click', window.hideConfirmationModal);
+            if (modalCloseButtonX) modalCloseButtonX.addEventListener('click', window.hideConfirmationModal);
+            if (modalCloseButtonOk) modalCloseButtonOk.addEventListener('click', window.hideConfirmationModal);
 
             // --- Funcionalidad de Borrado (con Modal) ---
-            function showDeleteConfirmModal(ovcId) { /* ... código sin cambios ... */
-                ovcIdToDeleteConfirm = ovcId;
-                if (deleteConfirmModal) {
-                    console.log(`DEBUG: Mostrando modal de confirmación de borrado para ID: ${ovcId}`);
-                    deleteConfirmModal.classList.remove('hidden');
-                }
-            }
-            function hideDeleteConfirmModal() { /* ... código sin cambios ... */
-                ovcIdToDeleteConfirm = null;
-                if (deleteConfirmModal) {
-                    console.log("DEBUG: Ocultando modal de confirmación de borrado.");
-                    deleteConfirmModal.classList.add('hidden');
-                }
-            }
+            // Las funciones showDeleteConfirmModal y hideDeleteConfirmModal se han movido a js/ovcForm.js
 
             // Listener para botones dentro del modal de borrado
-            if (deleteCancelButton) deleteCancelButton.addEventListener('click', hideDeleteConfirmModal);
-            if (deleteModalOverlay) deleteModalOverlay.addEventListener('click', hideDeleteConfirmModal);
+            if (deleteCancelButton) deleteCancelButton.addEventListener('click', window.hideDeleteConfirmModal);
+            if (deleteModalOverlay) deleteModalOverlay.addEventListener('click', window.hideDeleteConfirmModal);
 
             if (deleteConfirmButton) { /* ... código sin cambios ... */
                 deleteConfirmButton.addEventListener('click', () => {
+                    const ovcIdToDeleteConfirm = window.getOvcIdToDeleteConfirm();
                     if (ovcIdToDeleteConfirm) {
                         console.log(`DEBUG: Confirmado borrado para ID: ${ovcIdToDeleteConfirm}`);
-                        const ovcs = getOvcsFromStorage();
+                        const ovcs = window.getOvcsFromStorage();
                         const updatedOvcs = ovcs.filter(ovc => ovc.id !== Number(ovcIdToDeleteConfirm));
                         if (ovcs.length === updatedOvcs.length) {
                             console.warn(`DEBUG: No se encontró OVC con ID ${ovcIdToDeleteConfirm} para borrar.`);
                         } else {
-                            saveOvcsToStorage(updatedOvcs);
+                            window.saveOvcsToStorage(updatedOvcs);
                             console.log("DEBUG: OVC eliminado. Renderizando tabla de nuevo...");
-                            renderOvcTable();
+                            window.renderOvcTable();
                         }
                     } else { console.error("Error: No se encontró ID para borrar al confirmar."); }
-                    hideDeleteConfirmModal();
+                    window.hideDeleteConfirmModal();
                 });
             }
 
@@ -1429,15 +1063,15 @@
                         const ovcIdToEdit = editButton.getAttribute('data-id');
                         console.log(`DEBUG: Clic en Editar para ID: ${ovcIdToEdit}`);
                         if (ovcIdToEdit) {
-                            populateFormForEdit(ovcIdToEdit);
-                            showSection('crear');
+                            window.populateFormForEdit(ovcIdToEdit);
+                            window.showSection('crear');
                         }
                     } else if (deleteButton) {
                         event.preventDefault();
                         const ovcIdToDelete = deleteButton.getAttribute('data-id');
                         console.log(`DEBUG: Clic en Borrar para ID: ${ovcIdToDelete}`);
                         if (ovcIdToDelete) {
-                            showDeleteConfirmModal(ovcIdToDelete);
+                            window.showDeleteConfirmModal(ovcIdToDelete);
                         }
                     } else if (kanbanButton) { // Handle Kanban button click
                         event.preventDefault();
@@ -1446,7 +1080,7 @@
                         console.log(`DEBUG: Clic en Kanban para ID: ${ovcIdForKanban}, Título: ${ovcTitleForKanban}`);
                         if (ovcIdForKanban && ovcTitleForKanban) {
                             // Call showSection with Kanban context
-                            showSection('kanban', ovcIdForKanban, ovcTitleForKanban);
+                            window.showSection('kanban', ovcIdForKanban, ovcTitleForKanban);
                         } else {
                             console.error("Error: Missing data-id or data-title on Kanban button.");
                         }
@@ -1486,9 +1120,9 @@
                 console.log("DEBUG: No relevant URL parameters found or processed, loading default section.");
                 const initialActiveLink = document.querySelector('.sidebar-link.active[data-section]'); // Find active section link
                 if (initialActiveLink) {
-                    showSection(initialActiveLink.getAttribute('data-section'));
+                    window.showSection(initialActiveLink.getAttribute('data-section'));
                 } else {
-                    showSection('listar'); // Fallback to 'listar' if no active link found
+                    window.showSection('listar'); // Fallback to 'listar' if no active link found
                 }
             }
 
@@ -1840,7 +1474,7 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
 
             async function performFullSearch(criteria) { // Convertida a async
                 console.log("Performing full search with criteria:", criteria);
-                let allOvcs = getOvcsFromStorage();
+                let allOvcs = window.getOvcsFromStorage();
                 let filteredOvcs = allOvcs;
                 const rawMainQuery = criteria.query ? criteria.query.trim() : ""; // Mantener mayúsculas para operadores
 
@@ -1901,7 +1535,7 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
                     filteredOvcs = allOvcs;
                 }
                 
-                renderOvcTable(filteredOvcs);
+                window.renderOvcTable(filteredOvcs);
             }
 
             if (searchInput) {
@@ -1984,10 +1618,11 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
             }
 
 
-            // Mover aquí la definición de renderRizomaGraph para que esté en el scope correcto
-            /**
+            // COMENTADO: Esta función ha sido reemplazada por la versión en rizoma.js
+            /*
              * Llama a la función verRizoma para renderizar el grafo D3.
              */
+            /*
             function renderRizomaGraph() {
                 console.log("DEBUG: Llamando a verRizoma para renderizar el grafo.");
                 const containerId = '#rizoma-graph'; // ID del elemento SVG
@@ -2014,8 +1649,9 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
                     console.error(`Error: Contenedor SVG con ID '${containerId}' no encontrado.`);
                 }
             }
+            */
 
-            // --- Búsqueda en Rizoma (Adaptar si es necesario para D3) ---
+            /* // --- Búsqueda en Rizoma (Adaptar si es necesario para D3) ---
             // La lógica actual de búsqueda manipula display, lo cual puede no funcionar
             // bien con D3 que controla las posiciones. Se necesitaría una lógica
             // diferente para resaltar o filtrar nodos/enlaces en D3.
@@ -2725,7 +2361,7 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
             function setupAutocomplete(input) {
                 input.addEventListener('input', function () {
                     const query = input.value.toLowerCase();
-                    const ovcs = getOvcsFromStorage();
+                    const ovcs = window.getOvcsFromStorage();
                     const match = ovcs.find(ovc => ovc.titulo && ovc.titulo.toLowerCase().startsWith(query));
 
                     if (match) {
@@ -2759,27 +2395,24 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
             observer.observe(relacionesContainer, { childList: true, subtree: true });
         });
 
-        // Rubricas Submenu Toggle
-        const rubricasToggle = document.getElementById('rubricas-toggle');
-        const rubricasSubmenu = document.getElementById('rubricas-submenu');
-        const rubricasToggleIcon = rubricasToggle.querySelector('.submenu-toggle-icon');
-
-        rubricasToggle.addEventListener('click', (event) => {
-            event.preventDefault(); // Prevent default link behavior
-            const isOpen = rubricasSubmenu.classList.toggle('open');
-            rubricasToggleIcon.classList.toggle('open', isOpen);
-            rubricasToggleIcon.textContent = isOpen ? '▼' : '▶️'; // Change arrow icon
-        });
+        // Rubricas Submenu Toggle se maneja en navigation.js
+        // El cu00f3digo para manejar el toggle se ha movido a navigation.js
 
         // Las funciones renderRizomaGraph y la búsqueda comentada se movieron dentro del listener principal
+
+        // Asegurarse de que la tabla de OVCs se renderice al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Renderizando tabla de OVCs al cargar la página...');
+            window.renderOvcTable();
+        });
 
         // Combined Escape Key Listener
         window.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 // OVC Modals
-                if (confirmationModal && !confirmationModal.classList.contains('hidden')) hideConfirmationModal();
-                else if (deleteConfirmModal && !deleteConfirmModal.classList.contains('hidden')) hideDeleteConfirmModal();
-                else if (summaryModal && !summaryModal.classList.contains('hidden')) hideSummaryModal();
+                if (confirmationModal && !confirmationModal.classList.contains('hidden')) window.hideConfirmationModal();
+                else if (deleteConfirmModal && !deleteConfirmModal.classList.contains('hidden')) window.hideDeleteConfirmModal();
+                else if (summaryModal && !summaryModal.classList.contains('hidden')) window.hideSummaryModal();
                 // Kanban Modals / States
                 else if (KanbanApp && typeof KanbanApp.closeModal === 'function' && document.getElementById('taskModal')?.style.display === 'block') KanbanApp.closeModal();
                 else if (KanbanApp && typeof KanbanApp.disableEditMode === 'function' && KanbanApp.currentEditingTask) KanbanApp.disableEditMode(KanbanApp.currentEditingTask, false); // Needs currentEditingTask exposed or a public cancel method
