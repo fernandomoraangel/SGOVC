@@ -481,7 +481,9 @@ function showSection(sectionId, contextId = null, contextTitle = null) { // Adde
     // Deactivate all links first
     sidebarLinks.forEach(link => link.classList.remove('active'));
     // Deactivate rubric parent toggle if active
-    rubricasToggle.classList.remove('active');
+    if (rubricasToggle) {
+        rubricasToggle.classList.remove('active');
+    }
 
 
     const activeSection = sections[sectionId];
@@ -515,7 +517,40 @@ function showSection(sectionId, contextId = null, contextTitle = null) { // Adde
 
 
     if (sectionId === 'listar') {
-        window.renderOvcTable();
+        // Asegurarnos de que la función renderOvcTable esté disponible
+        if (typeof window.renderOvcTable === 'function') {
+            console.log('DEBUG: Llamando a renderOvcTable desde showSection');
+            try {
+                window.renderOvcTable();
+            } catch (error) {
+                console.error('Error al renderizar la tabla de OVCs:', error);
+                // Mostrar un mensaje de error en la interfaz
+                const ovcTableBody = document.getElementById('ovc-table-body');
+                if (ovcTableBody) {
+                    ovcTableBody.innerHTML = `
+                        <tr class="empty-table-row">
+                            <td colspan="6" class="text-red-600">
+                                Error al cargar los OVCs. Por favor, recarga la página.
+                            </td>
+                        </tr>`;
+                }
+            }
+        } else {
+            console.error('ERROR: renderOvcTable no está disponible');
+            // Intentar cargar el script manualmente si está disponible pero no se cargó correctamente
+            if (!window.ovcScriptLoaded) {
+                console.log('Intentando cargar el script manualmente...');
+                const script = document.createElement('script');
+                script.src = '../js/ovcDisplay.js';
+                script.onload = function() {
+                    console.log('Script ovcDisplay.js cargado manualmente');
+                    if (typeof window.renderOvcTable === 'function') {
+                        window.renderOvcTable();
+                    }
+                };
+                document.head.appendChild(script);
+            }
+        }
     } else if (sectionId === 'crear' && !isEditMode) {
         window.resetFormToCreateMode();
     } else if (sectionId === 'rizoma') {

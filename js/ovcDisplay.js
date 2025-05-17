@@ -1,9 +1,8 @@
 // js/ovcDisplay.js
 
-// Asegurarse de que getOvcsFromStorage esté disponible
+// Función para renderizar la tabla de OVCs
+window.ovcScriptLoaded = true; // Marcar que el script se ha cargado
 window.renderOvcTable = function(ovcsToRender) {
-    // Exportar la funciu00f3n globalmente de inmediato
-    window.renderOvcTable = renderOvcTable;
     
     const ovcTableBody = document.getElementById('ovc-table-body'); // Necesitamos obtener este elemento
     const paginationStart = document.getElementById('pagination-start');

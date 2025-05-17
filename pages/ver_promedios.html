@@ -76,21 +76,7 @@
                     <h2
                         class="text-xl font-semibold text-gray-700 mb-4 inline-block bg-accent-pink text-white px-3 py-1 rounded-md">
                         Visor de Promedios por OVC</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="ovcSelect" class="block text-sm font-medium text-gray-700">Seleccionar
-                                Título del OVC</label>
-                            <select id="ovcSelect" x-model="selectedOvcForAverage"
-                                @change="calculateAverageScore($event.target.value)"
-                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-accent-pink focus:border-accent-pink sm:text-sm rounded-md">
-                                <option value="">-- Elija un OVC --</option>
-                                <template x-for="ovcTitle in availableOvcTitles" :key="ovcTitle">
-                                    <option :value="ovcTitle" x-text="ovcTitle"></option>
-                                </template>
-                            </select>
-                            <p x-show="availableOvcTitles.length === 0" class="text-sm text-gray-500 mt-2">No hay
-                                OVCs evaluados todavía.</p>
-                        </div>
+                   
 
                         <div x-show="selectedOvcForAverage && averageScore !== null" x-cloak
                             class="mt-6 p-4 bg-gray-50 rounded-md border border-gray-200">

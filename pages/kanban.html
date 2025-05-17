@@ -16,8 +16,6 @@
 </head>
 
 <body class="p-4 md:p-8">
-    <h1>Kanban Board Loaded</h1>
-
     <h1 class="text-3xl font-bold mb-4 text-left text-gray-800"><span class="emoji">📋</span>Tablero Kanban</h1>
     <p class="text-gray-600 mb-6 text-left">Organiza tus tareas arrastrándolas entre columnas. Haz clic en una tarea
         para editarla.</p>
@@ -1164,13 +1162,8 @@
                 
                 currentOvcId = ovcIdContext; // Store the OVC ID
                 
-                // Actualizar el título en la interfaz si se proporciona
-                if (ovcTitle) {
-                    const titleElement = document.querySelector('h1.text-3xl');
-                    if (titleElement) {
-                        titleElement.textContent = `Tablero Kanban - ${ovcTitle}`;
-                    }
-                }
+                // El título se maneja desde kanban-simple.js
+                // No es necesario actualizarlo aquí para evitar duplicación
                 
                 // Marcar que la inicialización ha comenzado
                 window.kanbanInitialized = true;

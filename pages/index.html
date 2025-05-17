@@ -704,6 +704,80 @@
         </div>
     </div>
 
+    <!-- Modal de Búsqueda Avanzada -->
+    <div id="advanced-search-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+        aria-labelledby="advanced-search-modal-title" role="dialog" aria-modal="true">
+        <div id="advanced-search-modal-overlay" class="absolute inset-0 bg-gray-800 bg-opacity-60"></div>
+        <div class="modal-content bg-white rounded-lg shadow-xl overflow-hidden transform sm:max-w-2xl sm:w-full mx-4">
+            <div class="px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="advanced-search-modal-title">
+                        <span>🔍</span> Búsqueda Avanzada
+                    </h3>
+                    <button id="advanced-search-modal-close-x" type="button" class="text-gray-400 hover:text-gray-600 text-2xl">
+                        <span>❌</span>
+                    </button>
+                </div>
+                <div class="mt-4">
+                    <div class="mb-4">
+                        <label for="ai-search-prompt" class="block text-sm font-medium text-gray-700 mb-1">
+                            Búsqueda con IA (opcional)
+                        </label>
+                        <textarea id="ai-search-prompt" rows="3"
+                            class="shadow-sm focus:ring-pink-500 focus:border-pink-500 mt-1 block w-full sm:text-sm border border-gray-300 rounded-md p-2"
+                            placeholder="Ej: Muestra solo los OVC relacionados con programación que tengan videos..."></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Opciones de búsqueda:
+                        </label>
+                        <div class="flex items-center mb-2">
+                            <input id="fuzzy-search-checkbox" type="checkbox" class="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded">
+                            <label for="fuzzy-search-checkbox" class="ml-2 block text-sm text-gray-700">
+                                Búsqueda difusa (encontrar resultados similares)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Buscar en campos específicos:
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="flex items-center">
+                                <input id="field-title" type="checkbox" name="filter-fields" value="titulo" class="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" checked>
+                                <label for="field-title" class="ml-2 block text-sm text-gray-700">Título</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="field-desc" type="checkbox" name="filter-fields" value="descripcion" class="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" checked>
+                                <label for="field-desc" class="ml-2 block text-sm text-gray-700">Descripción</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="field-autor" type="checkbox" name="filter-fields" value="autores.nombre" class="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" checked>
+                                <label for="field-autor" class="ml-2 block text-sm text-gray-700">Autor</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="field-tags" type="checkbox" name="filter-fields" value="etiquetas" class="h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded" checked>
+                                <label for="field-tags" class="ml-2 block text-sm text-gray-700">Etiquetas</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-6 py-3 text-right">
+                <button id="advanced-search-cancel" type="button"
+                    class="inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                    Cancelar
+                </button>
+                <button id="apply-advanced-search-button" type="button"
+                    class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-pink-600 text-base font-medium text-white hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Aplicar Búsqueda
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
     <script>
@@ -737,12 +811,65 @@
             }
         });
 
+        // Funciones para el modal de búsqueda avanzada
+        function showAdvancedSearchModal() {
+            const modal = document.getElementById('advanced-search-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Evitar scroll del fondo
+            }
+        }
+
+        function hideAdvancedSearchModal() {
+            const modal = document.getElementById('advanced-search-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = ''; // Restaurar scroll del fondo
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
+            // Elementos del modal de resumen
             const summaryModal = document.getElementById('ovc-summary-modal');
             const summaryModalOverlay = document.getElementById('ovc-summary-modal-overlay');
             const summaryModalClose = document.getElementById('ovc-summary-modal-close');
             const summaryModalOk = document.getElementById('ovc-summary-modal-ok');
             const summaryModalContent = document.getElementById('ovc-summary-modal-content');
+            
+            // Elementos del modal de búsqueda avanzada
+            const advancedSearchTrigger = document.getElementById('advanced-search-trigger');
+            const advancedSearchModal = document.getElementById('advanced-search-modal');
+            const advancedSearchModalOverlay = document.getElementById('advanced-search-modal-overlay');
+            const advancedSearchModalCloseX = document.getElementById('advanced-search-modal-close-x');
+            const advancedSearchCancel = document.getElementById('advanced-search-cancel');
+            
+            // Configurar event listeners para el modal de búsqueda avanzada
+            if (advancedSearchTrigger) {
+                advancedSearchTrigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showAdvancedSearchModal();
+                });
+            }
+            
+            if (advancedSearchModalOverlay) {
+                advancedSearchModalOverlay.addEventListener('click', hideAdvancedSearchModal);
+            }
+            
+            if (advancedSearchModalCloseX) {
+                advancedSearchModalCloseX.addEventListener('click', hideAdvancedSearchModal);
+            }
+            
+            if (advancedSearchCancel) {
+                advancedSearchCancel.addEventListener('click', hideAdvancedSearchModal);
+            }
+            
+            // Cerrar el modal al presionar Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && advancedSearchModal && !advancedSearchModal.classList.contains('hidden')) {
+                    hideAdvancedSearchModal();
+                }
+            });
 
 
 
@@ -829,13 +956,19 @@
                 'etiquetas',
                 'autores.nombre',
                 'autores.rol',
+                'autores.correo',
                 'asignaturas',
                 'semestre',
                 'licencia',
                 'enlaces.descripcion',
+                'enlaces.titulo',
+                'enlaces.url',
                 'archivo', // Contiene el nombre del archivo
                 'relaciones.ovc',
-                'relaciones.etiqueta'
+                'relaciones.etiqueta',
+                'palabrasClave',
+                'fechaCreacion',
+                'fechaActualizacion'
             ];
 
             // --- Estado de Edición ---

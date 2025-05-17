@@ -38,7 +38,7 @@ window.KanbanApp = window.KanbanApp || {
         // Actualizar el título de la sección si es posible
         const sectionTitle = document.getElementById('section-title');
         if (sectionTitle) {
-            sectionTitle.innerHTML = `<span>📋</span> Tablero Kanban - ${ovcTitle || 'Sin título'}`;
+            sectionTitle.innerHTML = `<span>📋</span> Tablero Kanban`;
         }
         
         // Limpiar el contenedor
