@@ -1,7 +1,7 @@
 // js/ovcDisplay.js
 
 // Asegurarse de que getOvcsFromStorage esté disponible
-function renderOvcTable(ovcsToRender) {
+window.renderOvcTable = function(ovcsToRender) {
     // Exportar la funciu00f3n globalmente de inmediato
     window.renderOvcTable = renderOvcTable;
     
@@ -47,8 +47,8 @@ function renderOvcTable(ovcsToRender) {
                     <a href="#" class="text-indigo-600 hover:text-indigo-900 action-btn edit-ovc-btn" title="Editar" data-id="${ovc.id}">✏️</a>
                     <a href="#" class="text-blue-600 hover:text-blue-900 ml-4 action-btn view-ovc-btn" title="Ver" data-id="${ovc.id}">🔍</a>
                     <a href="#" class="text-red-600 hover:text-red-900 ml-4 action-btn delete-ovc-btn" title="Eliminar" data-id="${ovc.id}">🗑️</a>
-                    <a href="foro.html?ovcId=${ovc.id}" class="text-green-600 hover:text-green-900 ml-4 action-btn forum-ovc-btn" title="Foro" data-id="${ovc.id}">💬</a>
-                    <a href="evaluar_ovc.html?ovcId=${ovc.id}" class="text-purple-600 hover:text-purple-900 ml-4 action-btn evaluate-ovc-btn" title="Evaluar" data-id="${ovc.id}">✔️</a>
+                    <a href="#" class="text-green-600 hover:text-green-900 ml-4 action-btn forum-ovc-btn" title="Foro" data-id="${ovc.id}">💬</a>
+                    <a href="#" class="text-purple-600 hover:text-purple-900 ml-4 action-btn evaluate-ovc-btn" title="Evaluar" data-id="${ovc.id}">✔️</a>
                     <a href="ver_promedios.html?ovcId=${ovc.id}" class="text-cyan-600 hover:text-cyan-900 ml-4 action-btn view-averages-btn" title="Ver Promedios" data-id="${ovc.id}">📈</a>
                     <a href="#" class="text-orange-600 hover:text-orange-900 ml-4 action-btn kanban-ovc-btn" title="Tablero Kanban" data-id="${ovc.id}" data-title="${ovc.titulo || ''}">📋</a>
                </td>
@@ -131,6 +131,11 @@ window.hideSummaryModal = function() {
 
 // Configurar los botones del modal cuando el DOM esté cargado
 document.addEventListener('DOMContentLoaded', function() {
+    // Renderizar la tabla de OVCs al cargar la página si estamos en la sección de listar
+    const listarSection = document.getElementById('listar-section');
+    if (listarSection && !listarSection.classList.contains('hidden')) {
+        window.renderOvcTable();
+    }
     // Botón de cerrar (X) en la esquina superior derecha
     const closeButton = document.getElementById('ovc-summary-modal-close');
     if (closeButton) {
@@ -149,4 +154,89 @@ document.addEventListener('DOMContentLoaded', function() {
     if (modalOverlay) {
         modalOverlay.addEventListener('click', window.hideSummaryModal);
     }
+
+    // Manejador de eventos para el botón del foro
+    document.addEventListener('click', function(event) {
+        // Verificar si el clic fue en el botón del foro
+        const forumBtn = event.target.closest('.forum-ovc-btn');
+        if (forumBtn) {
+            event.preventDefault();
+            const ovcId = forumBtn.getAttribute('data-id');
+            console.log('Clic en botón del foro para OVC ID:', ovcId);
+            window.location.href = `foro.html?ovcId=${ovcId}`;
+            return;
+        }
+
+        // Verificar si el clic fue en otro botón de acción
+        const actionBtn = event.target.closest('.action-btn');
+        if (!actionBtn) {
+            return;
+        }
+
+        event.preventDefault();
+        
+        // Obtener las clases del botón
+        const btnClasses = actionBtn.className.split(' ');
+        
+        // Buscar la clase que termina en '-btn' para determinar la acción
+        const actionClass = btnClasses.find(cls => cls.endsWith('-btn'));
+        const ovcId = actionBtn.getAttribute('data-id');
+        const ovcTitle = actionBtn.getAttribute('data-title') || 'Sin título';
+
+        console.log(`Acción detectada: ${actionClass}, OVC ID: ${ovcId}, Título: ${ovcTitle}`);
+
+        // Manejar diferentes acciones
+        switch(actionClass) {
+            case 'kanban-ovc-btn':
+                // Navegar a la sección de Kanban con el ID del OVC
+                if (window.showSection) {
+                    window.showSection('kanban', ovcId, ovcTitle);
+                } else if (window.navigationShowSection) {
+                    window.navigationShowSection('kanban', ovcId, ovcTitle);
+                } else {
+                    console.error('No se pudo encontrar la función para mostrar la sección Kanban');
+                }
+                break;
+                
+            case 'view-ovc-btn':
+                // Mostrar el modal de resumen para el OVC
+                window.showSummaryModal(ovcId);
+                break;
+                
+            case 'edit-ovc-btn':
+                // Redirigir a la página de edición con el ID del OVC
+                window.location.href = `editar_ovc.html?id=${ovcId}`;
+                break;
+                
+            case 'delete-ovc-btn':
+                // Mostrar confirmación antes de eliminar
+                if (confirm('¿Estás seguro de que deseas eliminar este OVC?')) {
+                    // Lógica para eliminar el OVC
+                    console.log(`Eliminar OVC con ID: ${ovcId}`);
+                    // Aquí iría la lógica para eliminar el OVC
+                }
+                break;
+                
+            case 'evaluate-ovc-btn':
+                // Navegar a la página de evaluación del OVC
+                console.log('Navegando a la evaluación del OVC:', ovcId);
+                window.location.href = `evaluar_ovc.html?ovcId=${ovcId}`;
+                break;
+                
+            case 'view-averages-btn':
+                // Navegar a la página de promedios del OVC
+                window.location.href = `ver_promedios.html?ovcId=${ovcId}`;
+                break;
+                
+            case 'forum-ovc-btn':
+                // Navegar al foro del OVC
+                console.log('Navegando al foro del OVC:', ovcId);
+                // Usar la ruta relativa correcta
+                window.location.href = `pages/foro.html?ovcId=${ovcId}`;
+                break;
+                
+            default:
+                console.warn(`Acción no reconocida: ${actionClass}`);
+        }
+    });
 });

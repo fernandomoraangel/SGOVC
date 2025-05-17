@@ -10,10 +10,11 @@
     <!-- Cargar D3.js para la visualización del rizoma y biblioteca D3.js para visualización de grafos -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="../js/navigation.js"></script>
+    <!-- navigation.js se mueve al final del body -->
     <script src="../js/ovcStorage.js" defer></script>
     <script src="../js/ovcDisplay.js" defer></script>
     <script src="../js/ovcForm.js" defer></script>
+    <script src="../js/navigation.js" defer></script>
     <script src="../js/utils.js" defer></script>
     <!-- Scripts específicos para Rizoma y Kanban -->
     <script src="../js/rizoma-simple.js"></script>
@@ -90,13 +91,7 @@
                             <span>🌱</span> <span>Ver Rizoma</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="#" class="sidebar-link flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200"
-                            data-section="kanban">
-                            <span>📋</span> <span>Tablero Kanban</span>
-                        </a>
-                    </li>
-                    </li>
+
                     <li>
                         <a href="#" class="sidebar-link flex items-center px-6 py-3 text-gray-700 hover:bg-gray-200"
                             id="rubricas-toggle">
@@ -105,25 +100,13 @@
                         </a>
                         <ul class="submenu" id="rubricas-submenu">
                             <li>
-                                <a href="disenar_rubrica.html"
+                                <a href="#" onclick="event.preventDefault(); loadPageInContentArea('disenar_rubrica.html', this);"
                                     class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
                                     <span>✏️</span> <span>Diseñar Rúbrica</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="evaluar_ovc.html"
-                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
-                                    <span>✔️</span> <span>Evaluar OVC</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="ver_promedios.html"
-                                    class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
-                                    <span>📈</span> <span>Ver Promedios</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="resumen_rubricas.html"
+                                <a href="#" onclick="event.preventDefault(); loadPageInContentArea('resumen_rubricas.html', this);"
                                     class="sidebar-link submenu-link flex items-center px-6 py-2 text-gray-600 hover:bg-gray-200">
                                     <span>📑</span> <span>Resumen Rúbricas</span>
                                 </a>
@@ -241,8 +224,10 @@
                     <!-- Sección para visualizar el rizoma eliminada para evitar duplicidad de IDs -->
 
                     <!-- Sección para el tablero Kanban -->
-                    <div id="kanban-section" class="hidden space-y-6">
-                        <!-- El contenido se cargará dinámicamente desde kanban.html mediante un iframe -->
+                    <div id="kanban-section" class="hidden flex-1 flex flex-col h-full">
+                        <iframe id="kanban-iframe" src="kanban.html" class="w-full h-full border-0" style="min-height: 600px;">
+                            Tu navegador no soporta iframes. Por favor, actualiza a un navegador más reciente.
+                        </iframe>
                     </div>
 
                     <!-- Eliminado div duplicado con id="rizoma-section" que estaba aquí -->
@@ -596,8 +581,26 @@
         </div>
     </div>
 
+    <!-- Modal para el foro -->
+    <div id="forum-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
+        aria-labelledby="forum-modal-title" role="dialog" aria-modal="true">
+        <div class="relative bg-white rounded-lg shadow-xl w-11/12 max-w-6xl h-5/6 flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="forum-modal-title" class="text-xl font-semibold">Foro de Discusión</h3>
+                <button id="close-forum-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="forum-iframe" class="w-full h-full border-0" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
     <div id="ovc-summary-modal"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
         aria-labelledby="ovc-summary-modal-title" role="dialog" aria-modal="true">
         <div id="ovc-summary-modal-overlay" class="absolute inset-0 bg-gray-600 bg-opacity-75"></div>
         <div class="modal-content bg-white rounded-lg shadow-xl overflow-hidden transform sm:max-w-lg sm:w-full mx-4">
@@ -704,6 +707,36 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 
     <script>
+        // Manejador de eventos delegado para los botones de acción (incluyendo dinámicos)
+        document.addEventListener('click', function(event) {
+            // Manejador para el botón del foro
+            const forumBtn = event.target.closest('.forum-ovc-btn');
+            if (forumBtn) {
+                event.preventDefault();
+                event.stopPropagation(); // Prevenir propagación adicional
+                const ovcId = forumBtn.getAttribute('data-id');
+                console.log('DEBUG: Clic en botón del foro para OVC ID:', ovcId);
+                // Cargar el foro en el iframe
+                if (typeof loadPageInContentArea === 'function') {
+                    loadPageInContentArea(`foro_embed.html?ovcId=${ovcId}`, forumBtn);
+                } else {
+                    console.error('Error: loadPageInContentArea no está definido');
+                }
+                return false;
+            }
+            
+            // Manejador para el botón de evaluar
+            const evaluateBtn = event.target.closest('.evaluate-ovc-btn');
+            if (evaluateBtn) {
+                event.preventDefault();
+                event.stopPropagation(); // Prevenir propagación adicional
+                const ovcId = evaluateBtn.getAttribute('data-id');
+                console.log('DEBUG: Clic en botón de evaluar para OVC ID:', ovcId);
+                showEvaluateModal(ovcId);
+                return false;
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', function () {
             const summaryModal = document.getElementById('ovc-summary-modal');
             const summaryModalOverlay = document.getElementById('ovc-summary-modal-overlay');
@@ -1573,49 +1606,7 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
                 });
             }
 
-            // --- Function to Load Rubric Pages into Content Area ---
-            function loadPageInContentArea(url, clickedLink) {
-                console.log(`DEBUG: Cargando contenido de ${url} en iframe.`);
-                const contentArea = document.getElementById('content-area');
-
-                // Hide all other sections first
-                Object.values(sections).forEach(section => {
-                    if (section) section.classList.add('hidden');
-                });
-
-                // Clear previous content (including any old iframe)
-                contentArea.innerHTML = '';
-
-                // Create and configure iframe
-                const iframe = document.createElement('iframe');
-                iframe.setAttribute('src', url);
-                iframe.setAttribute('frameborder', '0');
-                iframe.style.width = '100%';
-                iframe.style.height = '100%'; // Make iframe fill the container
-                iframe.style.border = 'none';
-
-                // Append iframe
-                contentArea.appendChild(iframe);
-
-                // Update title (use text content of the clicked link)
-                const linkText = clickedLink.textContent.trim().replace(/^[^\w]+/, ''); // Clean up emoji/prefix
-                sectionTitle.innerHTML = `<span>📊</span> Rúbricas: ${linkText}`;
-
-                // Update active link state
-                sidebarLinks.forEach(link => link.classList.remove('active'));
-                if (clickedLink) {
-                    clickedLink.classList.add('active');
-                }
-                // Also mark the main "Rúbricas" toggle as active visually
-                rubricasToggle.classList.add('active');
-
-                // Ensure the submenu stays open visually
-                if (!rubricasSubmenu.classList.contains('open')) {
-                    rubricasSubmenu.classList.add('open');
-                    rubricasToggleIcon.classList.add('open');
-                    rubricasToggleIcon.textContent = '▼';
-                }
-            }
+            // La función loadPageInContentArea ha sido movida a navigation.js y está disponible globalmente
 
 
             // COMENTADO: Esta función ha sido reemplazada por la versión en rizoma.js
@@ -2317,10 +2308,6 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
                 addTaskBtn = document.getElementById('addTaskBtn');
                 taskForm = document.getElementById('taskForm');
 
-                if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
-                    console.error("Error: No se encontraron todos los elementos necesarios para el Kanban.");
-                    return;
-                }
 
                 columns.forEach(column => {
                     column.addEventListener('dragover', handleDragOver);
@@ -2420,7 +2407,304 @@ function performSimpleSearch_DEBUG(query, ovcs, fieldsToSearch = DEFAULT_SEARCH_
             }
         });
     </script>
-    <!-- Eliminada etiqueta </style> incorrecta -->
+    
+    <!-- Manejador global para el botón del foro -->
+    <script>
+        // Función para mostrar el modal del foro
+        function showForumModal(ovcId) {
+            const modal = document.getElementById('forum-modal');
+            const iframe = document.getElementById('forum-iframe');
+            const closeBtn = document.getElementById('close-forum-modal');
+            const modalTitle = document.getElementById('forum-modal-title');
+            
+            // Obtener el título del OVC desde localStorage
+            let ovcTitle = 'OVC';
+            try {
+                const ovcs = JSON.parse(localStorage.getItem('ovcs')) || [];
+                const ovc = ovcs.find(o => o.id === ovcId);
+                if (ovc && ovc.titulo) {
+                    ovcTitle = ovc.titulo;
+                }
+            } catch (error) {
+                console.error('Error al obtener el título del OVC:', error);
+            }
+            
+            // Actualizar el título del modal
+            modalTitle.textContent = `Foro: ${ovcTitle}`;
+            
+            // Configurar la URL del foro con el título codificado
+            const forumUrl = `foro_embed.html?ovcId=${ovcId}&ovcTitle=${encodeURIComponent(ovcTitle)}`;
+            console.log('Cargando foro en modal:', forumUrl);
+            
+            // Cargar el foro en el iframe
+            iframe.src = forumUrl;
+            
+            // Mostrar el modal
+            modal.classList.remove('hidden');
+            
+            // Manejar el cierre del modal
+            function closeModal() {
+                modal.classList.add('hidden');
+                // Limpiar el iframe al cerrar
+                iframe.src = 'about:blank';
+            }
+            
+            // Configurar el botón de cierre
+            closeBtn.onclick = closeModal;
+            
+            // Cerrar al hacer clic fuera del contenido
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Cerrar con la tecla Escape
+            document.addEventListener('keydown', function onEsc(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', onEsc);
+                }
+            });
+        }
+        
+        // Manejador global para los botones del foro
+        document.addEventListener('click', function(event) {
+            // Verificar si el clic fue en un botón del foro
+            let forumBtn = event.target.closest('.forum-ovc-btn');
+            
+            // Si no es un botón de foro, verificar si es un enlace a foro.html
+            if (!forumBtn) {
+                const forumLink = event.target.closest('a[href*="foro.html"]');
+                if (forumLink) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                    
+                    // Obtener el ID del OVC del atributo data-id o de la URL
+                    const ovcId = forumLink.getAttribute('data-id') || 
+                                  new URLSearchParams(forumLink.getAttribute('href').split('?')[1] || '').get('ovcId');
+                    
+                    console.log('Manejador global: Clic en enlace del foro para OVC ID:', ovcId);
+                    showForumModal(ovcId);
+                    return false;
+                }
+                return;
+            }
+            
+            // Si es un botón de foro, manejar el clic
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            
+            // Obtener el ID del OVC del atributo data-id
+            const ovcId = forumBtn.getAttribute('data-id');
+            console.log('Manejador global: Clic en botón del foro para OVC ID:', ovcId);
+            
+            // Mostrar el modal del foro
+            showForumModal(ovcId);
+            
+            return false;
+        }, true); // Usar captura para asegurar que se ejecute primero
+    </script>
+    <script>
+        // Manejador de eventos delegado para los botones de acción (incluyendo dinámicos)
+        document.addEventListener('DOMContentLoaded', function() {
+            // Usamos el evento click en el documento para manejar elementos dinámicos
+            document.addEventListener('click', function(event) {
+                // Manejador para el botón del foro
+                const forumBtn = event.target.closest('.forum-ovc-btn');
+                if (forumBtn) {
+                    event.preventDefault();
+                    event.stopPropagation(); // Prevenir propagación adicional
+                    const ovcId = forumBtn.getAttribute('data-id');
+                    console.log('DEBUG: Clic en botón del foro (delegado) para OVC ID:', ovcId);
+                    // Cargar el foro en el iframe
+                    if (typeof loadPageInContentArea === 'function') {
+                        loadPageInContentArea(`foro_embed.html?ovcId=${ovcId}`, forumBtn);
+                    } else {
+                        console.error('Error: loadPageInContentArea no está definido');
+                    }
+                    return false;
+                }
+                
+                // Manejador para el botón de evaluar
+                const evaluateBtn = event.target.closest('.evaluate-ovc-btn');
+                if (evaluateBtn) {
+                    event.preventDefault();
+                    event.stopPropagation(); // Prevenir propagación adicional
+                    const ovcId = evaluateBtn.getAttribute('data-id');
+                    console.log('DEBUG: Clic en botón de evaluar (delegado) para OVC ID:', ovcId);
+                    showEvaluateModal(ovcId);
+                    return false;
+                }
+                
+                // Manejador para el botón de ver promedios
+                const viewAveragesBtn = event.target.closest('.view-averages-btn');
+                if (viewAveragesBtn) {
+                    event.preventDefault();
+                    event.stopPropagation(); // Prevenir propagación adicional
+                    const ovcId = viewAveragesBtn.getAttribute('data-id');
+                    console.log('DEBUG: Clic en botón de ver promedios (delegado) para OVC ID:', ovcId);
+                    showAveragesModal(ovcId);
+                    return false;
+                }
+            });
+        });
+    </script>
+    
+    <!-- Modal para evaluar OVC -->
+    <div id="evaluate-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
+        aria-labelledby="evaluate-modal-title" role="dialog" aria-modal="true">
+        <div class="relative bg-white rounded-lg shadow-xl w-11/12 max-w-6xl h-5/6 flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="evaluate-modal-title" class="text-xl font-semibold">Evaluar OVC</h3>
+                <button id="close-evaluate-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="evaluate-iframe" class="w-full h-full border-0" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para ver promedios -->
+    <div id="averages-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300"
+        aria-labelledby="averages-modal-title" role="dialog" aria-modal="true">
+        <div class="relative bg-white rounded-lg shadow-xl w-11/12 max-w-6xl h-5/6 flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="averages-modal-title" class="text-xl font-semibold">Promedios del OVC</h3>
+                <button id="close-averages-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <iframe id="averages-iframe" class="w-full h-full border-0" frameborder="0" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funciones para mostrar/ocultar los modales
+        function showEvaluateModal(ovcId) {
+            const modal = document.getElementById('evaluate-modal');
+            const iframe = document.getElementById('evaluate-iframe');
+            const closeBtn = document.getElementById('close-evaluate-modal');
+            const modalTitle = document.getElementById('evaluate-modal-title');
+            
+            // Obtener el título del OVC desde localStorage
+            let ovcTitle = 'OVC';
+            try {
+                const ovcs = JSON.parse(localStorage.getItem('ovcs')) || [];
+                const ovc = ovcs.find(o => o.id === ovcId);
+                if (ovc && ovc.titulo) {
+                    ovcTitle = ovc.titulo;
+                }
+            } catch (error) {
+                console.error('Error al obtener el título del OVC:', error);
+            }
+            
+            // Actualizar el título del modal
+            modalTitle.textContent = `Evaluar: ${ovcTitle}`;
+            
+            // Configurar la URL del evaluador
+            const evaluateUrl = `evaluar_ovc.html?ovcId=${ovcId}&embedded=true`;
+            console.log('Cargando evaluador en modal:', evaluateUrl);
+            
+            // Cargar el evaluador en el iframe
+            iframe.src = evaluateUrl;
+            
+            // Mostrar el modal
+            modal.classList.remove('hidden');
+            
+            // Manejar el cierre del modal
+            function closeModal() {
+                modal.classList.add('hidden');
+                // Limpiar el iframe al cerrar
+                iframe.src = 'about:blank';
+            }
+            
+            // Configurar el botón de cierre
+            closeBtn.onclick = closeModal;
+            
+            // Cerrar al hacer clic fuera del contenido
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Cerrar con la tecla Escape
+            document.addEventListener('keydown', function onEsc(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', onEsc);
+                }
+            });
+        }
+
+        function showAveragesModal(ovcId) {
+            const modal = document.getElementById('averages-modal');
+            const iframe = document.getElementById('averages-iframe');
+            const closeBtn = document.getElementById('close-averages-modal');
+            const modalTitle = document.getElementById('averages-modal-title');
+            
+            // Obtener el título del OVC desde localStorage
+            let ovcTitle = 'OVC';
+            try {
+                const ovcs = JSON.parse(localStorage.getItem('ovcs')) || [];
+                const ovc = ovcs.find(o => o.id === ovcId);
+                if (ovc && ovc.titulo) {
+                    ovcTitle = ovc.titulo;
+                }
+            } catch (error) {
+                console.error('Error al obtener el título del OVC:', error);
+            }
+            
+            // Actualizar el título del modal
+            modalTitle.textContent = `Promedios: ${ovcTitle}`;
+            
+            // Configurar la URL de promedios
+            const averagesUrl = `ver_promedios.html?ovcId=${ovcId}&embedded=true`;
+            console.log('Cargando promedios en modal:', averagesUrl);
+            
+            // Cargar los promedios en el iframe
+            iframe.src = averagesUrl;
+            
+            // Mostrar el modal
+            modal.classList.remove('hidden');
+            
+            // Manejar el cierre del modal
+            function closeModal() {
+                modal.classList.add('hidden');
+                // Limpiar el iframe al cerrar
+                iframe.src = 'about:blank';
+            }
+            
+            // Configurar el botón de cierre
+            closeBtn.onclick = closeModal;
+            
+            // Cerrar al hacer clic fuera del contenido
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            };
+            
+            // Cerrar con la tecla Escape
+            document.addEventListener('keydown', function onEsc(event) {
+                if (event.key === 'Escape') {
+                    closeModal();
+                    document.removeEventListener('keydown', onEsc);
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

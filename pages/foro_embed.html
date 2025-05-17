@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foro - SGOVC</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: transparent;
+        }
+        .container {
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+    <!-- Main Content -->
+    <div class="container mx-auto mt-2 p-2">
+        <h1 id="forum-main-title" class="text-2xl font-bold mb-2">Foro de Discusión</h1>
+        <h2 id="ovc-forum-title" class="text-gray-600 text-lg mb-4"></h2> <!-- Placeholder for OVC Title -->
+        <hr class="mb-4 border-gray-300">
+
+        <!-- Sección para crear nuevo tema -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <h2 class="text-xl font-semibold mb-3">Crear Nuevo Tema</h2>
+            <form id="new-topic-form">
+                <div class="mb-3">
+                    <label for="topic-title" class="block text-sm font-medium text-gray-700 mb-1">Título del Tema</label>
+                    <input type="text" id="topic-title" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
+                </div>
+                <div class="mb-3">
+                    <label for="topic-content" class="block text-sm font-medium text-gray-700 mb-1">Mensaje</label>
+                    <textarea id="topic-content" rows="4" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"></textarea>
+                </div>
+                <button type="submit"
+                    class="bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                    Crear Tema
+                </button>
+            </form>
+        </div>
+
+        <!-- Lista de Temas -->
+        <div id="topics-list">
+            <!-- Los temas se cargarán aquí dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Modal para ver tema -->
+    <div id="topic-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg w-11/12 md:w-3/4 lg:w-2/3 max-h-[80vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center">
+                <h3 id="modal-topic-title" class="text-xl font-semibold"></h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="modal-topic-content" class="p-4 overflow-y-auto flex-grow">
+                <!-- El contenido del tema se cargará aquí -->
+            </div>
+            <div class="p-4 border-t">
+                <h4 class="font-semibold mb-2">Respuestas:</h4>
+                <div id="replies-container" class="space-y-3">
+                    <!-- Las respuestas se cargarán aquí -->
+                </div>
+                <div class="mt-4">
+                    <textarea id="reply-content" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                        placeholder="Escribe tu respuesta..."></textarea>
+                    <button id="submit-reply"
+                        class="mt-2 bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2">
+                        Responder
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const ovcId = urlParams.get('ovcId');
+        let ovcTitle = urlParams.get('ovcTitle');
+
+        // Mostrar el título del OVC inmediatamente
+        if (ovcTitle) {
+            document.getElementById('ovc-forum-title').textContent = decodeURIComponent(ovcTitle);
+            document.title = `Foro: ${decodeURIComponent(ovcTitle)}`;
+        } else {
+            // Intentar obtener el título del localStorage si no está en la URL
+            try {
+                const ovcs = JSON.parse(localStorage.getItem('ovcs')) || [];
+                const ovc = ovcs.find(o => o.id === ovcId);
+                if (ovc && ovc.titulo) {
+                    document.getElementById('ovc-forum-title').textContent = ovc.titulo;
+                    document.title = `Foro: ${ovc.titulo}`;
+                } else {
+                    document.getElementById('ovc-forum-title').textContent = 'OVC';
+                }
+            } catch (error) {
+                console.error('Error al obtener el título del OVC:', error);
+                document.getElementById('ovc-forum-title').textContent = 'OVC';
+            }
+        }
+
+        // Obtener el usuario actual del localStorage o usar uno por defecto
+        const currentUser = JSON.parse(localStorage.getItem('currentUser')) || { nombre: 'Usuario Anónimo' };
+
+        // Función para obtener los foros del localStorage
+        function getForums() {
+            return JSON.parse(localStorage.getItem('foros')) || {};
+        }
+
+        // Función para guardar los foros en el localStorage
+        function saveForums(forums) {
+            localStorage.setItem('foros', JSON.stringify(forums));
+        }
+
+        // Inicializar el foro para este OVC si no existe
+        function initForum() {
+            const forums = getForums();
+            if (!forums[ovcId]) {
+                forums[ovcId] = {
+                    titulo: ovcTitle || 'Sin título',
+                    temas: []
+                };
+                saveForums(forums);
+            }
+            return forums[ovcId];
+        }
+
+        // Actualizar el título del foro
+        function updateForumTitle() {
+            if (ovcId) {
+                const forum = initForum();
+                const title = forum.titulo || 'OVC';
+                document.getElementById('ovc-forum-title').textContent = title;
+                document.title = `Foro: ${title}`;
+            }
+        }
+
+        // Formatear fecha
+        function formatDate(date = new Date()) {
+            return date.toLocaleDateString('es-ES', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Generar ID único
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // Cargar y mostrar los temas
+        function loadTopics() {
+            const forum = initForum();
+            const topicsList = document.getElementById('topics-list');
+            topicsList.innerHTML = '';
+
+            if (forum.temas.length === 0) {
+                topicsList.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-md text-center text-gray-500">
+                        No hay temas en este foro. ¡Sé el primero en crear uno!
+                    </div>
+                `;
+                return;
+            }
+
+            // Ordenar temas por fecha (más recientes primero)
+            const sortedTopics = [...forum.temas].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+            sortedTopics.forEach(topic => {
+                const topicElement = document.createElement('div');
+                topicElement.className = 'bg-white p-4 rounded-lg shadow-md mb-3 cursor-pointer hover:bg-gray-50 transition-colors';
+                topicElement.innerHTML = `
+                    <h3 class="font-semibold text-lg text-gray-800">${topic.titulo}</h3>
+                    <div class="flex justify-between text-sm text-gray-500 mt-2">
+                        <span>Por: ${topic.autor}</span>
+                        <span>${new Date(topic.fecha).toLocaleString('es-ES')}</span>
+                    </div>
+                    <div class="mt-2 text-gray-600 text-sm">
+                        ${topic.contenido.length > 150 ? topic.contenido.substring(0, 150) + '...' : topic.contenido}
+                    </div>
+                    <div class="mt-2 text-sm text-pink-600">
+                        ${topic.respuestas.length} ${topic.respuestas.length === 1 ? 'respuesta' : 'respuestas'}
+                    </div>
+                `;
+                
+                topicElement.addEventListener('click', () => loadTopic(topic.id));
+                topicsList.appendChild(topicElement);
+            });
+        }
+
+        // Cargar un tema específico en el modal
+        function loadTopic(topicId) {
+            const forum = initForum();
+            const topic = forum.temas.find(t => t.id === topicId);
+            
+            if (!topic) {
+                alert('Tema no encontrado');
+                return;
+            }
+
+            // Actualizar el título y contenido del modal
+            const modalTitle = document.getElementById('modal-topic-title');
+            const modalContent = document.getElementById('modal-topic-content');
+            const repliesContainer = document.getElementById('replies-container');
+            
+            modalTitle.textContent = topic.titulo;
+            
+            // Mostrar el contenido del tema
+            modalContent.innerHTML = `
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-medium text-gray-800">${topic.autor}</span>
+                        <span class="text-sm text-gray-500">${new Date(topic.fecha).toLocaleString('es-ES')}</span>
+                    </div>
+                    <p class="text-gray-700 whitespace-pre-line">${topic.contenido}</p>
+                </div>
+            `;
+
+            // Mostrar respuestas
+            repliesContainer.innerHTML = '';
+            if (topic.respuestas.length > 0) {
+                topic.respuestas.forEach(reply => {
+                    const replyElement = document.createElement('div');
+                    replyElement.className = 'bg-gray-50 p-3 rounded-lg mb-2 border-l-4 border-pink-500';
+                    replyElement.innerHTML = `
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="font-medium text-gray-800">${reply.autor}</span>
+                            <span class="text-gray-500">${new Date(reply.fecha).toLocaleString('es-ES')}</span>
+                        </div>
+                        <p class="text-gray-700 whitespace-pre-line">${reply.contenido}</p>
+                    `;
+                    repliesContainer.appendChild(replyElement);
+                });
+            } else {
+                repliesContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No hay respuestas aún. ¡Sé el primero en responder!</p>';
+            }
+
+            // Configurar el botón de responder
+            const replyButton = document.getElementById('submit-reply');
+            const replyContent = document.getElementById('reply-content');
+            
+            const replyHandler = () => {
+                const content = replyContent.value.trim();
+                if (!content) {
+                    alert('Por favor escribe una respuesta');
+                    return;
+                }
+
+                const forums = getForums();
+                const forum = forums[ovcId];
+                const topicIndex = forum.temas.findIndex(t => t.id === topicId);
+                
+                if (topicIndex === -1) return;
+
+                const newReply = {
+                    id: generateId(),
+                    autor: currentUser.nombre,
+                    fecha: new Date().toISOString(),
+                    contenido: content
+                };
+
+                forum.temas[topicIndex].respuestas.push(newReply);
+                saveForums(forums);
+
+                // Limpiar el área de respuesta
+                replyContent.value = '';
+                
+                // Recargar el tema para mostrar la nueva respuesta
+                loadTopic(topicId);
+                
+                // Mostrar mensaje de éxito
+                const successMsg = document.createElement('div');
+                successMsg.className = 'text-green-600 text-sm mt-2';
+                successMsg.textContent = 'Respuesta enviada correctamente';
+                replyButton.parentNode.insertBefore(successMsg, replyButton.nextSibling);
+                
+                setTimeout(() => {
+                    successMsg.remove();
+                }, 3000);
+            };
+
+            // Actualizar el manejador de eventos del botón de responder
+            const newButton = replyButton.cloneNode(true);
+            replyButton.parentNode.replaceChild(newButton, replyButton);
+            newButton.onclick = replyHandler;
+
+            // Mostrar el modal
+            document.getElementById('topic-modal').classList.remove('hidden');
+        }
+
+        // Manejar el envío del formulario de nuevo tema
+        document.getElementById('new-topic-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('topic-title').value.trim();
+            const content = document.getElementById('topic-content').value.trim();
+            
+            if (!title || !content) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            const forums = getForums();
+            const forum = forums[ovcId] || { temas: [] };
+            
+            const newTopic = {
+                id: generateId(),
+                titulo: title,
+                contenido: content,
+                autor: currentUser.nombre,
+                fecha: new Date().toISOString(),
+                respuestas: []
+            };
+            
+            forum.temas.push(newTopic);
+            forums[ovcId] = forum;
+            saveForums(forums);
+            
+            // Limpiar el formulario
+            this.reset();
+            
+            // Mostrar mensaje de éxito
+            const successMsg = document.createElement('div');
+            successMsg.className = 'text-green-600 text-sm mt-2';
+            successMsg.textContent = 'Tema creado correctamente';
+            this.appendChild(successMsg);
+            
+            setTimeout(() => {
+                successMsg.remove();
+            }, 3000);
+            
+            // Recargar la lista de temas
+            loadTopics();
+        });
+
+        // Manejar el cierre del modal
+        document.getElementById('close-modal').addEventListener('click', function() {
+            document.getElementById('topic-modal').classList.add('hidden');
+        });
+
+        // Cerrar modal al hacer clic fuera del contenido
+        document.getElementById('topic-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+            }
+        });
+
+        // Escuchar mensajes del iframe principal para actualizar el título
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'SET_OVC_TITLE') {
+                updateForumTitle(event.data.title);
+            }
+        });
+
+        // Inicializar el foro y cargar los temas al cargar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            initForum();
+            // Usar el título de la URL si está disponible
+            if (ovcTitle) {
+                updateForumTitle(decodeURIComponent(ovcTitle));
+            } else {
+                updateForumTitle();
+            }
+            loadTopics();
+        });
+    </script>
+</body>
+</html>

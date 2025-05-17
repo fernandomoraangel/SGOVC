@@ -983,7 +983,7 @@
                 if (!savedState) {
                     console.log(`DEBUG: No hay estado guardado en ${storageKey}, creando tareas de ejemplo.`);
                     // Crear algunas tareas de ejemplo
-                    const exampleTasks = [
+                    /* const exampleTasks = [
                         {
                             id: generateId('task'),
                             title: 'Ejemplo: Crear documentación',
@@ -1027,7 +1027,7 @@
                     } catch (error) {
                         console.error(`ERROR: No se pudieron guardar las tareas de ejemplo en localStorage:`, error);
                         savedState = JSON.stringify(exampleTasks); // Usar directamente sin guardar en localStorage
-                    }
+                    } */
                 }
                 
                 if (savedState) {
@@ -1141,16 +1141,42 @@
             /**
              * Initializes the Kanban board application.
              * @param {string|null} ovcIdContext - The ID of the OVC to load the board for.
+             * @param {string} [ovcTitle=''] - The title of the OVC to display.
              */
-            function init(ovcIdContext = null) {
-                console.log(`KanbanApp.init called. Context OVC ID: ${ovcIdContext}`);
+            function init(ovcIdContext = null, ovcTitle = '') {
+                console.log(`KanbanApp.init called. Context OVC ID: ${ovcIdContext}, Title: ${ovcTitle}`);
+                
+                // Validar que se proporcione un ID de OVC
+                if (!ovcIdContext) {
+                    //console.error('Error: Se requiere un ID de OVC para inicializar el tablero Kanban');
+                    // Mostrar mensaje de error al usuario
+                    const errorContainer = document.createElement('div');
+                    errorContainer.className = 'p-4 bg-red-100 border-l-4 border-red-500 text-red-700';
+                    errorContainer.role = 'alert';
+                    errorContainer.innerHTML = `
+                        <p class="font-bold">Error</p>
+                        <p>No se pudo cargar el tablero Kanban. No se proporcionó un ID de OVC válido.</p>
+                        <p class="text-sm mt-2">Por favor, asegúrate de acceder al tablero Kanban desde la lista de OVCs.</p>
+                    `;
+                    //document.body.insertBefore(errorContainer, document.body.firstChild);
+                    return;
+                }
+                
                 currentOvcId = ovcIdContext; // Store the OVC ID
+                
+                // Actualizar el título en la interfaz si se proporciona
+                if (ovcTitle) {
+                    const titleElement = document.querySelector('h1.text-3xl');
+                    if (titleElement) {
+                        titleElement.textContent = `Tablero Kanban - ${ovcTitle}`;
+                    }
+                }
                 
                 // Marcar que la inicialización ha comenzado
                 window.kanbanInitialized = true;
 
                 // Query DOM elements *after* the content is loaded into index.html
-                columns = document.querySelectorAll('#kanbanBoard .kanban-tasks'); // Be more specific
+                columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
                 contextMenu = document.getElementById('contextMenu');
                 taskModal = document.getElementById('taskModal');
                 addTaskBtn = document.getElementById('addTaskBtn');
@@ -1166,9 +1192,21 @@
 
                 if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
                     console.error("Error: Uno o más elementos esenciales del Kanban no se encontraron en el DOM. La inicialización falló.");
-                    // Attempt to query again after a small delay?
+                    
+                    // Mostrar mensaje de error al usuario
+                    const errorContainer = document.createElement('div');
+                    errorContainer.className = 'p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700';
+                    errorContainer.role = 'alert';
+                    errorContainer.innerHTML = `
+                        <p class="font-bold">Advertencia</p>
+                        <p>Algunos elementos del tablero Kanban no se cargaron correctamente.</p>
+                        <p class="text-sm mt-2">Recargando la página en 3 segundos...</p>
+                    `;
+                    document.body.insertBefore(errorContainer, document.body.firstChild);
+                    
+                    // Intentar de nuevo después de un retraso
                     setTimeout(() => {
-                        console.log("Retrying DOM query...");
+                        console.log("Reintentando carga del DOM...");
                         columns = document.querySelectorAll('#kanbanBoard .kanban-tasks');
                         contextMenu = document.getElementById('contextMenu');
                         taskModal = document.getElementById('taskModal');
@@ -1182,14 +1220,27 @@
                             taskForm: !!taskForm
                         });
                         if (!columns.length || !contextMenu || !taskModal || !addTaskBtn || !taskForm) {
-                            console.error("Retry failed. Kanban elements still missing.");
-                            return; // Stop initialization if elements are missing
+                            console.error("Reintento fallido. Elementos del Kanban aún faltantes.");
+                            
+                            // Actualizar mensaje de error
+                            errorContainer.className = 'p-4 bg-red-100 border-l-4 border-red-500 text-red-700';
+                            errorContainer.innerHTML = `
+                                <p class="font-bold">Error crítico</p>
+                                <p>No se pudo cargar el tablero Kanban. Elementos esenciales faltantes.</p>
+                                <p class="text-sm mt-2">Por favor, recarga la página o contacta al soporte técnico.</p>
+                            `;
+                            
+                            return; // Detener la inicialización si faltan elementos
                         } else {
-                            console.log("Retry successful. Continuing init.");
+                            console.log("Reintento exitoso. Continuando con la inicialización.");
+                            // Eliminar mensaje de error si existe
+                            if (errorContainer && errorContainer.parentNode) {
+                                errorContainer.parentNode.removeChild(errorContainer);
+                            }
                             setupListenersAndLoad();
                         }
-                    }, 100); // Wait 100ms and retry
-                    return; // Stop initial attempt
+                    }, 3000); // Esperar 3 segundos antes de reintentar
+                    return; // Detener el intento inicial
                 }
 
                 setupListenersAndLoad();
@@ -1361,15 +1412,71 @@
             
             console.log('KanbanApp expuesto en el objeto window');
             
+            // Notificar a la ventana principal que el Kanban está listo
+            if (window.parent) {
+                console.log('Enviando mensaje KANBAN_READY a la ventana principal');
+                window.parent.postMessage({ type: 'KANBAN_READY' }, '*');
+            } else {
+                console.log('No se encontró ventana padre para enviar mensaje KANBAN_READY');
+            }
+            
             return publicApi;
         })();
 
-        // --- Inicialización ---
-        // Función para inicializar el Kanban con un ID de OVC específico
-        function initializeKanban(ovcId = null) {
-            console.log('Inicializando Kanban con OVC ID:', ovcId);
-            KanbanApp.init(ovcId);
-        }
+            // --- Inicialización ---
+            // Función para inicializar el Kanban con un ID de OVC específico
+            function initializeKanban(ovcId, ovcTitle) {
+                console.log('Inicializando Kanban con OVC ID:', ovcId, 'Título:', ovcTitle);
+                
+                // Validar que se proporcione un ID de OVC
+                if (!ovcId) {
+                    console.warn('No se proporcionó un ID de OVC válido. Se requiere un ID para cargar el tablero Kanban.');
+                    // No mostrar mensaje de error al usuario
+                    return;
+                }
+                
+                try {
+                    // Establecer el estado de inicialización
+                    window.kanbanInitialized = false;
+                    
+                    // Actualizar el título de la página
+                    document.title = `Kanban - ${ovcTitle || 'Tablero sin título'}`;
+                    
+                    // Inicializar el tablero Kanban con el ID y título del OVC
+                    console.log('Llamando a KanbanApp.init con:', { ovcId, ovcTitle });
+                    KanbanApp.init(ovcId, ovcTitle);
+                    
+                    // Marcar como inicializado
+                    window.kanbanInitialized = true;
+                    
+                    // Notificar a la ventana principal que el Kanban se inicializó correctamente
+                    if (window.parent) {
+                        window.parent.postMessage({ 
+                            type: 'KANBAN_INITIALIZED',
+                            ovcId: ovcId,
+                            ovcTitle: ovcTitle
+                        }, '*');
+                    }
+                    
+                    // Verificar si el tablero se inicializó correctamente después de un breve retraso
+                    setTimeout(() => {
+                        if (!window.kanbanInitialized) {
+                            console.error('Error: El tablero Kanban no se inicializó correctamente');
+                            // Solo registrar en consola, no mostrar al usuario
+                            console.warn('El tablero Kanban está tardando más de lo esperado en cargar.');
+                            
+                            // No notificar a la ventana principal sobre el error
+                        }
+                    }, 2000); // Esperar 2 segundos antes de verificar
+                } catch (error) {
+                    console.error('Error al inicializar el tablero Kanban:', error);
+                    
+                    // Solo registrar en consola, no mostrar al usuario
+                    console.error('Error al inicializar el tablero Kanban:', error);
+                    
+                    // No notificar a la ventana principal sobre el error
+                }
+            }
 
         // Manejar mensajes de la ventana principal
         window.addEventListener('message', function(event) {
@@ -1381,25 +1488,68 @@
             //     return;
             // }
             
-            if (event.data && event.data.type === 'INIT_KANBAN') {
-                console.log('Inicializando Kanban con datos:', event.data);
-                console.log('KanbanApp disponible:', typeof window.KanbanApp !== 'undefined');
-                
-                // Esperar un momento para asegurar que todo esté listo
-                setTimeout(() => {
-                    try {
-                        initializeKanban(event.data.ovcId);
-                        console.log('Kanban inicializado correctamente');
-                    } catch (error) {
-                        console.error('Error al inicializar Kanban:', error);
+            if (!event.data || !event.data.type) {
+                console.log('Mensaje recibido sin tipo, ignorando...');
+                return;
+            }
+            
+            switch (event.data.type) {
+                case 'INIT_KANBAN':
+                    console.log('Inicializando Kanban con datos:', event.data);
+                    
+                    // Notificar que el Kanban está listo
+                    if (window.parent) {
+                        window.parent.postMessage({ 
+                            type: 'KANBAN_READY'
+                        }, '*');
                     }
-                }, 100);
+                    
+                    // Verificar si KanbanApp está disponible
+                    if (typeof window.KanbanApp === 'undefined') {
+                        console.error('Error: KanbanApp no está disponible');
+                        return;
+                    }
+                    
+                    // Cargar el tablero Kanban específico para este OVC
+                    const ovcId = event.data.ovcId;
+                    const ovcTitle = event.data.ovcTitle || 'Sin título';
+                    
+                    // Verificar si el tablero existe en el almacenamiento
+                    const kanbanBoard = window.KanbanStorage ? window.KanbanStorage.getBoard(ovcId) : null;
+                    
+                    if (kanbanBoard) {
+                        console.log('Tablero Kanban cargado desde el almacenamiento:', kanbanBoard);
+                    } else {
+                        console.log('No se encontró un tablero existente para este OVC, se creará uno nuevo');
+                    }
+                    
+                    // Esperar a que el DOM esté listo
+                    if (document.readyState === 'loading') {
+                        console.log('DOM aún no está listo, esperando...');
+                        document.addEventListener('DOMContentLoaded', () => {
+                            console.log('DOM cargado, inicializando Kanban...');
+                            initializeKanban(ovcId, ovcTitle);
+                        });
+                    } else {
+                        console.log('DOM ya está listo, inicializando Kanban...');
+                        initializeKanban(ovcId, ovcTitle);
+                    }
+                    break;
+                    
+                default:
+                    console.log('Tipo de mensaje no manejado:', event.data.type);
             }
         });
 
         // Inicializar cuando se carga la página, pero también permitir inicialización externa
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DEBUG: kanban.html DOMContentLoaded event fired');
+            
+            // Notificar a la ventana principal que el DOM está cargado
+            if (window.parent) {
+                console.log('Enviando mensaje KANBAN_READY a la ventana principal desde DOMContentLoaded');
+                window.parent.postMessage({ type: 'KANBAN_READY' }, '*');
+            }
             
             // Notificar a la ventana padre que estamos listos para recibir la inicialización
             if (window.self !== window.top) {
