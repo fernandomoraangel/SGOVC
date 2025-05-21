@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Conexión Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+
+        .success {
+            color: green;
+            border-color: green;
+        }
+
+        .error {
+            color: red;
+            border-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Prueba de Conexión a Supabase</h1>
+    <div id="status">Estado de la conexión: Conectando...</div>
+
+    <script>
+        const supabaseUrl = 'https://ryikzywbpgqbzswfrrks.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5aWt6eXdicGdxYnpzd2ZycmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0ODg1MDgsImV4cCI6MjA2MzA2NDUwOH0.fD1T3sj5LuaaM9rqMeKuhrsprrDcPdEbzLxrCD6b2C8';
+
+        async function testSupabaseConnection() {
+            const statusDiv = document.getElementById('status');
+            try {
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+                // Intenta una operación simple, como obtener la lista de tablas (esto puede requerir permisos)
+                // O simplemente verifica si la inicialización fue exitosa
+                // Una forma simple es intentar obtener la sesión actual, que no requiere permisos especiales
+                const { data, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    statusDiv.textContent = 'Estado de la conexión: Error al conectar.';
+                    statusDiv.className = 'error';
+                    console.error('Error al conectar a Supabase:', error.message);
+                } else {
+                    statusDiv.textContent = 'Estado de la conexión: Conexión exitosa.';
+                    statusDiv.className = 'success';
+                    console.log('Conexión a Supabase exitosa.', data);
+                }
+            } catch (e) {
+                statusDiv.textContent = 'Estado de la conexión: Error inesperado.';
+                statusDiv.className = 'error';
+                console.error('Error inesperado:', e);
+            }
+        }
+
+        // Llama a la función de prueba cuando la página cargue
+        window.onload = testSupabaseConnection;
+    </script>
+</body>
+
+</html>
