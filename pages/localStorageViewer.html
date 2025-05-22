@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de LocalStorage</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #storage-data {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 15px;
+            background-color: #f9f9f9;
+            white-space: pre-wrap;
+            /* Preserve whitespace and wrap lines */
+            word-break: break-all;
+            /* Ensure long strings break */
+        }
+
+        .item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .key {
+            font-weight: bold;
+            color: #0056b3;
+            margin-right: 8px;
+            display: inline-block;
+            min-width: 120px;
+            /* Give keys a minimum width for alignment */
+            vertical-align: top;
+        }
+
+        .value {
+            display: inline-block;
+            max-width: calc(100% - 130px);
+            /* Adjust max-width based on key width */
+            vertical-align: top;
+        }
+
+        .ovc-data-details {
+            margin-top: 10px;
+            padding-left: 20px;
+            border-left: 2px solid #007bff;
+            background-color: #e9f5ff;
+        }
+
+        .ovc-data-details .key {
+            color: #003366;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 1em;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Contenido de LocalStorage</h1>
+
+    <div id="storage-data">
+        <!-- Data will be loaded here by JavaScript -->
+    </div>
+
+    <button id="export-button">Exportar a JSON Completo</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storageDataElement = document.getElementById('storage-data');
+            const exportButton = document.getElementById('export-button');
+            const localStorageData = {}; // To store data for export
+
+            // Display localStorage data
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+
+                // Store full value for export
+                localStorageData[key] = value;
+
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('item');
+
+                const keySpan = document.createElement('span');
+                keySpan.classList.add('key');
+                keySpan.textContent = `${key}:`;
+
+                const valueSpan = document.createElement('span');
+                valueSpan.classList.add('value');
+
+                if (key === 'ovcData' && value) {
+                    try {
+                        const ovcData = JSON.parse(value);
+                        let ovcDisplayContent = '';
+                        const ovcDataForExport = JSON.parse(value); // Create a copy for export
+
+                        // Process ovcData fields for display and export
+                        for (const field in ovcData) {
+                            if (ovcData.hasOwnProperty(field)) {
+                                let fieldValue = ovcData[field];
+                                let displayFieldValue = JSON.stringify(fieldValue, null, 2); // Default display value
+
+                                console.log(`Field: ${field}, Type: ${typeof fieldValue}, Value: ${fieldValue}`); // Debug log
+
+                                if (field === 'image' && typeof fieldValue === 'string') {
+                                    console.log(`Truncating image field.`); // Debug log
+                                    // Truncate image for display
+                                    displayFieldValue = fieldValue.substring(0, 10) + (fieldValue.length > 10 ? '...' : '');
+                                    // Truncate image for export copy
+                                    ovcDataForExport[field] = fieldValue.substring(0, 10);
+                                }
+
+                                ovcDisplayContent += `<div class="ovc-data-details"><span class="key">${field}:</span><span class="value">${displayFieldValue}</span></div>`;
+                            }
+                        }
+                        valueSpan.innerHTML = ovcDisplayContent; // Use innerHTML for nested structure
+
+                        // Store modified ovcData (with truncated image) for export
+                        localStorageData[key] = JSON.stringify(ovcDataForExport);
+
+                    } catch (e) {
+                        // If parsing fails, display original value with error
+                        console.error(`Error parsing ovcData for key ${key}:`, e);
+                        valueSpan.textContent = `[ERROR: No se pudo parsear JSON] ${value}`;
+                        // Store original value for export if parsing fails
+                        localStorageData[key] = value;
+                    }
+                } else {
+                    // Display other localStorage values directly
+                    valueSpan.textContent = value;
+                    // Store full value for export for other keys
+                    localStorageData[key] = value;
+                }
+
+                itemDiv.appendChild(keySpan);
+                itemDiv.appendChild(valueSpan);
+                storageDataElement.appendChild(itemDiv);
+            }
+
+            // Export button functionality
+            exportButton.addEventListener('click', () => {
+                const jsonString = JSON.stringify(localStorageData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'localStorage_export.json';
+                document.body.appendChild(a);
+                a.click();
+
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+
+</html>
