@@ -880,6 +880,13 @@
 
             function saveBoardState() {
                 const storageKey = getStorageKey(); // Get dynamic key
+                if (!currentOvcId) {
+                    console.warn("KanbanApp: No OVC ID set. Cannot save board state. Displaying error or preventing save.");
+                    // Optionally, display a user-friendly message or disable save functionality if no OVC context.
+                    // For now, just preventing the save is sufficient.
+                    // alert("No se puede guardar el tablero Kanban: No hay un OVC seleccionado."); // Example user message
+                    return; // Prevent saving to the generic key
+                }
                 if (currentEditingTask) {
                     console.warn("Guardando con tarea en edición. Cancelando edición...");
                     disableEditMode(currentEditingTask, false);
@@ -931,6 +938,14 @@
 
             function loadBoardState() {
                 const storageKey = getStorageKey(); // Obtener clave dinámica
+                if (!currentOvcId) {
+                    console.warn("KanbanApp: No OVC ID set. Cannot load board state. Initializing an empty board or displaying error.");
+                    // Optionally, clear the board or show a message that no OVC is selected.
+                    // For now, just preventing loading from the generic key and ensuring an empty board state is sufficient.
+                    columns.forEach(col => col.innerHTML = ''); // Clear columns
+                    // alert("No se puede cargar el tablero Kanban: No hay un OVC seleccionado."); // Example user message
+                    return; // Prevent loading from the generic key
+                }
                 console.log(`DEBUG: Cargando estado del tablero desde ${storageKey}...`);
                 
                 // Verificar que las columnas estén inicializadas
@@ -1145,22 +1160,22 @@
                 console.log(`KanbanApp.init called. Context OVC ID: ${ovcIdContext}, Title: ${ovcTitle}`);
                 
                 // Validar que se proporcione un ID de OVC
+                // currentOvcId = ovcIdContext; // Original line
                 if (!ovcIdContext) {
-                    //console.error('Error: Se requiere un ID de OVC para inicializar el tablero Kanban');
-                    // Mostrar mensaje de error al usuario
-                    const errorContainer = document.createElement('div');
-                    errorContainer.className = 'p-4 bg-red-100 border-l-4 border-red-500 text-red-700';
-                    errorContainer.role = 'alert';
-                    errorContainer.innerHTML = `
-                        <p class="font-bold">Error</p>
-                        <p>No se pudo cargar el tablero Kanban. No se proporcionó un ID de OVC válido.</p>
-                        <p class="text-sm mt-2">Por favor, asegúrate de acceder al tablero Kanban desde la lista de OVCs.</p>
-                    `;
-                    //document.body.insertBefore(errorContainer, document.body.firstChild);
-                    return;
+                    console.error('KanbanApp Error: Se requiere un ID de OVC para inicializar el tablero Kanban. El tablero no funcionará correctamente sin un contexto.');
+                    // Display a user-friendly message within the Kanban area
+                    const kanbanBoardDiv = document.getElementById('kanbanBoard');
+                    if (kanbanBoardDiv) {
+                        kanbanBoardDiv.innerHTML = '<p class="text-red-500 p-4">Error: No se ha especificado un OVC para este tablero Kanban. No se pueden guardar ni cargar tareas.</p>';
+                    }
+                    // Disable further Kanban functionality if no OVC ID
+                    const addTaskButton = document.getElementById('addTaskBtn');
+                    if (addTaskButton) addTaskButton.disabled = true;
+                    currentOvcId = null; // Ensure it's null
+                    // Do not proceed to loadBoardState if no ID
+                    return; 
                 }
-                
-                currentOvcId = ovcIdContext; // Store the OVC ID
+                currentOvcId = ovcIdContext; // Set the OVC ID only if valid
                 
                 // El título se maneja desde kanban-simple.js
                 // No es necesario actualizarlo aquí para evitar duplicación
