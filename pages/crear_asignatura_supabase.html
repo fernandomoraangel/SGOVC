@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Asignatura</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #0056b3;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            /* Include padding and border in the element's total width and height */
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #status-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            display: none;
+            /* Hidden by default */
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Crear Nueva Asignatura</h1>
+
+        <form id="create-asignatura-form">
+            <div class="form-group">
+                <label for="nombre-asignatura">Nombre de la Asignatura:</label>
+                <input type="text" id="nombre-asignatura" required>
+            </div>
+            <button type="submit">Guardar Asignatura</button>
+        </form>
+
+        <div id="status-message"></div>
+    </div>
+
+    <script>
+        // Reemplaza con tus credenciales de Supabase obtenidas de .env
+        const supabaseUrl = 'https://ryikzywbpgqbzswfrrks.supabase.co'; // Ejemplo: 'https://abcdef12345.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5aWt6eXdicGdxYnpzd2ZycmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0ODg1MDgsImV4cCI6MjA2MzA2NDUwOH0.fD1T3sj5LuaaM9rqMeKuhrsprrDcPdEbzLxrCD6b2C8'; // Ejemplo: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+
+        console.log('Supabase URL:', supabaseUrl); // Debug log
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        const form = document.getElementById('create-asignatura-form');
+        const statusMessageDiv = document.getElementById('status-message');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const nombreAsignaturaInput = document.getElementById('nombre-asignatura');
+            const nombreAsignatura = nombreAsignaturaInput.value.trim();
+
+            if (!nombreAsignatura) {
+                displayStatusMessage('Por favor, ingresa el nombre de la asignatura.', 'error');
+                return;
+            }
+
+            // Clear previous status message
+            displayStatusMessage('', '');
+
+            try {
+                const { data, error } = await supabase
+                    .from('asignaturas')
+                    .insert([
+                        { nombre: nombreAsignatura }
+                    ]);
+
+                if (error) {
+                    console.error('Error al insertar asignatura:', error);
+                    displayStatusMessage(`Error al guardar la asignatura: ${error.message}`, 'error');
+                } else {
+                    console.log('Asignatura guardada con éxito:', data);
+                    displayStatusMessage('Asignatura guardada con éxito.', 'success');
+                    form.reset(); // Clear the form
+                }
+            } catch (e) {
+                console.error('Error inesperado al guardar asignatura:', e);
+                displayStatusMessage(`Error inesperado al guardar la asignatura: ${e.message}`, 'error');
+            }
+        });
+
+        function displayStatusMessage(message, type) {
+            statusMessageDiv.textContent = message;
+            statusMessageDiv.className = ''; // Clear existing classes
+            if (type) { // Only add class if type is not empty
+                statusMessageDiv.classList.add(type);
+            }
+            statusMessageDiv.style.display = message ? 'block' : 'none';
+
+            // Hide success message after 3 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessageDiv.style.display = 'none';
+                }, 3000); // 3000 milliseconds = 3 seconds
+            }
+        }
+    </script>
+</body>
+
+</html>
